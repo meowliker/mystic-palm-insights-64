@@ -1,49 +1,69 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Sparkles, Hand, Stars, Gem } from 'lucide-react';
-import heroImage from '@/assets/hero-cosmic-palm.jpg';
-import AuthForm from './AuthForm';
+import { Gem, Sparkles, Star, Moon } from 'lucide-react';
+import AuthForm from '@/components/AuthForm';
+import { useAuth } from '@/hooks/useAuth';
 
 interface WelcomeScreenProps {
-  onStartScan?: () => void;
+  onStartScan: () => void;
 }
 
 const WelcomeScreen = ({ onStartScan }: WelcomeScreenProps) => {
-  const [isAuthMode, setIsAuthMode] = useState<'welcome' | 'login' | 'signup'>('welcome');
+  const [showAuth, setShowAuth] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
+  const { user, loading } = useAuth();
 
-  const handleAuthSuccess = () => {
-    // When auth is successful, redirect to scanner
-    onStartScan?.();
-  };
-
-  if (isAuthMode === 'login' || isAuthMode === 'signup') {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-background relative overflow-hidden flex items-center justify-center px-6">
-        {/* Cosmic Background Pattern */}
-        <div className="absolute inset-0 bg-starfield opacity-40"></div>
-        <div className="absolute inset-0 bg-cosmic opacity-20"></div>
-        
-        {/* Floating Stars */}
-        <div className="absolute top-20 left-20 w-2 h-2 bg-secondary rounded-full animate-twinkle"></div>
-        <div className="absolute top-40 right-32 w-1 h-1 bg-primary-glow rounded-full animate-twinkle delay-1000"></div>
-        <div className="absolute bottom-32 left-40 w-1.5 h-1.5 bg-accent rounded-full animate-twinkle delay-2000"></div>
-        
-        <div className="relative z-10 w-full max-w-md">
-          <AuthForm 
-            mode={isAuthMode}
-            onModeChange={setIsAuthMode}
-            onSuccess={handleAuthSuccess}
-          />
-          
-          <div className="mt-6 text-center">
-            <Button 
-              variant="ghost" 
-              onClick={() => setIsAuthMode('welcome')}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              ← Back to Welcome
-            </Button>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (showAuth) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative overflow-hidden">
+        {/* Background stars */}
+        <div className="absolute inset-0">
+          {[...Array(50)].map((_, i) => (
+            <Star
+              key={i}
+              className="absolute text-white/20 animate-pulse"
+              size={Math.random() * 4 + 2}
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 3}s`,
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Content */}
+        <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
+          <div className="w-full max-w-md">
+            <div className="text-center mb-8">
+              <Button
+                variant="ghost"
+                onClick={() => setShowAuth(false)}
+                className="mb-4 text-white/70 hover:text-white"
+              >
+                ← Back to Welcome
+              </Button>
+            </div>
+            <AuthForm
+              mode={authMode}
+              onModeChange={setAuthMode}
+              onSuccess={() => {
+                setShowAuth(false);
+                onStartScan();
+              }}
+            />
           </div>
         </div>
       </div>
@@ -51,91 +71,105 @@ const WelcomeScreen = ({ onStartScan }: WelcomeScreenProps) => {
   }
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Cosmic Background Pattern */}
-      <div className="absolute inset-0 bg-starfield opacity-40"></div>
-      <div className="absolute inset-0 bg-cosmic opacity-20"></div>
-      
-      {/* Floating Stars */}
-      <div className="absolute top-20 left-20 w-2 h-2 bg-secondary rounded-full animate-twinkle"></div>
-      <div className="absolute top-40 right-32 w-1 h-1 bg-primary-glow rounded-full animate-twinkle delay-1000"></div>
-      <div className="absolute bottom-32 left-40 w-1.5 h-1.5 bg-accent rounded-full animate-twinkle delay-2000"></div>
-      
-      <div className="relative z-10 min-h-screen flex flex-col">
-        {/* Header */}
-        <header className="p-6 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <Gem className="h-8 w-8 text-primary animate-pulse-glow" />
-            <span className="text-xl font-bold text-foreground">PalmCosmic</span>
-          </div>
-        </header>
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative overflow-hidden">
+      {/* Background stars */}
+      <div className="absolute inset-0">
+        {[...Array(50)].map((_, i) => (
+          <Star
+            key={i}
+            className="absolute text-white/20 animate-pulse"
+            size={Math.random() * 4 + 2}
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 3}s`,
+            }}
+          />
+        ))}
+      </div>
 
-        {/* Hero Section */}
-        <main className="flex-1 flex flex-col lg:flex-row items-center justify-center px-6 py-12">
-          <div className="flex-1 max-w-2xl space-y-8 text-center lg:text-left">
-            <div className="space-y-4">
-              <h1 className="text-5xl lg:text-7xl font-bold text-foreground leading-tight">
-                Unlock Your
-                <span className="text-transparent bg-clip-text bg-mystical block">
-                  Cosmic Destiny
-                </span>
+      {/* Main content */}
+      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center text-center p-6">
+        <div className="space-y-8 max-w-2xl mx-auto">
+          {/* Logo and title */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-center gap-3">
+              <Gem className="h-12 w-12 text-yellow-300 animate-pulse-glow" />
+              <h1 className="text-5xl font-bold text-white cosmic-title">
+                PalmCosmic
               </h1>
-              <p className="text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0">
-                Discover the ancient wisdom hidden in your palms through AI-powered readings and personalized astrological insights.
-              </p>
             </div>
+            <p className="text-xl text-purple-200 font-light">
+              Unlock the mysteries of your destiny through AI-powered palm reading
+            </p>
+          </div>
 
-            <div className="flex flex-wrap justify-center lg:justify-start gap-4">
-              <Button 
-                variant="glow" 
+          {/* Features */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-12">
+            <div className="space-y-3 p-6 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
+              <Sparkles className="h-8 w-8 text-yellow-300 mx-auto" />
+              <h3 className="text-lg font-semibold text-white">AI Analysis</h3>
+              <p className="text-purple-200 text-sm">Advanced AI interprets your palm lines with cosmic precision</p>
+            </div>
+            <div className="space-y-3 p-6 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
+              <Moon className="h-8 w-8 text-blue-300 mx-auto" />
+              <h3 className="text-lg font-semibold text-white">Cosmic Insights</h3>
+              <p className="text-purple-200 text-sm">Discover your life path, love lines, and hidden potentials</p>
+            </div>
+            <div className="space-y-3 p-6 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
+              <Star className="h-8 w-8 text-purple-300 mx-auto" />
+              <h3 className="text-lg font-semibold text-white">Personalized</h3>
+              <p className="text-purple-200 text-sm">Tailored readings based on your unique palm characteristics</p>
+            </div>
+          </div>
+
+          {/* CTA Buttons */}
+          <div className="space-y-4">
+            {user ? (
+              <Button
+                onClick={onStartScan}
                 size="lg"
-                onClick={() => setIsAuthMode('signup')}
-                className="font-semibold"
+                variant="glow"
+                className="text-lg px-8 py-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
               >
-                <Sparkles className="h-5 w-5" />
+                <Gem className="mr-2 h-5 w-5" />
                 Begin Your Journey
               </Button>
-              <Button 
-                variant="outline" 
-                size="lg"
-                onClick={() => setIsAuthMode('login')}
-              >
-                Sign In
-              </Button>
-            </div>
-
-            {/* Features */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8">
-              <Card className="p-6 bg-card/50 backdrop-blur-sm border-border/50 text-center">
-                <Hand className="h-8 w-8 text-primary mx-auto mb-3 animate-float" />
-                <h3 className="font-semibold text-foreground mb-2">AI Palm Reading</h3>
-                <p className="text-sm text-muted-foreground">Advanced AI analyzes your palm lines for profound insights</p>
-              </Card>
-              <Card className="p-6 bg-card/50 backdrop-blur-sm border-border/50 text-center">
-                <Stars className="h-8 w-8 text-accent mx-auto mb-3 animate-float delay-500" />
-                <h3 className="font-semibold text-foreground mb-2">Daily Horoscope</h3>
-                <p className="text-sm text-muted-foreground">Personalized cosmic guidance for your journey ahead</p>
-              </Card>
-              <Card className="p-6 bg-card/50 backdrop-blur-sm border-border/50 text-center">
-                <Gem className="h-8 w-8 text-secondary mx-auto mb-3 animate-float delay-1000" />
-                <h3 className="font-semibold text-foreground mb-2">Reading History</h3>
-                <p className="text-sm text-muted-foreground">Track your spiritual growth with detailed records</p>
-              </Card>
-            </div>
+            ) : (
+              <>
+                <Button
+                  onClick={() => {
+                    setAuthMode('signup');
+                    setShowAuth(true);
+                  }}
+                  size="lg"
+                  variant="glow"
+                  className="text-lg px-8 py-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                >
+                  <Gem className="mr-2 h-5 w-5" />
+                  Begin Your Journey
+                </Button>
+                <div className="text-center">
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setAuthMode('login');
+                      setShowAuth(true);
+                    }}
+                    className="text-purple-200 hover:text-white"
+                  >
+                    Already have an account? Sign in
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
 
-          {/* Hero Image */}
-          <div className="flex-1 max-w-2xl mt-12 lg:mt-0">
-            <div className="relative">
-              <img 
-                src={heroImage} 
-                alt="Cosmic Palm Reading" 
-                className="w-full h-auto rounded-2xl shadow-cosmic"
-              />
-              <div className="absolute inset-0 bg-mystical opacity-20 rounded-2xl"></div>
-            </div>
-          </div>
-        </main>
+          <p className="text-purple-300 text-sm max-w-md mx-auto">
+            Join thousands who have discovered their cosmic path through the ancient art of palmistry, 
+            enhanced with modern AI technology.
+          </p>
+        </div>
       </div>
     </div>
   );
