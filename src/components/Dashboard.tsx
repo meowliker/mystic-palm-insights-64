@@ -1,0 +1,267 @@
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Scan, 
+  Calendar, 
+  History, 
+  BookOpen, 
+  User, 
+  Settings,
+  Heart,
+  Brain,
+  Zap,
+  Star,
+  Clock
+} from 'lucide-react';
+import constellationPattern from '@/assets/constellation-pattern.jpg';
+
+const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
+  const [activeTab, setActiveTab] = useState<'readings' | 'horoscope' | 'blog'>('readings');
+
+  // Mock data
+  const recentReadings = [
+    {
+      id: 1,
+      date: '2025-01-17',
+      time: '14:30',
+      lines: ['Life Line', 'Heart Line', 'Head Line'],
+      insights: 'Strong life force with emotional depth'
+    },
+    {
+      id: 2,
+      date: '2025-01-15',
+      time: '09:15',
+      lines: ['Fate Line', 'Heart Line'],
+      insights: 'Career changes aligned with passion'
+    }
+  ];
+
+  const todayHoroscope = {
+    sign: 'Aquarius',
+    prediction: 'The stars align favorably for new beginnings. Your palm readings suggest a day of emotional clarity and creative insights.',
+    energy: 85,
+    focus: 'Career & Relationships'
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Welcome back, Sarah</h1>
+              <p className="text-muted-foreground">Ready to explore your cosmic destiny?</p>
+            </div>
+            <Button 
+              variant="glow" 
+              onClick={onStartScan}
+              className="gap-2"
+            >
+              <Scan className="h-4 w-4" />
+              New Scan
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <div className="container mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Card className="p-4 text-center bg-card/80 backdrop-blur-sm">
+                <History className="h-6 w-6 text-primary mx-auto mb-2" />
+                <div className="text-2xl font-bold text-foreground">12</div>
+                <div className="text-xs text-muted-foreground">Total Readings</div>
+              </Card>
+              <Card className="p-4 text-center bg-card/80 backdrop-blur-sm">
+                <Calendar className="h-6 w-6 text-accent mx-auto mb-2" />
+                <div className="text-2xl font-bold text-foreground">28</div>
+                <div className="text-xs text-muted-foreground">Days Streak</div>
+              </Card>
+              <Card className="p-4 text-center bg-card/80 backdrop-blur-sm">
+                <Star className="h-6 w-6 text-secondary mx-auto mb-2" />
+                <div className="text-2xl font-bold text-foreground">8.5</div>
+                <div className="text-xs text-muted-foreground">Accuracy</div>
+              </Card>
+              <Card className="p-4 text-center bg-card/80 backdrop-blur-sm">
+                <Zap className="h-6 w-6 text-primary-glow mx-auto mb-2" />
+                <div className="text-2xl font-bold text-foreground">95%</div>
+                <div className="text-xs text-muted-foreground">Cosmic Sync</div>
+              </Card>
+            </div>
+
+            {/* Tabs */}
+            <div className="space-y-6">
+              <div className="flex gap-4">
+                <Button 
+                  variant={activeTab === 'readings' ? 'default' : 'ghost'}
+                  onClick={() => setActiveTab('readings')}
+                >
+                  <History className="h-4 w-4 mr-2" />
+                  Recent Readings
+                </Button>
+                <Button 
+                  variant={activeTab === 'horoscope' ? 'default' : 'ghost'}
+                  onClick={() => setActiveTab('horoscope')}
+                >
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Today's Horoscope
+                </Button>
+                <Button 
+                  variant={activeTab === 'blog' ? 'default' : 'ghost'}
+                  onClick={() => setActiveTab('blog')}
+                >
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Astrology Blog
+                </Button>
+              </div>
+
+              {/* Tab Content */}
+              {activeTab === 'readings' && (
+                <div className="space-y-4">
+                  {recentReadings.map((reading) => (
+                    <Card key={reading.id} className="p-6 bg-card/80 backdrop-blur-sm hover:shadow-mystical transition-all">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Clock className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">
+                              {reading.date} at {reading.time}
+                            </span>
+                          </div>
+                          <h3 className="font-semibold text-foreground">Palm Reading #{reading.id}</h3>
+                        </div>
+                        <Button variant="outline" size="sm">View Details</Button>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="flex flex-wrap gap-2">
+                          {reading.lines.map((line) => (
+                            <Badge key={line} variant="secondary" className="bg-primary/10 text-primary">
+                              {line}
+                            </Badge>
+                          ))}
+                        </div>
+                        <p className="text-muted-foreground">{reading.insights}</p>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+
+              {activeTab === 'horoscope' && (
+                <Card className="p-6 bg-card/80 backdrop-blur-sm">
+                  <div className="space-y-6">
+                    <div className="text-center">
+                      <h3 className="text-2xl font-bold text-foreground mb-2">
+                        {todayHoroscope.sign} ♒
+                      </h3>
+                      <p className="text-muted-foreground">Today's Cosmic Guidance</p>
+                    </div>
+                    
+                    <div className="bg-primary/10 rounded-lg p-4">
+                      <p className="text-foreground leading-relaxed">{todayHoroscope.prediction}</p>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-primary mb-1">{todayHoroscope.energy}%</div>
+                        <div className="text-sm text-muted-foreground">Energy Level</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-semibold text-foreground mb-1">{todayHoroscope.focus}</div>
+                        <div className="text-sm text-muted-foreground">Focus Areas</div>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {activeTab === 'blog' && (
+                <div className="space-y-4">
+                  <Card className="p-6 bg-card/80 backdrop-blur-sm hover:shadow-mystical transition-all">
+                    <h3 className="font-semibold text-foreground mb-2">Understanding Your Palm Lines</h3>
+                    <p className="text-muted-foreground mb-3">Discover the ancient art of palmistry and what each line reveals about your cosmic journey.</p>
+                    <Button variant="outline" size="sm">Read More</Button>
+                  </Card>
+                  <Card className="p-6 bg-card/80 backdrop-blur-sm hover:shadow-mystical transition-all">
+                    <h3 className="font-semibold text-foreground mb-2">Mercury Retrograde Guide</h3>
+                    <p className="text-muted-foreground mb-3">Navigate cosmic challenges with wisdom from your palm readings during planetary transitions.</p>
+                    <Button variant="outline" size="sm">Read More</Button>
+                  </Card>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Profile Card */}
+            <Card className="p-6 bg-card/80 backdrop-blur-sm text-center">
+              <div className="w-16 h-16 bg-mystical rounded-full mx-auto mb-4 flex items-center justify-center">
+                <User className="h-8 w-8 text-primary-foreground" />
+              </div>
+              <h3 className="font-semibold text-foreground mb-1">Sarah Mitchell</h3>
+              <p className="text-sm text-muted-foreground mb-4">Aquarius ♒ • Premium Member</p>
+              <div className="space-y-2">
+                <Button variant="outline" size="sm" className="w-full">
+                  <User className="h-4 w-4 mr-2" />
+                  Edit Profile
+                </Button>
+                <Button variant="ghost" size="sm" className="w-full">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Settings
+                </Button>
+              </div>
+            </Card>
+
+            {/* Quick Insights */}
+            <Card 
+              className="p-6 bg-card/80 backdrop-blur-sm relative overflow-hidden"
+              style={{
+                backgroundImage: `url(${constellationPattern})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            >
+              <div className="absolute inset-0 bg-background/80"></div>
+              <div className="relative z-10">
+                <h3 className="font-semibold text-foreground mb-4">Your Cosmic Profile</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Heart className="h-5 w-5 text-accent" />
+                    <div>
+                      <div className="text-sm font-medium text-foreground">Heart Line</div>
+                      <div className="text-xs text-muted-foreground">Strong emotional connections</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Brain className="h-5 w-5 text-primary" />
+                    <div>
+                      <div className="text-sm font-medium text-foreground">Head Line</div>
+                      <div className="text-xs text-muted-foreground">Analytical and creative</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Zap className="h-5 w-5 text-secondary" />
+                    <div>
+                      <div className="text-sm font-medium text-foreground">Life Line</div>
+                      <div className="text-xs text-muted-foreground">Vibrant life energy</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Dashboard;
