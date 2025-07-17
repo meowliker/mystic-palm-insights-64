@@ -1,29 +1,60 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import WelcomeScreen from '@/components/WelcomeScreen';
 import PalmScanner from '@/components/PalmScanner';
 import ResultsScreen from '@/components/ResultsScreen';
 import Dashboard from '@/components/Dashboard';
+import { useAuth } from '@/hooks/useAuth';
 
 type AppState = 'welcome' | 'scanner' | 'results' | 'dashboard';
 
 const Index = () => {
   const [currentScreen, setCurrentScreen] = useState<AppState>('welcome');
+  const { user, loading } = useAuth();
 
-  const handleStartScan = () => setCurrentScreen('scanner');
+  // Redirect to welcome if user is not authenticated
+  useEffect(() => {
+    if (!loading) {
+      if (!user && currentScreen !== 'welcome') {
+        setCurrentScreen('welcome');
+      }
+    }
+  }, [user, loading, currentScreen]);
+
+  const handleStartScan = () => {
+    if (user) {
+      setCurrentScreen('scanner');
+    } else {
+      setCurrentScreen('welcome');
+    }
+  };
+
   const handleScanComplete = () => setCurrentScreen('results');
   const handleGoToDashboard = () => setCurrentScreen('dashboard');
+
+  // Show loading state while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   switch (currentScreen) {
     case 'welcome':
       return <WelcomeScreen onStartScan={handleStartScan} />;
     case 'scanner':
-      return <PalmScanner onScanComplete={handleScanComplete} />;
+      return user ? <PalmScanner onScanComplete={handleScanComplete} /> : <WelcomeScreen onStartScan={handleStartScan} />;
     case 'results':
-      return <ResultsScreen onGoToDashboard={handleGoToDashboard} />;
+      return user ? <ResultsScreen onGoToDashboard={handleGoToDashboard} /> : <WelcomeScreen onStartScan={handleStartScan} />;
     case 'dashboard':
-      return <Dashboard onStartScan={handleStartScan} />;
+      return user ? <Dashboard onStartScan={handleStartScan} /> : <WelcomeScreen onStartScan={handleStartScan} />;
     default:
-      return <WelcomeScreen />;
+      return <WelcomeScreen onStartScan={handleStartScan} />;
   }
 };
 
