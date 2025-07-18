@@ -139,13 +139,18 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
 
       if (authError) throw authError;
 
+      // Update local state with the new image URL
       setProfilePictureUrl(uploadedImageUrl);
       setProfilePicture(null);
+      setPendingRemoval(false);
 
       toast({
         title: "Profile Updated",
         description: "Your profile has been updated successfully.",
       });
+
+      // Close the dialog
+      setOpen(false);
     } catch (error: any) {
       toast({
         title: "Error",

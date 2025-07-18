@@ -148,7 +148,7 @@ const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
                         <h3 className="font-semibold text-foreground mb-4">{user?.user_metadata?.full_name || 'Cosmic Explorer'}</h3>
                         <div className="space-y-2">
                           <EditProfileDialog>
-                            <Button variant="outline" size="sm" className="w-full" onClick={() => setSidebarOpen(false)}>
+                            <Button variant="outline" size="sm" className="w-full">
                               <User className="h-4 w-4 mr-2" />
                               Edit Profile
                             </Button>
