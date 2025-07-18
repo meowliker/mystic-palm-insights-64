@@ -28,6 +28,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useBlogs } from '@/hooks/useBlogs';
 import { EditProfileDialog } from '@/components/EditProfileDialog';
 import { supabase } from '@/integrations/supabase/client';
+import HoroscopeForm from '@/components/HoroscopeForm';
+import { HoroscopeResultDialog } from '@/components/HoroscopeResultDialog';
 
 const ProfilePicture = ({ userId, onUpdate }: { userId?: string; onUpdate?: () => void }) => {
   const [profilePictureUrl, setProfilePictureUrl] = useState<string>('');
@@ -98,6 +100,8 @@ const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userBlogs, setUserBlogs] = useState<any[]>([]);
   const [blogsLoading, setBlogsLoading] = useState(false);
+  const [horoscope, setHoroscope] = useState<any>(null);
+  const [showHoroscopeDialog, setShowHoroscopeDialog] = useState(false);
   const { scans } = useScans();
   const { user } = useAuth();
   const { fetchUserBlogs, publishDraft, deleteBlog } = useBlogs();
@@ -147,11 +151,9 @@ const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
     insights: scan.overall_insight
   }));
 
-  const todayHoroscope = {
-    sign: 'Aquarius',
-    prediction: 'The stars align favorably for new beginnings. Your palm readings suggest a day of emotional clarity and creative insights.',
-    energy: 85,
-    focus: 'Career & Relationships'
+  const handleHoroscopeGenerated = (generatedHoroscope: any) => {
+    setHoroscope(generatedHoroscope);
+    setShowHoroscopeDialog(true);
   };
 
   return (
@@ -344,31 +346,7 @@ const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
               )}
 
               {activeTab === 'horoscope' && (
-                <Card className="p-6 bg-card/80 backdrop-blur-sm">
-                  <div className="space-y-6">
-                    <div className="text-center">
-                      <h3 className="text-2xl font-bold text-foreground mb-2">
-                        {todayHoroscope.sign} ♒
-                      </h3>
-                      <p className="text-muted-foreground">Today's Cosmic Guidance</p>
-                    </div>
-                    
-                    <div className="bg-primary/10 rounded-lg p-4">
-                      <p className="text-foreground leading-relaxed">{todayHoroscope.prediction}</p>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center">
-                        <div className="text-3xl font-bold text-primary mb-1">{todayHoroscope.energy}%</div>
-                        <div className="text-sm text-muted-foreground">Energy Level</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-lg font-semibold text-foreground mb-1">{todayHoroscope.focus}</div>
-                        <div className="text-sm text-muted-foreground">Focus Areas</div>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
+                <HoroscopeForm onHoroscopeGenerated={handleHoroscopeGenerated} />
               )}
 
               {activeTab === 'blog' && (
@@ -535,6 +513,13 @@ const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
           </div>
         </div>
       </div>
+
+      {/* Horoscope Result Dialog */}
+      <HoroscopeResultDialog 
+        open={showHoroscopeDialog}
+        onOpenChange={setShowHoroscopeDialog}
+        horoscope={horoscope}
+      />
     </div>
   );
 };
