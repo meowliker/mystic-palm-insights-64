@@ -141,16 +141,19 @@ const PalmScanner = ({ onScanComplete }: { onScanComplete: (scanData: any) => vo
     setScanState('detecting');
     setProgress(0);
     
-    // Start alignment detection
+    // Simplified alignment detection - more forgiving
     alignmentIntervalRef.current = setInterval(() => {
-      // Simulate palm detection with some randomness
-      const isAligned = Math.random() > 0.4;
+      // Much more forgiving palm detection
+      const isAligned = Math.random() > 0.2; // 80% chance of good alignment
       setAlignment(isAligned ? 'good' : 'poor');
-      
-      if (isAligned && scanState === 'detecting') {
+    }, 500);
+
+    // Auto start scanning after 2 seconds regardless of alignment
+    setTimeout(() => {
+      if (scanState === 'detecting' || scanState === 'ready') {
         setScanState('scanning');
       }
-    }, 300);
+    }, 2000);
   };
 
   // Progress tracking effect
@@ -158,22 +161,18 @@ const PalmScanner = ({ onScanComplete }: { onScanComplete: (scanData: any) => vo
     if (scanState === 'scanning') {
       progressIntervalRef.current = setInterval(() => {
         setProgress(prev => {
-          // Only progress if alignment is good
-          if (alignment === 'good') {
-            const newProgress = prev + 2;
-            if (newProgress >= 100) {
-              clearInterval(progressIntervalRef.current!);
-              handleScanComplete();
-              return 100;
-            }
-            return newProgress;
-          } else {
-            // Reset progress if alignment is lost
-            setScanState('detecting');
-            return 0;
+          // Simplified progress - always progress, slightly faster when aligned
+          const progressIncrement = alignment === 'good' ? 3 : 2;
+          const newProgress = prev + progressIncrement;
+          
+          if (newProgress >= 100) {
+            clearInterval(progressIntervalRef.current!);
+            handleScanComplete();
+            return 100;
           }
+          return newProgress;
         });
-      }, 100);
+      }, 150);
     } else {
       if (progressIntervalRef.current) {
         clearInterval(progressIntervalRef.current);
