@@ -18,6 +18,7 @@ const PalmScanner = ({ onScanComplete }: { onScanComplete: (scanData: any) => vo
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [cameraActive, setCameraActive] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -27,32 +28,10 @@ const PalmScanner = ({ onScanComplete }: { onScanComplete: (scanData: any) => vo
 
   // Initialize camera
   useEffect(() => {
-    const initializeCamera = async () => {
-      try {
-        const mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: { 
-            facingMode: 'user',
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          }
-        });
-        setStream(mediaStream);
-        if (videoRef.current) {
-          videoRef.current.srcObject = mediaStream;
-        }
-        setCameraError(null);
-      } catch (error) {
-        setCameraError('Camera access denied. Please enable camera permissions.');
-        console.error('Camera error:', error);
-      }
-    };
-
     initializeCamera();
 
     return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
+      stopCamera();
       if (progressIntervalRef.current) {
         clearInterval(progressIntervalRef.current);
       }
@@ -61,6 +40,41 @@ const PalmScanner = ({ onScanComplete }: { onScanComplete: (scanData: any) => vo
       }
     };
   }, []);
+
+  const initializeCamera = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { 
+          facingMode: 'user',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      });
+      setStream(mediaStream);
+      setCameraActive(true);
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+      }
+      setCameraError(null);
+    } catch (error) {
+      setCameraError('Camera access denied. Please enable camera permissions.');
+      console.error('Camera error:', error);
+    }
+  };
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => {
+        track.stop();
+        console.log('Camera track stopped');
+      });
+      setStream(null);
+      setCameraActive(false);
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+    }
+  };
 
   const captureImage = async (): Promise<string | null> => {
     if (!videoRef.current || !canvasRef.current) return null;
@@ -236,8 +250,9 @@ const PalmScanner = ({ onScanComplete }: { onScanComplete: (scanData: any) => vo
       return;
     }
 
-    // Both hands complete
+    // Both hands complete - stop camera for privacy
     setScanState('complete');
+    stopCamera();
     
     // Pass the complete scan data
     const scanData = {
@@ -250,22 +265,7 @@ const PalmScanner = ({ onScanComplete }: { onScanComplete: (scanData: any) => vo
   };
 
   const retryCamera = async () => {
-    try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { 
-          facingMode: 'user',
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        }
-      });
-      setStream(mediaStream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-      }
-      setCameraError(null);
-    } catch (error) {
-      setCameraError('Unable to access camera. Please check permissions.');
-    }
+    await initializeCamera();
   };
 
   const getStatusMessage = () => {
@@ -302,6 +302,36 @@ const PalmScanner = ({ onScanComplete }: { onScanComplete: (scanData: any) => vo
               Please use the flashlight for better scans in dark backgrounds
             </p>
           )}
+          
+          {/* Camera Privacy Controls */}
+          <div className="flex items-center justify-center gap-4">
+            <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
+              cameraActive ? 'bg-red-500/20 text-red-600' : 'bg-green-500/20 text-green-600'
+            }`}>
+              <div className={`w-2 h-2 rounded-full ${cameraActive ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`} />
+              Camera {cameraActive ? 'Active' : 'Off'}
+            </div>
+            {cameraActive && scanState === 'ready' && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={stopCamera}
+                className="text-red-600 border-red-200 hover:bg-red-50"
+              >
+                Stop Camera
+              </Button>
+            )}
+            {!cameraActive && scanState === 'ready' && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={initializeCamera}
+                className="text-green-600 border-green-200 hover:bg-green-50"
+              >
+                Start Camera
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Main Scanning Area */}
@@ -424,7 +454,7 @@ const PalmScanner = ({ onScanComplete }: { onScanComplete: (scanData: any) => vo
               </span>
             </div>
             
-            {scanState === 'ready' && (
+            {scanState === 'ready' && cameraActive && (
               <Button 
                 onClick={startScan}
                 className="w-full bg-primary hover:bg-primary/90"
@@ -433,6 +463,20 @@ const PalmScanner = ({ onScanComplete }: { onScanComplete: (scanData: any) => vo
                 <Hand className="h-5 w-5 mr-2" />
                 Start {currentHand} Palm Scan
               </Button>
+            )}
+            
+            {scanState === 'ready' && !cameraActive && (
+              <div className="space-y-3">
+                <p className="text-muted-foreground text-sm">Camera is stopped for privacy</p>
+                <Button 
+                  onClick={initializeCamera}
+                  className="w-full bg-primary hover:bg-primary/90"
+                  size="lg"
+                >
+                  <Camera className="h-5 w-5 mr-2" />
+                  Enable Camera to Start
+                </Button>
+              </div>
             )}
             
             {scanState === 'complete' && (
