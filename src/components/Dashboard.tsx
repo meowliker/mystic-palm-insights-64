@@ -77,6 +77,7 @@ const ProfilePicture = ({ userId, onUpdate }: { userId?: string; onUpdate?: () =
           src={profilePictureUrl} 
           alt="Profile" 
           className="w-full h-full object-cover"
+          key={profilePictureUrl} // Force re-render when URL changes
         />
       ) : (
         <User className="h-8 w-8 text-primary-foreground" />

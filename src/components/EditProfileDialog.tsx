@@ -87,21 +87,28 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
       if (profilePicture) {
         setIsUploadingImage(true);
         const fileExt = profilePicture.name.split('.').pop();
-        const fileName = `${user.id}/profile.${fileExt}`;
+        const timestamp = Date.now();
+        const fileName = `${user.id}/profile_${timestamp}.${fileExt}`;
+
+        // Delete old profile picture if it exists
+        if (profilePictureUrl && profilePictureUrl.includes('profiles/')) {
+          const oldFileName = profilePictureUrl.split('/profiles/')[1];
+          await supabase.storage.from('profiles').remove([oldFileName]);
+        }
 
         // Upload to storage
         const { error: uploadError } = await supabase.storage
           .from('profiles')
-          .upload(fileName, profilePicture, { upsert: true });
+          .upload(fileName, profilePicture);
 
         if (uploadError) throw uploadError;
 
-        // Get public URL
+        // Get public URL with cache-busting parameter
         const { data: { publicUrl } } = supabase.storage
           .from('profiles')
           .getPublicUrl(fileName);
 
-        uploadedImageUrl = publicUrl;
+        uploadedImageUrl = `${publicUrl}?t=${timestamp}`;
         setIsUploadingImage(false);
       }
 
