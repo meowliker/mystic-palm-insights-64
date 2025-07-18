@@ -70,8 +70,12 @@ const AuthForm = ({ mode, onModeChange, onSuccess }: AuthFormProps) => {
             variant: "destructive"
           });
         } else {
+          // Get user data after successful login to access full_name from metadata
+          const { data: { user } } = await supabase.auth.getUser();
+          const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'there';
+          
           toast({
-            title: `Welcome ${fullName || email.split('@')[0]}!`,
+            title: `Welcome ${userName}!`,
             description: "You've successfully signed in."
           });
           onSuccess();
