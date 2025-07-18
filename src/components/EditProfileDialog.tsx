@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -6,11 +6,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { User, Lock, Mail, Calendar, Phone, MapPin, Camera, Eye, EyeOff } from 'lucide-react';
+import { User, Lock, Mail, Calendar, Phone, Camera, Eye, EyeOff, Shield, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { PhoneVerificationDialog } from '@/components/PhoneVerificationDialog';
 
 interface EditProfileDialogProps {
   children: React.ReactNode;
@@ -22,12 +22,17 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
   const [open, setOpen] = useState(false);
   
   // Profile form states
-  const [fullName, setFullName] = useState(user?.user_metadata?.full_name || '');
+  const [fullName, setFullName] = useState('');
   const [birthdate, setBirthdate] = useState('');
   const [gender, setGender] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [place, setPlace] = useState('');
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
+  const [profilePictureUrl, setProfilePictureUrl] = useState<string>('');
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  
+  // Verification dialog state
+  const [showVerificationDialog, setShowVerificationDialog] = useState(false);
+  const [showForgotPasswordDialog, setShowForgotPasswordDialog] = useState(false);
   
   // Password form states
   const [currentPassword, setCurrentPassword] = useState('');
@@ -41,23 +46,88 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isSendingResetEmail, setIsSendingResetEmail] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+  // Load profile data on mount
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user) return;
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      
+      if (profile) {
+        setFullName(profile.full_name || '');
+        setBirthdate(profile.birthdate || '');
+        setGender(profile.gender || '');
+        setPhoneNumber(profile.phone_number || '');
+        setProfilePictureUrl(profile.profile_picture_url || '');
+        setPhoneVerified(profile.phone_verified || false);
+      }
+    };
+
+    if (open) {
+      loadProfile();
+    }
+  }, [user, open]);
 
   const handleProfileUpdate = async () => {
     if (!user) return;
     
     setIsUpdatingProfile(true);
     try {
-      const { error } = await supabase.auth.updateUser({
-        data: {
+      let uploadedImageUrl = profilePictureUrl;
+
+      // Upload profile picture if a new one is selected
+      if (profilePicture) {
+        setIsUploadingImage(true);
+        const fileExt = profilePicture.name.split('.').pop();
+        const fileName = `${user.id}/profile.${fileExt}`;
+
+        // Upload to storage
+        const { error: uploadError } = await supabase.storage
+          .from('profiles')
+          .upload(fileName, profilePicture, { upsert: true });
+
+        if (uploadError) throw uploadError;
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('profiles')
+          .getPublicUrl(fileName);
+
+        uploadedImageUrl = publicUrl;
+        setIsUploadingImage(false);
+      }
+
+      // Update profile in database
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          email: user.email!,
           full_name: fullName,
-          birthdate,
-          gender,
-          phone_number: phoneNumber,
-          place
-        }
+          birthdate: birthdate || null,
+          gender: gender || null,
+          phone_number: phoneNumber || null,
+          profile_picture_url: uploadedImageUrl || null,
+          phone_verified: phoneVerified
+        });
+
+      if (profileError) throw profileError;
+
+      // Update auth metadata
+      const { error: authError } = await supabase.auth.updateUser({
+        data: { full_name: fullName }
       });
 
-      if (error) throw error;
+      if (authError) throw authError;
+
+      setProfilePictureUrl(uploadedImageUrl);
+      setProfilePicture(null);
 
       toast({
         title: "Profile Updated",
@@ -71,6 +141,7 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
       });
     } finally {
       setIsUpdatingProfile(false);
+      setIsUploadingImage(false);
     }
   };
 
@@ -154,6 +225,8 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
         title: "Reset Email Sent",
         description: "Please check your email for password reset instructions.",
       });
+      
+      setShowForgotPasswordDialog(false);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -162,6 +235,40 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
       });
     } finally {
       setIsSendingResetEmail(false);
+    }
+  };
+
+  const handleRemoveProfilePicture = async () => {
+    if (!user || !profilePictureUrl) return;
+
+    try {
+      // Remove from storage if it exists
+      if (profilePictureUrl.includes('profiles/')) {
+        const fileName = `${user.id}/profile.${profilePictureUrl.split('.').pop()}`;
+        await supabase.storage.from('profiles').remove([fileName]);
+      }
+
+      // Update profile in database
+      const { error } = await supabase
+        .from('profiles')
+        .update({ profile_picture_url: null })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      setProfilePictureUrl('');
+      setProfilePicture(null);
+
+      toast({
+        title: "Profile Picture Removed",
+        description: "Your profile picture has been removed.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to remove profile picture.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -216,15 +323,37 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
                     Profile Picture
                   </Label>
                   <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 bg-mystical rounded-full flex items-center justify-center">
-                      <User className="h-8 w-8 text-primary-foreground" />
+                    <div className="relative w-16 h-16 rounded-full overflow-hidden bg-mystical flex items-center justify-center">
+                      {profilePictureUrl || profilePicture ? (
+                        <>
+                          <img 
+                            src={profilePicture ? URL.createObjectURL(profilePicture) : profilePictureUrl} 
+                            alt="Profile" 
+                            className="w-full h-full object-cover"
+                          />
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            className="absolute -top-2 -right-2 w-6 h-6 rounded-full p-0"
+                            onClick={handleRemoveProfilePicture}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </>
+                      ) : (
+                        <User className="h-8 w-8 text-primary-foreground" />
+                      )}
                     </div>
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleProfilePictureChange}
-                      className="flex-1"
-                    />
+                    <div className="flex-1">
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleProfilePictureChange}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Upload a profile picture (JPG, PNG)
+                      </p>
+                    </div>
                   </div>
                 </div>
 
@@ -275,34 +404,44 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
                     <Phone className="h-4 w-4" />
                     Phone Number
                   </Label>
-                  <Input
-                    id="phoneNumber"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    placeholder="Enter your phone number"
-                  />
-                </div>
-
-                {/* Place */}
-                <div className="space-y-2">
-                  <Label htmlFor="place" className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4" />
-                    Location
-                  </Label>
-                  <Input
-                    id="place"
-                    value={place}
-                    onChange={(e) => setPlace(e.target.value)}
-                    placeholder="Enter your location"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      id="phoneNumber"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      placeholder="Enter your phone number"
+                      disabled={phoneVerified}
+                      className={phoneVerified ? "bg-muted" : ""}
+                    />
+                    {phoneVerified ? (
+                      <Button variant="outline" disabled className="shrink-0">
+                        <Shield className="h-4 w-4 mr-2 text-green-500" />
+                        Verified
+                      </Button>
+                    ) : (
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setShowVerificationDialog(true)}
+                        disabled={!phoneNumber}
+                        className="shrink-0"
+                      >
+                        Verify
+                      </Button>
+                    )}
+                  </div>
+                  {phoneVerified && (
+                    <p className="text-xs text-muted-foreground">
+                      Phone number is verified and cannot be changed
+                    </p>
+                  )}
                 </div>
 
                 <Button 
                   onClick={handleProfileUpdate} 
-                  disabled={isUpdatingProfile}
+                  disabled={isUpdatingProfile || isUploadingImage}
                   className="w-full"
                 >
-                  {isUpdatingProfile ? 'Updating...' : 'Update Profile'}
+                  {isUploadingImage ? 'Uploading Image...' : isUpdatingProfile ? 'Updating...' : 'Update Profile'}
                 </Button>
               </div>
             </Card>
@@ -392,25 +531,50 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
                 >
                   {isChangingPassword ? 'Changing...' : 'Change Password'}
                 </Button>
+
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setShowForgotPasswordDialog(true)}
+                  className="w-full text-sm"
+                >
+                  Forgot Password?
+                </Button>
               </div>
             </Card>
+          </TabsContent>
+        </Tabs>
 
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Forgot Password?</h3>
-              <p className="text-muted-foreground mb-4">
+        {/* Phone Verification Dialog */}
+        <PhoneVerificationDialog
+          open={showVerificationDialog}
+          onOpenChange={setShowVerificationDialog}
+          phoneNumber={phoneNumber}
+          onVerificationComplete={() => {
+            setPhoneVerified(true);
+            handleProfileUpdate();
+          }}
+        />
+
+        {/* Forgot Password Dialog */}
+        <Dialog open={showForgotPasswordDialog} onOpenChange={setShowForgotPasswordDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Reset Password</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-muted-foreground">
                 Send a password reset email to your registered email address.
               </p>
               <Button 
-                variant="outline" 
                 onClick={handleForgotPassword}
                 disabled={isSendingResetEmail}
                 className="w-full"
               >
-                {isSendingResetEmail ? 'Sending...' : 'Send Reset Email'}
+                {isSendingResetEmail ? 'Sending...' : 'Reset Password through Email'}
               </Button>
-            </Card>
-          </TabsContent>
-        </Tabs>
+            </div>
+          </DialogContent>
+        </Dialog>
       </DialogContent>
     </Dialog>
   );

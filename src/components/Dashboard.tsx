@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,43 @@ import constellationPattern from '@/assets/constellation-pattern.jpg';
 import { useScans } from '@/hooks/useScans';
 import { useAuth } from '@/hooks/useAuth';
 import { EditProfileDialog } from '@/components/EditProfileDialog';
+import { supabase } from '@/integrations/supabase/client';
+
+const ProfilePicture = ({ userId }: { userId?: string }) => {
+  const [profilePictureUrl, setProfilePictureUrl] = useState<string>('');
+
+  useEffect(() => {
+    const loadProfilePicture = async () => {
+      if (!userId) return;
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('profile_picture_url')
+        .eq('id', userId)
+        .single();
+      
+      if (profile?.profile_picture_url) {
+        setProfilePictureUrl(profile.profile_picture_url);
+      }
+    };
+
+    loadProfilePicture();
+  }, [userId]);
+
+  return (
+    <div className="w-16 h-16 rounded-full mx-auto mb-4 overflow-hidden bg-mystical flex items-center justify-center">
+      {profilePictureUrl ? (
+        <img 
+          src={profilePictureUrl} 
+          alt="Profile" 
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        <User className="h-8 w-8 text-primary-foreground" />
+      )}
+    </div>
+  );
+};
 
 const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
   const [activeTab, setActiveTab] = useState<'readings' | 'horoscope' | 'blog'>('readings');
@@ -216,9 +253,7 @@ const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
           <div className="space-y-6">
             {/* Profile Card */}
             <Card className="p-6 bg-card/80 backdrop-blur-sm text-center">
-              <div className="w-16 h-16 bg-mystical rounded-full mx-auto mb-4 flex items-center justify-center">
-                <User className="h-8 w-8 text-primary-foreground" />
-              </div>
+              <ProfilePicture userId={user?.id} />
               <h3 className="font-semibold text-foreground mb-4">{user?.user_metadata?.full_name || 'Cosmic Explorer'}</h3>
               <div className="space-y-2">
                 <EditProfileDialog>
