@@ -48,15 +48,15 @@ const Index = () => {
 
   switch (currentScreen) {
     case 'welcome':
-      return <WelcomeScreen onStartScan={handleStartScan} />;
+      return <WelcomeScreen onStartScan={handleStartScan} onGoToDashboard={handleGoToDashboard} />;
     case 'scanner':
-      return user ? <PalmScanner onScanComplete={handleScanComplete} /> : <WelcomeScreen onStartScan={handleStartScan} />;
+      return user ? <PalmScanner onScanComplete={handleScanComplete} /> : <WelcomeScreen onStartScan={handleStartScan} onGoToDashboard={handleGoToDashboard} />;
     case 'results':
-      return user ? <ResultsScreen onGoToDashboard={handleGoToDashboard} /> : <WelcomeScreen onStartScan={handleStartScan} />;
+      return user ? <ResultsScreen onGoToDashboard={handleGoToDashboard} /> : <WelcomeScreen onStartScan={handleStartScan} onGoToDashboard={handleGoToDashboard} />;
     case 'dashboard':
-      return user ? <Dashboard onStartScan={handleStartScan} /> : <WelcomeScreen onStartScan={handleStartScan} />;
+      return user ? <Dashboard onStartScan={handleStartScan} /> : <WelcomeScreen onStartScan={handleStartScan} onGoToDashboard={handleGoToDashboard} />;
     default:
-      return <WelcomeScreen onStartScan={handleStartScan} />;
+      return <WelcomeScreen onStartScan={handleStartScan} onGoToDashboard={handleGoToDashboard} />;
   }
 };
 

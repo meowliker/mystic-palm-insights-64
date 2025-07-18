@@ -4,16 +4,19 @@ import { Button } from '@/components/ui/button';
 import { Gem, Sparkles, Star, Moon, LogOut, User } from 'lucide-react';
 import AuthForm from '@/components/AuthForm';
 import { useAuth } from '@/hooks/useAuth';
+import { useScans } from '@/hooks/useScans';
 
 interface WelcomeScreenProps {
   onStartScan: () => void;
+  onGoToDashboard: () => void;
 }
 
-const WelcomeScreen = ({ onStartScan }: WelcomeScreenProps) => {
+const WelcomeScreen = ({ onStartScan, onGoToDashboard }: WelcomeScreenProps) => {
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
   const [showSwitchAccounts, setShowSwitchAccounts] = useState(false);
   const { user, loading, signOut } = useAuth();
+  const { hasScans, loading: scansLoading } = useScans();
 
   if (loading) {
     return (
@@ -62,6 +65,7 @@ const WelcomeScreen = ({ onStartScan }: WelcomeScreenProps) => {
               onModeChange={setAuthMode}
               onSuccess={() => {
                 setShowAuth(false);
+                // For new users after auth, always go to scanner first
                 onStartScan();
               }}
             />
@@ -129,13 +133,14 @@ const WelcomeScreen = ({ onStartScan }: WelcomeScreenProps) => {
             {user ? (
               <>
                 <Button
-                  onClick={onStartScan}
+                  onClick={hasScans ? onGoToDashboard : onStartScan}
                   size="lg"
                   variant="glow"
                   className="text-lg px-8 py-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                  disabled={scansLoading}
                 >
                   <Gem className="mr-2 h-5 w-5" />
-                  Go to Your Dashboard
+                  {scansLoading ? 'Loading...' : hasScans ? 'Go to Your Dashboard' : 'Scan Your Palm'}
                 </Button>
                 <div className="text-center space-y-2">
                   <Button
