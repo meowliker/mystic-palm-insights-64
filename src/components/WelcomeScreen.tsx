@@ -62,12 +62,8 @@ const WelcomeScreen = ({ onStartScan, onGoToDashboard }: WelcomeScreenProps) => 
               onModeChange={setAuthMode}
               onSuccess={() => {
                 setShowAuth(false);
-                // Login goes to dashboard, signup goes to scanner
-                if (authMode === 'login') {
-                  onGoToDashboard();
-                } else {
-                  onStartScan();
-                }
+                // Both login and signup go to dashboard
+                onGoToDashboard();
               }}
             />
           </div>
