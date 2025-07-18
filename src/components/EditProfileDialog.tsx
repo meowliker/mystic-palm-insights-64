@@ -346,7 +346,7 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
       }
 
       // Delete the user from auth (this will cascade delete all related data)
-      const { error: deleteUserError } = await supabase.rpc('delete_user_account', { user_id: user.id });
+      const { error: deleteUserError } = await supabase.rpc('delete_user_account', { target_user_id: user.id });
       
       if (deleteUserError) {
         console.error('Error deleting user account:', deleteUserError);
@@ -380,11 +380,11 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl h-[80vh] overflow-y-auto flex flex-col">
         <DialogDescription className="sr-only">
           Edit your profile information, security settings, and account preferences.
         </DialogDescription>
-        <DialogHeader>
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
             Edit Profile

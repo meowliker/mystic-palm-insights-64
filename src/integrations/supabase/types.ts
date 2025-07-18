@@ -101,7 +101,7 @@ export type Database = {
     }
     Functions: {
       delete_user_account: {
-        Args: { user_id: string }
+        Args: { target_user_id: string }
         Returns: undefined
       }
     }
