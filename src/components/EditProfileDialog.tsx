@@ -29,6 +29,7 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
   const [profilePictureUrl, setProfilePictureUrl] = useState<string>('');
   const [phoneVerified, setPhoneVerified] = useState(false);
+  const [pendingRemoval, setPendingRemoval] = useState(false);
   
   // Verification dialog state
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
@@ -66,6 +67,7 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
         setPhoneNumber(profile.phone_number || '');
         setProfilePictureUrl(profile.profile_picture_url || '');
         setPhoneVerified(profile.phone_verified || false);
+        setPendingRemoval(false);
       }
     };
 
@@ -101,6 +103,17 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
 
         uploadedImageUrl = publicUrl;
         setIsUploadingImage(false);
+      }
+
+      // Handle profile picture removal
+      if (pendingRemoval) {
+        // Remove from storage if it exists
+        if (profilePictureUrl && profilePictureUrl.includes('profiles/')) {
+          const fileName = `${user.id}/profile.${profilePictureUrl.split('.').pop()}`;
+          await supabase.storage.from('profiles').remove([fileName]);
+        }
+        uploadedImageUrl = '';
+        setPendingRemoval(false);
       }
 
       // Update profile in database
@@ -238,38 +251,9 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
     }
   };
 
-  const handleRemoveProfilePicture = async () => {
-    if (!user || !profilePictureUrl) return;
-
-    try {
-      // Remove from storage if it exists
-      if (profilePictureUrl.includes('profiles/')) {
-        const fileName = `${user.id}/profile.${profilePictureUrl.split('.').pop()}`;
-        await supabase.storage.from('profiles').remove([fileName]);
-      }
-
-      // Update profile in database
-      const { error } = await supabase
-        .from('profiles')
-        .update({ profile_picture_url: null })
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      setProfilePictureUrl('');
-      setProfilePicture(null);
-
-      toast({
-        title: "Profile Picture Removed",
-        description: "Your profile picture has been removed.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to remove profile picture.",
-        variant: "destructive",
-      });
-    }
+  const handleRemoveProfilePicture = () => {
+    setPendingRemoval(true);
+    setProfilePicture(null);
   };
 
   const handleProfilePictureChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -301,7 +285,7 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
           <TabsContent value="profile" className="space-y-6">
             <Card className="p-6">
               <div className="space-y-4">
-                {/* Email (unchangeable) */}
+                 {/* Email (unchangeable) */}
                 <div className="space-y-2">
                   <Label htmlFor="email" className="flex items-center gap-2">
                     <Mail className="h-4 w-4" />
@@ -313,7 +297,6 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
                     disabled
                     className="bg-muted"
                   />
-                  <p className="text-xs text-muted-foreground">Email cannot be changed</p>
                 </div>
 
                 {/* Profile Picture */}
@@ -324,33 +307,33 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
                   </Label>
                   <div className="flex items-center gap-4">
                     <div className="relative w-16 h-16 rounded-full overflow-hidden bg-mystical flex items-center justify-center">
-                      {profilePictureUrl || profilePicture ? (
-                        <>
-                          <img 
-                            src={profilePicture ? URL.createObjectURL(profilePicture) : profilePictureUrl} 
-                            alt="Profile" 
-                            className="w-full h-full object-cover"
-                          />
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            className="absolute -top-2 -right-2 w-6 h-6 rounded-full p-0"
-                            onClick={handleRemoveProfilePicture}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </>
+                      {(profilePictureUrl && !pendingRemoval) || profilePicture ? (
+                        <img 
+                          src={profilePicture ? URL.createObjectURL(profilePicture) : profilePictureUrl} 
+                          alt="Profile" 
+                          className="w-full h-full object-cover"
+                        />
                       ) : (
                         <User className="h-8 w-8 text-primary-foreground" />
                       )}
                     </div>
                     <div className="flex-1 space-y-2">
-                      <Input
+                      <input
                         type="file"
                         accept="image/*"
                         onChange={handleProfilePictureChange}
+                        className="hidden"
+                        id="profile-picture-input"
                       />
-                      {(profilePictureUrl || profilePicture) && (
+                      <Button
+                        variant="outline"
+                        onClick={() => document.getElementById('profile-picture-input')?.click()}
+                        className="w-full"
+                      >
+                        <Camera className="h-4 w-4 mr-2" />
+                        Change Profile
+                      </Button>
+                      {((profilePictureUrl && !pendingRemoval) || profilePicture) && (
                         <Button
                           variant="outline"
                           size="sm"
