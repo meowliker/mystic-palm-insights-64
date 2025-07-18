@@ -323,6 +323,13 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
         return;
       }
 
+      // Get the current profile data for email before deletion
+      const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .single();
+
       // Delete user's profile data
       const { error: profileError } = await supabase
         .from('profiles')
@@ -345,6 +352,19 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
         await supabase.storage.from('profiles').remove([fileName]);
       }
 
+      // Send account deletion confirmation email
+      try {
+        await supabase.functions.invoke('send-account-deletion-email', {
+          body: {
+            email: user.email,
+            fullName: currentProfile?.full_name
+          }
+        });
+      } catch (emailError) {
+        console.error('Failed to send deletion confirmation email:', emailError);
+        // Don't block account deletion if email fails
+      }
+
       // Delete the user from auth (this will cascade delete all related data)
       const { error: deleteUserError } = await supabase.rpc('delete_user_account', { target_user_id: user.id });
       
@@ -358,7 +378,7 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
 
       toast({
         title: "Account Deleted",
-        description: "Your account and all data have been deleted successfully. Redirecting to welcome page...",
+        description: "Your account and all data have been deleted successfully. A confirmation email has been sent. Redirecting to welcome page...",
       });
 
       // Close the dialog
