@@ -56,6 +56,8 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  console.log('DeepSeek API Key exists:', !!deepseekApiKey);
+
   try {
     const { zodiacSign, name, birthDate, birthTime, birthPlace, method } = await req.json();
     
@@ -127,10 +129,14 @@ serve(async (req) => {
       }),
     });
 
+    console.log('API Response status:', response.status);
+    
     const data = await response.json();
+    console.log('API Response data:', data);
     
     if (!response.ok) {
-      throw new Error(data.error?.message || 'Failed to generate horoscope');
+      console.error('API Error:', data);
+      throw new Error(data.error?.message || data.message || 'Failed to generate horoscope');
     }
 
     const generatedContent = data.choices[0].message.content;
