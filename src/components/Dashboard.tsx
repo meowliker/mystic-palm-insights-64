@@ -162,16 +162,25 @@ const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
   };
 
   const handleClearAllScans = async () => {
-    const success = await clearAllScans();
-    if (success) {
-      toast({
-        title: "History cleared",
-        description: "All palm readings have been deleted successfully."
-      });
-    } else {
+    try {
+      const success = await clearAllScans();
+      if (success) {
+        toast({
+          title: "History cleared",
+          description: "All palm readings have been deleted successfully."
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to clear history. Please try again.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error clearing scans:', error);
       toast({
         title: "Error",
-        description: "Failed to clear reading history. Please try again.",
+        description: "Failed to clear history. Please try again.",
         variant: "destructive"
       });
     }
@@ -334,10 +343,10 @@ const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
                     <div className="flex justify-between items-center">
                       <h3 className="text-lg font-semibold">Recent Readings</h3>
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
                         onClick={handleClearAllScans}
-                        className="text-red-600 border-red-200 hover:bg-red-50 flex items-center gap-2"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 flex items-center gap-2"
                       >
                         <AlertTriangle className="h-4 w-4" />
                         Clear All History
