@@ -128,15 +128,26 @@ const WelcomeScreen = ({ onStartScan, onGoToDashboard }: WelcomeScreenProps) => 
           {/* CTA Buttons */}
           <div className="space-y-4">
             {user ? (
-              <Button
-                onClick={onStartScan}
-                size="lg"
-                variant="glow"
-                className="text-lg px-8 py-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-              >
-                <Gem className="mr-2 h-5 w-5" />
-                Begin Your Journey
-              </Button>
+              <div className="space-y-4">
+                <Button
+                  onClick={onGoToDashboard}
+                  size="lg"
+                  variant="glow"
+                  className="text-lg px-8 py-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                >
+                  <Gem className="mr-2 h-5 w-5" />
+                  Go to Dashboard
+                </Button>
+                <div className="text-center">
+                  <Button
+                    variant="ghost"
+                    onClick={signOut}
+                    className="text-purple-200 hover:text-white"
+                  >
+                    Sign Out
+                  </Button>
+                </div>
+              </div>
             ) : (
               <>
                 <Button
