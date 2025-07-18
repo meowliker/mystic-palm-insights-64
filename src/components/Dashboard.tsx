@@ -332,16 +332,23 @@ const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
 
               {activeTab === 'blog' && (
                 <div className="space-y-4">
-                  <Card className="p-6 bg-card/80 backdrop-blur-sm hover:shadow-mystical transition-all">
-                    <h3 className="font-semibold text-foreground mb-2">Understanding Your Palm Lines</h3>
-                    <p className="text-muted-foreground mb-3">Discover the ancient art of palmistry and what each line reveals about your cosmic journey.</p>
-                    <Button variant="outline" size="sm">Read More</Button>
-                  </Card>
-                  <Card className="p-6 bg-card/80 backdrop-blur-sm hover:shadow-mystical transition-all">
-                    <h3 className="font-semibold text-foreground mb-2">Mercury Retrograde Guide</h3>
-                    <p className="text-muted-foreground mb-3">Navigate cosmic challenges with wisdom from your palm readings during planetary transitions.</p>
-                    <Button variant="outline" size="sm">Read More</Button>
-                  </Card>
+                  <div className="text-center space-y-4">
+                    <div className="text-6xl mb-4">📝</div>
+                    <h3 className="text-xl font-semibold text-foreground">Astrology Blog</h3>
+                    <p className="text-muted-foreground">
+                      Share your cosmic insights and read what others have discovered about astrology
+                    </p>
+                    <div className="flex gap-4 justify-center">
+                      <Button onClick={() => window.location.href = '/blogs'} variant="default">
+                        <BookOpen className="h-4 w-4 mr-2" />
+                        Read Blogs
+                      </Button>
+                      <Button onClick={() => window.location.href = '/blogs/create'} variant="outline">
+                        <BookOpen className="h-4 w-4 mr-2" />
+                        Write Blog
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
