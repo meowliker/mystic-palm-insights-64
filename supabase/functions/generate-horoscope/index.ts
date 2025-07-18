@@ -57,6 +57,16 @@ serve(async (req) => {
   }
 
   console.log('DeepSeek API Key exists:', !!deepseekApiKey);
+  
+  if (!deepseekApiKey) {
+    console.error('DeepSeek API key is not set');
+    return new Response(JSON.stringify({ 
+      error: 'DeepSeek API key is not configured' 
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
 
   try {
     const { zodiacSign, name, birthDate, birthTime, birthPlace, method } = await req.json();
