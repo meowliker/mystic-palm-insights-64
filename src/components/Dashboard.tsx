@@ -16,27 +16,27 @@ import {
   Clock
 } from 'lucide-react';
 import constellationPattern from '@/assets/constellation-pattern.jpg';
+import { useScans } from '@/hooks/useScans';
+import { useAuth } from '@/hooks/useAuth';
 
 const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
   const [activeTab, setActiveTab] = useState<'readings' | 'horoscope' | 'blog'>('readings');
+  const { scans } = useScans();
+  const { user } = useAuth();
 
-  // Mock data
-  const recentReadings = [
-    {
-      id: 1,
-      date: '2025-01-17',
-      time: '14:30',
-      lines: ['Life Line', 'Heart Line', 'Head Line'],
-      insights: 'Strong life force with emotional depth'
-    },
-    {
-      id: 2,
-      date: '2025-01-15',
-      time: '09:15',
-      lines: ['Fate Line', 'Heart Line'],
-      insights: 'Career changes aligned with passion'
-    }
-  ];
+  // Format scans for display
+  const recentReadings = scans.map((scan) => ({
+    id: scan.id,
+    date: new Date(scan.scan_date).toLocaleDateString(),
+    time: new Date(scan.scan_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    lines: [
+      scan.life_line_strength && `Life Line (${scan.life_line_strength})`,
+      scan.heart_line_strength && `Heart Line (${scan.heart_line_strength})`,
+      scan.head_line_strength && `Head Line (${scan.head_line_strength})`,
+      scan.fate_line_strength && `Fate Line (${scan.fate_line_strength})`
+    ].filter(Boolean),
+    insights: scan.overall_insight
+  }));
 
   const todayHoroscope = {
     sign: 'Aquarius',
@@ -52,7 +52,7 @@ const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Welcome back, Sarah</h1>
+              <h1 className="text-2xl font-bold text-foreground">Welcome back, {user?.user_metadata?.full_name || 'Cosmic Explorer'}</h1>
               <p className="text-muted-foreground">Ready to explore your cosmic destiny?</p>
             </div>
             <Button 
@@ -75,7 +75,7 @@ const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <Card className="p-4 text-center bg-card/80 backdrop-blur-sm">
                 <History className="h-6 w-6 text-primary mx-auto mb-2" />
-                <div className="text-2xl font-bold text-foreground">12</div>
+                <div className="text-2xl font-bold text-foreground">{scans.length}</div>
                 <div className="text-xs text-muted-foreground">Total Readings</div>
               </Card>
               <Card className="p-4 text-center bg-card/80 backdrop-blur-sm">
@@ -124,7 +124,7 @@ const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
               {/* Tab Content */}
               {activeTab === 'readings' && (
                 <div className="space-y-4">
-                  {recentReadings.map((reading) => (
+                  {recentReadings.length > 0 ? recentReadings.map((reading) => (
                     <Card key={reading.id} className="p-6 bg-card/80 backdrop-blur-sm hover:shadow-mystical transition-all">
                       <div className="flex justify-between items-start mb-4">
                         <div>
@@ -134,7 +134,7 @@ const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
                               {reading.date} at {reading.time}
                             </span>
                           </div>
-                          <h3 className="font-semibold text-foreground">Palm Reading #{reading.id}</h3>
+                          <h3 className="font-semibold text-foreground">Palm Reading</h3>
                         </div>
                         <Button variant="outline" size="sm">View Details</Button>
                       </div>
@@ -150,7 +150,19 @@ const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
                         <p className="text-muted-foreground">{reading.insights}</p>
                       </div>
                     </Card>
-                  ))}
+                  )) : (
+                    <Card className="p-8 bg-card/80 backdrop-blur-sm text-center">
+                      <div className="space-y-4">
+                        <Scan className="h-12 w-12 text-muted-foreground mx-auto" />
+                        <h3 className="text-lg font-semibold text-foreground">No scans yet</h3>
+                        <p className="text-muted-foreground">Start your cosmic journey with your first palm reading!</p>
+                        <Button onClick={onStartScan} variant="glow">
+                          <Scan className="h-4 w-4 mr-2" />
+                          Get Your First Reading
+                        </Button>
+                      </div>
+                    </Card>
+                  )}
                 </div>
               )}
 
@@ -206,8 +218,8 @@ const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
               <div className="w-16 h-16 bg-mystical rounded-full mx-auto mb-4 flex items-center justify-center">
                 <User className="h-8 w-8 text-primary-foreground" />
               </div>
-              <h3 className="font-semibold text-foreground mb-1">Sarah Mitchell</h3>
-              <p className="text-sm text-muted-foreground mb-4">Aquarius ♒ • Premium Member</p>
+              <h3 className="font-semibold text-foreground mb-1">{user?.user_metadata?.full_name || 'Cosmic Explorer'}</h3>
+              <p className="text-sm text-muted-foreground mb-4">{user?.email}</p>
               <div className="space-y-2">
                 <Button variant="outline" size="sm" className="w-full">
                   <User className="h-4 w-4 mr-2" />

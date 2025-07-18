@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,8 +12,10 @@ import {
   ArrowRight,
   Sparkles
 } from 'lucide-react';
+import { useScans } from '@/hooks/useScans';
 
 const ResultsScreen = ({ onGoToDashboard }: { onGoToDashboard: () => void }) => {
+  const { saveScan } = useScans();
   const palmResults = {
     lifeLine: {
       strength: 'Strong',
@@ -37,6 +40,29 @@ const ResultsScreen = ({ onGoToDashboard }: { onGoToDashboard: () => void }) => 
   };
 
   const overallInsight = "Your palm reveals a harmonious balance between emotional depth, intellectual clarity, and life force energy. The cosmic patterns suggest a period of growth and self-discovery ahead.";
+
+  // Save scan results to database when component mounts
+  useEffect(() => {
+    const saveCurrentScan = async () => {
+      const scanData = {
+        life_line_strength: palmResults.lifeLine.strength,
+        heart_line_strength: palmResults.heartLine.strength,
+        head_line_strength: palmResults.headLine.strength,
+        fate_line_strength: palmResults.fateLine.strength,
+        overall_insight: overallInsight,
+        traits: {
+          lifeLine: palmResults.lifeLine.traits,
+          heartLine: palmResults.heartLine.traits,
+          headLine: palmResults.headLine.traits,
+          fateLine: palmResults.fateLine.traits
+        }
+      };
+
+      await saveScan(scanData);
+    };
+
+    saveCurrentScan();
+  }, [saveScan]);
 
   return (
     <div className="min-h-screen bg-background">

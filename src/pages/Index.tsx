@@ -5,21 +5,30 @@ import PalmScanner from '@/components/PalmScanner';
 import ResultsScreen from '@/components/ResultsScreen';
 import Dashboard from '@/components/Dashboard';
 import { useAuth } from '@/hooks/useAuth';
+import { useScans } from '@/hooks/useScans';
 
 type AppState = 'welcome' | 'scanner' | 'results' | 'dashboard';
 
 const Index = () => {
   const [currentScreen, setCurrentScreen] = useState<AppState>('welcome');
   const { user, loading } = useAuth();
+  const { hasScans, loading: scansLoading } = useScans();
 
-  // Redirect to welcome if user is not authenticated
+  // Redirect logic based on user authentication and scan history
   useEffect(() => {
-    if (!loading) {
+    if (!loading && !scansLoading) {
       if (!user && currentScreen !== 'welcome') {
         setCurrentScreen('welcome');
+      } else if (user && currentScreen === 'welcome') {
+        // If user is authenticated and on welcome screen, check for scan history
+        if (hasScans()) {
+          setCurrentScreen('dashboard');
+        } else {
+          setCurrentScreen('scanner');
+        }
       }
     }
-  }, [user, loading, currentScreen]);
+  }, [user, loading, scansLoading, currentScreen, hasScans]);
 
   const handleStartScan = () => {
     if (user) {
@@ -32,8 +41,8 @@ const Index = () => {
   const handleScanComplete = () => setCurrentScreen('results');
   const handleGoToDashboard = () => setCurrentScreen('dashboard');
 
-  // Show loading state while checking auth
-  if (loading) {
+  // Show loading state while checking auth and scans
+  if (loading || scansLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
