@@ -26,7 +26,7 @@ const handler = async (req: Request): Promise<Response> => {
     const displayName = fullName || email.split('@')[0];
 
     const emailResponse = await resend.emails.send({
-      from: "PalmCosmic <onboarding@resend.dev>",
+      from: "PalmCosmic <likermeow@gmail.com>",
       to: [email],
       subject: "Account Deletion Confirmation - PalmCosmic",
       html: `

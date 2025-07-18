@@ -71,7 +71,7 @@ const AuthForm = ({ mode, onModeChange, onSuccess }: AuthFormProps) => {
           });
         } else {
           toast({
-            title: "Welcome back!",
+            title: `Welcome ${fullName || email.split('@')[0]}!`,
             description: "You've successfully signed in."
           });
           onSuccess();
@@ -131,7 +131,7 @@ const AuthForm = ({ mode, onModeChange, onSuccess }: AuthFormProps) => {
         </div>
         
         <h2 className="text-2xl font-bold text-foreground">
-          {mode === 'signup' ? 'Create Your Account' : 'Welcome Back'}
+          {mode === 'signup' ? 'Create Your Account' : 'Sign In'}
         </h2>
         
         <form onSubmit={handleSubmit} className="space-y-4">
