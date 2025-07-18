@@ -54,7 +54,7 @@ const WelcomeScreen = ({ onStartScan, onGoToDashboard }: WelcomeScreenProps) => 
                 onClick={() => setShowAuth(false)}
                 className="mb-4 text-white/70 hover:text-white"
               >
-                ← Back to Welcome
+                ← Back
               </Button>
             </div>
             <AuthForm
