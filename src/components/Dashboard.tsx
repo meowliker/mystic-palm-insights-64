@@ -18,6 +18,7 @@ import {
 import constellationPattern from '@/assets/constellation-pattern.jpg';
 import { useScans } from '@/hooks/useScans';
 import { useAuth } from '@/hooks/useAuth';
+import { EditProfileDialog } from '@/components/EditProfileDialog';
 
 const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
   const [activeTab, setActiveTab] = useState<'readings' | 'horoscope' | 'blog'>('readings');
@@ -218,13 +219,14 @@ const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
               <div className="w-16 h-16 bg-mystical rounded-full mx-auto mb-4 flex items-center justify-center">
                 <User className="h-8 w-8 text-primary-foreground" />
               </div>
-              <h3 className="font-semibold text-foreground mb-1">{user?.user_metadata?.full_name || 'Cosmic Explorer'}</h3>
-              <p className="text-sm text-muted-foreground mb-4">{user?.email}</p>
+              <h3 className="font-semibold text-foreground mb-4">{user?.user_metadata?.full_name || 'Cosmic Explorer'}</h3>
               <div className="space-y-2">
-                <Button variant="outline" size="sm" className="w-full">
-                  <User className="h-4 w-4 mr-2" />
-                  Edit Profile
-                </Button>
+                <EditProfileDialog>
+                  <Button variant="outline" size="sm" className="w-full">
+                    <User className="h-4 w-4 mr-2" />
+                    Edit Profile
+                  </Button>
+                </EditProfileDialog>
                 <Button variant="ghost" size="sm" className="w-full">
                   <Settings className="h-4 w-4 mr-2" />
                   Settings
