@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useScans } from '@/hooks/useScans';
-import { Sparkles, Heart, Brain, TrendingUp, Star, ArrowRight, Calendar } from 'lucide-react';
+import { Sparkles, Heart, Brain, TrendingUp, Star, ArrowRight, Calendar, Zap } from 'lucide-react';
 
 interface ResultsScreenProps {
   onGoToDashboard: () => void;
@@ -61,7 +61,7 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
             <div className="text-center space-y-4">
               <h2 className="text-2xl font-bold text-foreground">Your Cosmic Overview</h2>
               <p className="text-lg text-muted-foreground leading-relaxed">
-                {overallInsight}
+                {palmResults.overall_insight}
               </p>
               <div className="flex justify-center gap-2">
                 <Star className="h-5 w-5 text-secondary fill-current" />
@@ -85,19 +85,12 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
                   <div className="flex items-center gap-2 mb-2">
                     <h3 className="font-semibold text-foreground">Life Line</h3>
                     <Badge variant="secondary" className="bg-primary/20 text-primary">
-                      {palmResults.lifeLine.strength}
+                      {palmResults.life_line_strength}
                     </Badge>
                   </div>
                   <p className="text-muted-foreground mb-3 text-sm">
-                    {palmResults.lifeLine.description}
+                    Represents vitality, health, and general life journey. Your life line indicates {palmResults.life_line_strength?.toLowerCase()} life force.
                   </p>
-                  <div className="flex flex-wrap gap-1">
-                    {palmResults.lifeLine.traits.map((trait) => (
-                      <Badge key={trait} variant="outline" className="text-xs">
-                        {trait}
-                      </Badge>
-                    ))}
-                  </div>
                 </div>
               </div>
             </Card>
@@ -112,19 +105,12 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
                   <div className="flex items-center gap-2 mb-2">
                     <h3 className="font-semibold text-foreground">Heart Line</h3>
                     <Badge variant="secondary" className="bg-accent/20 text-accent">
-                      {palmResults.heartLine.strength}
+                      {palmResults.heart_line_strength}
                     </Badge>
                   </div>
                   <p className="text-muted-foreground mb-3 text-sm">
-                    {palmResults.heartLine.description}
+                    Relates to emotions, relationships, and love life. Your heart line shows {palmResults.heart_line_strength?.toLowerCase()} emotional capacity.
                   </p>
-                  <div className="flex flex-wrap gap-1">
-                    {palmResults.heartLine.traits.map((trait) => (
-                      <Badge key={trait} variant="outline" className="text-xs">
-                        {trait}
-                      </Badge>
-                    ))}
-                  </div>
                 </div>
               </div>
             </Card>
@@ -139,19 +125,12 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
                   <div className="flex items-center gap-2 mb-2">
                     <h3 className="font-semibold text-foreground">Head Line</h3>
                     <Badge variant="secondary" className="bg-secondary/20 text-secondary">
-                      {palmResults.headLine.strength}
+                      {palmResults.head_line_strength}
                     </Badge>
                   </div>
                   <p className="text-muted-foreground mb-3 text-sm">
-                    {palmResults.headLine.description}
+                    Represents intellect, reasoning, and thought processes. Your head line suggests {palmResults.head_line_strength?.toLowerCase()} mental clarity.
                   </p>
-                  <div className="flex flex-wrap gap-1">
-                    {palmResults.headLine.traits.map((trait) => (
-                      <Badge key={trait} variant="outline" className="text-xs">
-                        {trait}
-                      </Badge>
-                    ))}
-                  </div>
                 </div>
               </div>
             </Card>
@@ -159,26 +138,19 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
             {/* Fate Line */}
             <Card className="p-6 bg-card/80 backdrop-blur-sm hover:shadow-mystical transition-all">
               <div className="flex items-start gap-4">
-                <div className="p-3 bg-primary-glow/10 rounded-lg">
-                  <TrendingUp className="h-6 w-6 text-primary-glow" />
+                <div className="p-3 bg-primary/10 rounded-lg">
+                  <TrendingUp className="h-6 w-6 text-primary" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <h3 className="font-semibold text-foreground">Fate Line</h3>
-                    <Badge variant="secondary" className="bg-primary-glow/20 text-primary-glow">
-                      {palmResults.fateLine.strength}
+                    <Badge variant="secondary" className="bg-primary/20 text-primary">
+                      {palmResults.fate_line_strength}
                     </Badge>
                   </div>
                   <p className="text-muted-foreground mb-3 text-sm">
-                    {palmResults.fateLine.description}
+                    Indicates destiny, life's path, and external influences. Your fate line shows {palmResults.fate_line_strength?.toLowerCase()} destiny connection.
                   </p>
-                  <div className="flex flex-wrap gap-1">
-                    {palmResults.fateLine.traits.map((trait) => (
-                      <Badge key={trait} variant="outline" className="text-xs">
-                        {trait}
-                      </Badge>
-                    ))}
-                  </div>
                 </div>
               </div>
             </Card>
