@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -345,6 +345,15 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
         await supabase.storage.from('profiles').remove([fileName]);
       }
 
+      // Delete the user from auth (this will cascade delete all related data)
+      const { error: deleteUserError } = await supabase.rpc('delete_user_account', { user_id: user.id });
+      
+      if (deleteUserError) {
+        console.error('Error deleting user account:', deleteUserError);
+        // If the RPC doesn't exist, we'll create it via migration
+        throw new Error('Account deletion failed. Please try again.');
+      }
+
       toast({
         title: "Account Deleted",
         description: "Your account and all data have been deleted successfully.",
@@ -371,7 +380,10 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl h-[80vh] overflow-y-auto">
+        <DialogDescription className="sr-only">
+          Edit your profile information, security settings, and account preferences.
+        </DialogDescription>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
