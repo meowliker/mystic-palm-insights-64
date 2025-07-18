@@ -230,12 +230,19 @@ const parsePalmReading = (aiResponse: string) => {
 };
 
 serve(async (req) => {
+  // Log all incoming requests
+  console.log('Request received:', req.method, req.url);
+  console.log('Request headers:', Object.fromEntries(req.headers.entries()));
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { palmImageUrl, zodiacSign, name, birthDate, birthTime, birthPlace, method } = await req.json();
+    const requestBody = await req.text();
+    console.log('Request body:', requestBody);
+    
+    const { palmImageUrl, zodiacSign, name, birthDate, birthTime, birthPlace, method } = JSON.parse(requestBody);
     
     // Check if this is a palm reading request or horoscope request
     if (palmImageUrl) {
@@ -250,8 +257,13 @@ serve(async (req) => {
       console.log('Parsed palm reading:', palmReading);
       
       // Save the palm reading to database
-      const userIdFromAuth = req.headers.get('authorization')?.includes('Bearer') ? 
-        req.headers.get('user-id') || 'anonymous' : 'anonymous';
+      const authHeader = req.headers.get('authorization');
+      const userIdHeader = req.headers.get('user-id');
+      
+      console.log('Auth header:', authHeader);
+      console.log('User-ID header:', userIdHeader);
+      
+      const userIdFromAuth = userIdHeader || 'anonymous';
       
       console.log('Attempting to save palm reading for user:', userIdFromAuth);
       
