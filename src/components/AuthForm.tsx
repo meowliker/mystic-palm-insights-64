@@ -56,8 +56,8 @@ const AuthForm = ({ mode, onModeChange, onSuccess }: AuthFormProps) => {
         const { error } = await signIn(email, password);
         if (error) {
           toast({
-            title: "Sign in failed",
-            description: error.message,
+            title: "Invalid credentials",
+            description: "Please check your email and password and try again.",
             variant: "destructive"
           });
         } else {
