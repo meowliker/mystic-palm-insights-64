@@ -5,6 +5,7 @@ import { Gem, Sparkles, Star, Moon, LogOut, User } from 'lucide-react';
 import AuthForm from '@/components/AuthForm';
 import { useAuth } from '@/hooks/useAuth';
 import { useScans } from '@/hooks/useScans';
+import { useToast } from '@/hooks/use-toast';
 
 interface WelcomeScreenProps {
   onStartScan: () => void;
@@ -17,6 +18,7 @@ const WelcomeScreen = ({ onStartScan, onGoToDashboard }: WelcomeScreenProps) => 
   const [showSwitchAccounts, setShowSwitchAccounts] = useState(false);
   const { user, loading, signOut } = useAuth();
   const { hasScans, loading: scansLoading } = useScans();
+  const { toast } = useToast();
 
   if (loading) {
     return (
@@ -65,8 +67,12 @@ const WelcomeScreen = ({ onStartScan, onGoToDashboard }: WelcomeScreenProps) => 
               onModeChange={setAuthMode}
               onSuccess={() => {
                 setShowAuth(false);
-                // For new users after auth, always go to scanner first
-                onStartScan();
+                // After successful login, go to scanner for new users or dashboard for existing users
+                if (hasScans) {
+                  onGoToDashboard();
+                } else {
+                  onStartScan();
+                }
               }}
             />
           </div>
@@ -133,7 +139,21 @@ const WelcomeScreen = ({ onStartScan, onGoToDashboard }: WelcomeScreenProps) => 
             {user ? (
               <>
                 <Button
-                  onClick={hasScans ? onGoToDashboard : onStartScan}
+                  onClick={() => {
+                    if (!user?.email_confirmed_at) {
+                      toast({
+                        title: "Please verify your email",
+                        description: "Check your email and click the verification link before proceeding.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    if (hasScans) {
+                      onGoToDashboard();
+                    } else {
+                      onStartScan();
+                    }
+                  }}
                   size="lg"
                   variant="glow"
                   className="text-lg px-8 py-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"

@@ -54,7 +54,7 @@ const AuthForm = ({ mode, onModeChange, onSuccess }: AuthFormProps) => {
             title: "Registration successful!",
             description: "Please check your email to verify your account."
           });
-          onSuccess();
+          // Don't call onSuccess for signup - let the auth state handle the redirect
         }
       } else {
         const { error } = await signIn(email, password);
