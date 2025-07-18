@@ -14,21 +14,14 @@ const Index = () => {
   const { user, loading } = useAuth();
   const { hasScans, loading: scansLoading } = useScans();
 
-  // Redirect logic based on user authentication and scan history
+  // Only redirect unauthenticated users away from protected screens
   useEffect(() => {
     if (!loading && !scansLoading) {
-      if (!user && currentScreen !== 'welcome') {
+      if (!user && (currentScreen === 'scanner' || currentScreen === 'results' || currentScreen === 'dashboard')) {
         setCurrentScreen('welcome');
-      } else if (user && currentScreen === 'welcome') {
-        // If user is authenticated and on welcome screen, check for scan history
-        if (hasScans()) {
-          setCurrentScreen('dashboard');
-        } else {
-          setCurrentScreen('scanner');
-        }
       }
     }
-  }, [user, loading, scansLoading, currentScreen, hasScans]);
+  }, [user, loading, scansLoading, currentScreen]);
 
   const handleStartScan = () => {
     if (user) {
