@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { 
   Scan, 
   Calendar, 
@@ -86,6 +87,7 @@ const ProfilePicture = ({ userId, onUpdate }: { userId?: string; onUpdate?: () =
 
 const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
   const [activeTab, setActiveTab] = useState<'readings' | 'horoscope' | 'blog'>('readings');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { scans } = useScans();
   const { user } = useAuth();
 
@@ -116,18 +118,90 @@ const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Welcome back, {user?.user_metadata?.full_name || 'Cosmic Explorer'}</h1>
-              <p className="text-muted-foreground">Ready to explore your cosmic destiny?</p>
+            <div className="flex-1">
+              <h1 className="text-xl md:text-2xl font-bold text-foreground">Welcome back, {user?.user_metadata?.full_name || 'Cosmic Explorer'}</h1>
+              <p className="text-muted-foreground hidden sm:block">Ready to explore your cosmic destiny?</p>
             </div>
-            <Button 
-              variant="glow" 
-              onClick={onStartScan}
-              className="gap-2"
-            >
-              <Scan className="h-4 w-4" />
-              New Scan
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="glow" 
+                onClick={onStartScan}
+                className="gap-2"
+                size="sm"
+              >
+                <Scan className="h-4 w-4" />
+                <span className="hidden sm:inline">New Scan</span>
+              </Button>
+              {/* Mobile Settings */}
+              <div className="lg:hidden">
+                <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+                  <SheetTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Settings className="h-4 w-4" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="right" className="w-80">
+                    <div className="space-y-6 pt-6">
+                      {/* Mobile Profile Card */}
+                      <Card className="p-6 bg-card/80 backdrop-blur-sm text-center">
+                        <ProfilePicture userId={user?.id} />
+                        <h3 className="font-semibold text-foreground mb-4">{user?.user_metadata?.full_name || 'Cosmic Explorer'}</h3>
+                        <div className="space-y-2">
+                          <EditProfileDialog>
+                            <Button variant="outline" size="sm" className="w-full" onClick={() => setSidebarOpen(false)}>
+                              <User className="h-4 w-4 mr-2" />
+                              Edit Profile
+                            </Button>
+                          </EditProfileDialog>
+                          <Button variant="ghost" size="sm" className="w-full">
+                            <Settings className="h-4 w-4 mr-2" />
+                            Settings
+                          </Button>
+                        </div>
+                      </Card>
+
+                      {/* Mobile Cosmic Profile */}
+                      <Card 
+                        className="p-6 bg-card/80 backdrop-blur-sm relative overflow-hidden"
+                        style={{
+                          backgroundImage: `url(${constellationPattern})`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center'
+                        }}
+                      >
+                        <div className="absolute inset-0 bg-background/80"></div>
+                        <div className="relative z-10">
+                          <h3 className="font-semibold text-foreground mb-4">Your Cosmic Profile</h3>
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-3">
+                              <Heart className="h-5 w-5 text-accent" />
+                              <div>
+                                <div className="text-sm font-medium text-foreground">Heart Line</div>
+                                <div className="text-xs text-muted-foreground">Strong emotional connections</div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <Brain className="h-5 w-5 text-primary" />
+                              <div>
+                                <div className="text-sm font-medium text-foreground">Head Line</div>
+                                <div className="text-xs text-muted-foreground">Analytical and creative</div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <Zap className="h-5 w-5 text-secondary" />
+                              <div>
+                                <div className="text-sm font-medium text-foreground">Life Line</div>
+                                <div className="text-xs text-muted-foreground">Vibrant life energy</div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              </div>
+            </div>
           </div>
         </div>
       </header>
@@ -276,8 +350,8 @@ const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
             </div>
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
+          {/* Desktop Sidebar */}
+          <div className="hidden lg:block space-y-6">
             {/* Profile Card */}
             <Card className="p-6 bg-card/80 backdrop-blur-sm text-center">
               <ProfilePicture userId={user?.id} />

@@ -260,6 +260,7 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
     const file = event.target.files?.[0];
     if (file) {
       setProfilePicture(file);
+      setPendingRemoval(false); // Clear any pending removal if new image is selected
     }
   };
 
@@ -305,18 +306,24 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
                     <Camera className="h-4 w-4" />
                     Profile Picture
                   </Label>
-                  <div className="flex items-center gap-4">
-                    <div className="relative w-16 h-16 rounded-full overflow-hidden bg-mystical flex items-center justify-center">
-                      {(profilePictureUrl && !pendingRemoval) || profilePicture ? (
-                        <img 
-                          src={profilePicture ? URL.createObjectURL(profilePicture) : profilePictureUrl} 
-                          alt="Profile" 
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <User className="h-8 w-8 text-primary-foreground" />
-                      )}
-                    </div>
+                   <div className="flex items-center gap-4">
+                     <div className="relative w-16 h-16 rounded-full overflow-hidden bg-mystical flex items-center justify-center">
+                       {profilePicture ? (
+                         <img 
+                           src={URL.createObjectURL(profilePicture)} 
+                           alt="Profile" 
+                           className="w-full h-full object-cover"
+                         />
+                       ) : (profilePictureUrl && !pendingRemoval) ? (
+                         <img 
+                           src={profilePictureUrl} 
+                           alt="Profile" 
+                           className="w-full h-full object-cover"
+                         />
+                       ) : (
+                         <User className="h-8 w-8 text-primary-foreground" />
+                       )}
+                     </div>
                     <div className="flex-1 space-y-2">
                       <input
                         type="file"
