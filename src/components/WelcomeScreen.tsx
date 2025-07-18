@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Gem, Sparkles, Star, Moon, LogOut, User } from 'lucide-react';
+import { Gem, Sparkles, Star, Moon } from 'lucide-react';
 import AuthForm from '@/components/AuthForm';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -13,7 +13,6 @@ interface WelcomeScreenProps {
 const WelcomeScreen = ({ onStartScan, onGoToDashboard }: WelcomeScreenProps) => {
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
-  const [showSwitchAccounts, setShowSwitchAccounts] = useState(false);
   const { user, loading, signOut } = useAuth();
 
   if (loading) {
@@ -128,56 +127,15 @@ const WelcomeScreen = ({ onStartScan, onGoToDashboard }: WelcomeScreenProps) => 
           {/* CTA Buttons */}
           <div className="space-y-4">
             {user ? (
-              <>
-                <Button
-                  onClick={onStartScan}
-                  size="lg"
-                  variant="glow"
-                  className="text-lg px-8 py-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-                >
-                  <Gem className="mr-2 h-5 w-5" />
-                  Begin Your Journey
-                </Button>
-                <div className="text-center space-y-2">
-                  <Button
-                    variant="ghost"
-                    onClick={() => setShowSwitchAccounts(!showSwitchAccounts)}
-                    className="text-purple-200 hover:text-white"
-                  >
-                    Switch Accounts
-                  </Button>
-                  {showSwitchAccounts && (
-                    <div className="space-y-2 p-4 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20">
-                      <Button
-                        onClick={async () => {
-                          await signOut();
-                          setAuthMode('login');
-                          setShowAuth(true);
-                          setShowSwitchAccounts(false);
-                        }}
-                        variant="ghost"
-                        className="w-full text-purple-200 hover:text-white"
-                      >
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Log into existing account
-                      </Button>
-                      <Button
-                        onClick={async () => {
-                          await signOut();
-                          setAuthMode('signup');
-                          setShowAuth(true);
-                          setShowSwitchAccounts(false);
-                        }}
-                        variant="ghost"
-                        className="w-full text-purple-200 hover:text-white"
-                      >
-                        <User className="mr-2 h-4 w-4" />
-                        Register
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </>
+              <Button
+                onClick={onStartScan}
+                size="lg"
+                variant="glow"
+                className="text-lg px-8 py-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+              >
+                <Gem className="mr-2 h-5 w-5" />
+                Begin Your Journey
+              </Button>
             ) : (
               <>
                 <Button
