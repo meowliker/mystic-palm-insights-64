@@ -32,10 +32,10 @@ const AuthForm = ({ mode, onModeChange, onSuccess }: AuthFormProps) => {
       if (mode === 'signup') {
         const { error } = await signUp(email, password, fullName);
         if (error) {
-          if (error.message.includes('already registered')) {
+          if (error.message.includes('already registered') || error.message.includes('already been registered')) {
             toast({
-              title: "Account already exists",
-              description: "This email is already registered. Please sign in instead.",
+              title: "User Already Exists",
+              description: "Please Login with Your Password",
               variant: "destructive"
             });
           } else {
