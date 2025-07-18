@@ -119,6 +119,8 @@ serve(async (req) => {
 
     Make it personal, positive, and actionable.`;
 
+    console.log('Making API request to DeepSeek...');
+    
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -140,14 +142,16 @@ serve(async (req) => {
     });
 
     console.log('API Response status:', response.status);
+    console.log('API Response headers:', Object.fromEntries(response.headers.entries()));
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('DeepSeek API Error:', errorText);
+      throw new Error(`DeepSeek API Error (${response.status}): ${errorText}`);
+    }
     
     const data = await response.json();
     console.log('API Response data:', data);
-    
-    if (!response.ok) {
-      console.error('API Error:', data);
-      throw new Error(data.error?.message || data.message || 'Failed to generate horoscope');
-    }
 
     const generatedContent = data.choices[0].message.content;
     
