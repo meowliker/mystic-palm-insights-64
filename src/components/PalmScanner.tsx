@@ -3,14 +3,17 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { Camera, Hand, CheckCircle, AlertCircle, RefreshCw, Sparkles } from 'lucide-react';
+import { Camera, Hand, CheckCircle, AlertCircle, RefreshCw, Sparkles, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import palmOutline from '@/assets/palm-outline.png';
 
 type ScanState = 'ready' | 'detecting' | 'scanning' | 'analyzing' | 'complete' | 'error';
 
-const PalmScanner = ({ onScanComplete }: { onScanComplete: (scanData: any) => void }) => {
+const PalmScanner = ({ onScanComplete, onGoBack }: { 
+  onScanComplete: (scanData: any) => void;
+  onGoBack?: () => void;
+}) => {
   const [scanState, setScanState] = useState<ScanState>('ready');
   const [currentHand, setCurrentHand] = useState<'left' | 'right'>('left');
   const [progress, setProgress] = useState(0);
@@ -288,6 +291,20 @@ const PalmScanner = ({ onScanComplete }: { onScanComplete: (scanData: any) => vo
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/80 flex items-center justify-center px-6">
       <div className="w-full max-w-2xl space-y-6">
+        {/* Back Button */}
+        {onGoBack && (
+          <div className="flex justify-start">
+            <Button 
+              variant="outline" 
+              onClick={onGoBack}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Dashboard
+            </Button>
+          </div>
+        )}
+
         {/* Header */}
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-bold text-foreground flex items-center justify-center gap-2">

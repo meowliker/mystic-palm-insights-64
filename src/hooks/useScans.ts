@@ -132,6 +132,51 @@ export const useScans = () => {
     }
   };
 
+  const clearAllScans = async (): Promise<boolean> => {
+    if (!user) return false;
+
+    try {
+      // First, get all scans with images to delete from storage
+      const { data: scansWithImages } = await supabase
+        .from('palm_scans')
+        .select('palm_image_url')
+        .eq('user_id', user.id)
+        .not('palm_image_url', 'is', null);
+
+      // Delete images from storage
+      if (scansWithImages && scansWithImages.length > 0) {
+        for (const scan of scansWithImages) {
+          if (scan.palm_image_url) {
+            const fileName = scan.palm_image_url.split('/').pop();
+            if (fileName) {
+              await supabase.storage
+                .from('palm-images')
+                .remove([`${user.id}/${fileName}`]);
+            }
+          }
+        }
+      }
+
+      // Delete all scan records
+      const { error } = await supabase
+        .from('palm_scans')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error clearing all scans:', error);
+        return false;
+      }
+
+      // Refresh the scans list
+      await fetchScans();
+      return true;
+    } catch (error) {
+      console.error('Error clearing all scans:', error);
+      return false;
+    }
+  };
+
   const hasScans = scans.length > 0;
 
   useEffect(() => {
@@ -143,6 +188,7 @@ export const useScans = () => {
     loading,
     saveScan,
     deleteScan,
+    clearAllScans,
     hasScans,
     fetchScans
   };

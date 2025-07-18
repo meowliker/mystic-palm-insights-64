@@ -21,7 +21,8 @@ import {
   Eye,
   FileText,
   PlusCircle,
-  Share
+  Share,
+  AlertTriangle
 } from 'lucide-react';
 import constellationPattern from '@/assets/constellation-pattern.jpg';
 import { useScans } from '@/hooks/useScans';
@@ -105,7 +106,7 @@ const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
   const [blogsLoading, setBlogsLoading] = useState(false);
   const [horoscope, setHoroscope] = useState<any>(null);
   const [showHoroscopeDialog, setShowHoroscopeDialog] = useState(false);
-  const { scans } = useScans();
+  const { scans, clearAllScans } = useScans();
   const { user } = useAuth();
   const { fetchUserBlogs, publishDraft, deleteBlog } = useBlogs();
   const { toast } = useToast();
@@ -156,6 +157,22 @@ const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
       toast({
         title: "Copied to clipboard",
         description: "Your palm reading has been copied to clipboard"
+      });
+    }
+  };
+
+  const handleClearAllScans = async () => {
+    const success = await clearAllScans();
+    if (success) {
+      toast({
+        title: "History cleared",
+        description: "All palm readings have been deleted successfully."
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to clear reading history. Please try again.",
+        variant: "destructive"
       });
     }
   };
@@ -312,6 +329,22 @@ const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
               {/* Tab Content */}
               {activeTab === 'readings' && (
                 <div className="space-y-4">
+                  {/* Clear All History Button */}
+                  {scans.length > 0 && (
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-semibold">Recent Readings</h3>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleClearAllScans}
+                        className="text-red-600 border-red-200 hover:bg-red-50 flex items-center gap-2"
+                      >
+                        <AlertTriangle className="h-4 w-4" />
+                        Clear All History
+                      </Button>
+                    </div>
+                  )}
+                  
                   {scans.length > 0 ? scans.map((scan) => (
                     <Card key={scan.id} className="p-6 bg-card/80 backdrop-blur-sm hover:shadow-mystical transition-all">
                       <div className="flex justify-between items-start mb-4">

@@ -50,7 +50,7 @@ const Index = () => {
     case 'welcome':
       return <WelcomeScreen onStartScan={handleStartScan} onGoToDashboard={handleGoToDashboard} />;
     case 'scanner':
-      return user ? <PalmScanner onScanComplete={handleScanComplete} /> : <WelcomeScreen onStartScan={handleStartScan} onGoToDashboard={handleGoToDashboard} />;
+      return user ? <PalmScanner onScanComplete={handleScanComplete} onGoBack={handleGoToDashboard} /> : <WelcomeScreen onStartScan={handleStartScan} onGoToDashboard={handleGoToDashboard} />;
     case 'results':
       return user ? <ResultsScreen onGoToDashboard={handleGoToDashboard} /> : <WelcomeScreen onStartScan={handleStartScan} onGoToDashboard={handleGoToDashboard} />;
     case 'dashboard':
