@@ -12,6 +12,7 @@ interface ScanData {
   fate_line_strength: string;
   overall_insight: string;
   traits: any;
+  palm_image_url?: string;
   created_at: string;
   updated_at: string;
 }
@@ -55,6 +56,7 @@ export const useScans = () => {
     fate_line_strength: string;
     overall_insight: string;
     traits: any;
+    palm_image_url?: string;
   }) => {
     if (!user) return null;
 
@@ -82,7 +84,55 @@ export const useScans = () => {
     }
   };
 
-  const hasScans = () => scans.length > 0;
+  const deleteScan = async (scanId: string) => {
+    if (!user) return false;
+
+    try {
+      // First get the scan to find the image URL
+      const { data: scan } = await supabase
+        .from('palm_scans')
+        .select('palm_image_url')
+        .eq('id', scanId)
+        .eq('user_id', user.id)
+        .single();
+
+      // Delete the scan record
+      const { error } = await supabase
+        .from('palm_scans')
+        .delete()
+        .eq('id', scanId)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error deleting scan:', error);
+        return false;
+      }
+
+      // Delete the associated image if it exists
+      if (scan?.palm_image_url) {
+        try {
+          const fileName = scan.palm_image_url.split('/').pop();
+          if (fileName) {
+            await supabase.storage
+              .from('palm-images')
+              .remove([`${user.id}/${fileName}`]);
+          }
+        } catch (imageError) {
+          console.error('Error deleting image:', imageError);
+          // Don't fail the whole operation if image deletion fails
+        }
+      }
+
+      // Refresh scans after deletion
+      fetchScans();
+      return true;
+    } catch (error) {
+      console.error('Error deleting scan:', error);
+      return false;
+    }
+  };
+
+  const hasScans = scans.length > 0;
 
   useEffect(() => {
     fetchScans();
@@ -92,6 +142,7 @@ export const useScans = () => {
     scans,
     loading,
     saveScan,
+    deleteScan,
     hasScans,
     fetchScans
   };

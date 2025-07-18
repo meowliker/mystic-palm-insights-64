@@ -1,26 +1,40 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Camera, Hand, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { useToast } from '@/hooks/use-toast';
+import { Camera, Hand, CheckCircle, AlertCircle, RefreshCw, Sparkles } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import palmOutline from '@/assets/palm-outline.png';
 
-type ScanState = 'ready' | 'scanning' | 'complete' | 'error';
+type ScanState = 'ready' | 'detecting' | 'scanning' | 'analyzing' | 'complete' | 'error';
 
-const PalmScanner = ({ onScanComplete }: { onScanComplete: () => void }) => {
+const PalmScanner = ({ onScanComplete }: { onScanComplete: (scanData: any) => void }) => {
   const [scanState, setScanState] = useState<ScanState>('ready');
   const [currentHand, setCurrentHand] = useState<'left' | 'right'>('left');
-  const [countdown, setCountdown] = useState(0);
+  const [progress, setProgress] = useState(0);
   const [alignment, setAlignment] = useState<'good' | 'poor'>('poor');
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const alignmentIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const { user } = useAuth();
+  const { toast } = useToast();
 
   // Initialize camera
   useEffect(() => {
     const initializeCamera = async () => {
       try {
         const mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'user' }
+          video: { 
+            facingMode: 'user',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
         });
         setStream(mediaStream);
         if (videoRef.current) {
@@ -39,51 +53,210 @@ const PalmScanner = ({ onScanComplete }: { onScanComplete: () => void }) => {
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
       }
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+      if (alignmentIntervalRef.current) {
+        clearInterval(alignmentIntervalRef.current);
+      }
     };
   }, []);
 
-  const startScan = () => {
-    if (cameraError) {
-      return;
-    }
-    
-    setScanState('scanning');
-    setCountdown(5);
-    setAlignment('poor');
-    
-    // Simulate alignment detection
-    const alignmentInterval = setInterval(() => {
-      setAlignment(Math.random() > 0.3 ? 'good' : 'poor');
-    }, 500);
+  const captureImage = async (): Promise<string | null> => {
+    if (!videoRef.current || !canvasRef.current) return null;
 
-    // Countdown timer
-    const countdownInterval = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) {
-          clearInterval(countdownInterval);
-          clearInterval(alignmentInterval);
-          
-          if (currentHand === 'left') {
-            // Move to right hand
-            setCurrentHand('right');
-            setScanState('ready');
-            return 0;
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+    const ctx = canvas.getContext('2d');
+    
+    if (!ctx) return null;
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0);
+    
+    return canvas.toDataURL('image/jpeg', 0.8);
+  };
+
+  const uploadImageToStorage = async (imageDataUrl: string): Promise<string | null> => {
+    if (!user) return null;
+
+    try {
+      // Convert data URL to blob
+      const response = await fetch(imageDataUrl);
+      const blob = await response.blob();
+      
+      // Create unique filename
+      const fileName = `${user.id}/${Date.now()}-palm.jpg`;
+      
+      const { data, error } = await supabase.storage
+        .from('palm-images')
+        .upload(fileName, blob, {
+          contentType: 'image/jpeg',
+          upsert: false
+        });
+
+      if (error) {
+        console.error('Error uploading image:', error);
+        return null;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('palm-images')
+        .getPublicUrl(fileName);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      return null;
+    }
+  };
+
+  const generatePalmReading = async (imageUrl: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-horoscope', {
+        body: { 
+          palmImageUrl: imageUrl,
+          zodiacSign: 'leo', // You might want to get this from user profile
+          birthDate: new Date().toISOString() // You might want to get this from user profile
+        }
+      });
+
+      if (error) {
+        console.error('Error generating reading:', error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error generating reading:', error);
+      return null;
+    }
+  };
+
+  const startScan = () => {
+    if (cameraError) return;
+    
+    setScanState('detecting');
+    setProgress(0);
+    
+    // Start alignment detection
+    alignmentIntervalRef.current = setInterval(() => {
+      // Simulate palm detection with some randomness
+      const isAligned = Math.random() > 0.4;
+      setAlignment(isAligned ? 'good' : 'poor');
+      
+      if (isAligned && scanState === 'detecting') {
+        setScanState('scanning');
+      }
+    }, 300);
+  };
+
+  // Progress tracking effect
+  useEffect(() => {
+    if (scanState === 'scanning') {
+      progressIntervalRef.current = setInterval(() => {
+        setProgress(prev => {
+          // Only progress if alignment is good
+          if (alignment === 'good') {
+            const newProgress = prev + 2;
+            if (newProgress >= 100) {
+              clearInterval(progressIntervalRef.current!);
+              handleScanComplete();
+              return 100;
+            }
+            return newProgress;
           } else {
-            // Both hands complete
-            setScanState('complete');
-            setTimeout(onScanComplete, 2000);
+            // Reset progress if alignment is lost
+            setScanState('detecting');
             return 0;
           }
-        }
-        return prev - 1;
+        });
+      }, 100);
+    } else {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+    }
+
+    return () => {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+    };
+  }, [scanState, alignment]);
+
+  const handleScanComplete = async () => {
+    setScanState('analyzing');
+    
+    // Capture the palm image
+    const imageDataUrl = await captureImage();
+    if (!imageDataUrl) {
+      toast({
+        title: "Error",
+        description: "Failed to capture palm image",
+        variant: "destructive"
       });
-    }, 1000);
+      return;
+    }
+
+    setCapturedImage(imageDataUrl);
+    
+    // Upload image and generate reading
+    const imageUrl = await uploadImageToStorage(imageDataUrl);
+    if (!imageUrl) {
+      toast({
+        title: "Error", 
+        description: "Failed to save palm image",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const palmReading = await generatePalmReading(imageUrl);
+    if (!palmReading) {
+      toast({
+        title: "Error",
+        description: "Failed to generate palm reading", 
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Check if we need to scan the other hand
+    if (currentHand === 'left') {
+      setCurrentHand('right');
+      setScanState('ready');
+      setProgress(0);
+      toast({
+        title: "Left palm complete!",
+        description: "Now position your right palm for scanning"
+      });
+      return;
+    }
+
+    // Both hands complete
+    setScanState('complete');
+    
+    // Pass the complete scan data
+    const scanData = {
+      ...palmReading,
+      palm_image_url: imageUrl,
+      capturedImage: imageDataUrl
+    };
+    
+    setTimeout(() => onScanComplete(scanData), 2000);
   };
 
   const retryCamera = async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user' }
+        video: { 
+          facingMode: 'user',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
       });
       setStream(mediaStream);
       if (videoRef.current) {
@@ -95,25 +268,45 @@ const PalmScanner = ({ onScanComplete }: { onScanComplete: () => void }) => {
     }
   };
 
+  const getStatusMessage = () => {
+    switch (scanState) {
+      case 'ready':
+        return `Position your ${currentHand} palm within the outline`;
+      case 'detecting':
+        return `Looking for ${currentHand} palm...`;
+      case 'scanning':
+        return `Scanning your ${currentHand} palm for insights...`;
+      case 'analyzing':
+        return 'Analyzing cosmic patterns in your palm...';
+      case 'complete':
+        return 'Palm reading complete!';
+      default:
+        return '';
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-6">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/80 flex items-center justify-center px-6">
       <div className="w-full max-w-2xl space-y-6">
+        {/* Header */}
         <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold text-foreground">
-            {scanState === 'ready' && 'Position Your Palm'}
-            {scanState === 'scanning' && `Scanning ${currentHand} Palm`}
-            {scanState === 'complete' && 'Scan Complete!'}
+          <h1 className="text-4xl font-bold text-foreground flex items-center justify-center gap-2">
+            <Sparkles className="h-8 w-8 text-primary animate-pulse" />
+            Palm Reading
           </h1>
-          <p className="text-muted-foreground">
-            {scanState === 'ready' && 'Align your palm with the outline to begin scanning'}
-            {scanState === 'scanning' && `Hold steady... ${countdown}s remaining`}
-            {scanState === 'complete' && 'Analyzing your cosmic patterns...'}
+          <p className="text-muted-foreground text-lg">
+            {getStatusMessage()}
           </p>
+          {scanState === 'ready' && (
+            <p className="text-sm text-muted-foreground">
+              Please use the flashlight for better scans in dark backgrounds
+            </p>
+          )}
         </div>
 
-        <Card className="relative overflow-hidden bg-card/80 backdrop-blur-sm">
-          {/* Camera View */}
-          <div className="aspect-[4/3] relative flex items-center justify-center">
+        {/* Main Scanning Area */}
+        <Card className="relative overflow-hidden bg-card/80 backdrop-blur-sm border-primary/20">
+          <div className="aspect-[4/3] relative flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5">
             {cameraError ? (
               <div className="flex flex-col items-center space-y-4 text-center p-8">
                 <AlertCircle className="h-12 w-12 text-destructive" />
@@ -131,92 +324,151 @@ const PalmScanner = ({ onScanComplete }: { onScanComplete: () => void }) => {
                   autoPlay
                   playsInline
                   muted
-                  className="absolute inset-0 w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full object-cover rounded-lg"
                 />
                 
+                {/* Hidden canvas for image capture */}
+                <canvas ref={canvasRef} className="hidden" />
+                
                 {/* Palm Outline Overlay */}
-                <div className="relative z-10">
-                  <img 
-                    src={palmOutline} 
-                    alt="Palm Outline" 
-                    className={`w-48 h-60 transition-all duration-500 ${
-                      alignment === 'good' 
-                        ? 'opacity-80 drop-shadow-[0_0_20px_rgba(168,85,247,0.8)]' 
-                        : 'opacity-60'
-                    }`}
-                  />
-                  
-                  {/* Alignment Indicator */}
-                  <div className={`absolute -top-4 -right-4 p-2 rounded-full ${
-                    alignment === 'good' ? 'bg-green-500' : 'bg-red-500'
-                  }`}>
-                    {alignment === 'good' ? (
-                      <CheckCircle className="h-4 w-4 text-white" />
-                    ) : (
-                      <AlertCircle className="h-4 w-4 text-white" />
+                <div className="relative z-10 flex items-center justify-center">
+                  <div className="relative">
+                    <img 
+                      src={palmOutline} 
+                      alt="Palm Outline" 
+                      className={`w-56 h-72 transition-all duration-500 ${
+                        alignment === 'good' 
+                          ? 'opacity-90 drop-shadow-[0_0_30px_rgba(168,85,247,0.9)] scale-105' 
+                          : 'opacity-60 scale-100'
+                      }`}
+                      style={{
+                        filter: alignment === 'good' ? 'brightness(1.2) contrast(1.1)' : 'none'
+                      }}
+                    />
+                    
+                    {/* Alignment Indicator */}
+                    <div className={`absolute -top-6 -right-6 p-3 rounded-full transition-all duration-300 ${
+                      alignment === 'good' ? 'bg-green-500 scale-110' : 'bg-red-500'
+                    }`}>
+                      {alignment === 'good' ? (
+                        <CheckCircle className="h-5 w-5 text-white" />
+                      ) : (
+                        <AlertCircle className="h-5 w-5 text-white" />
+                      )}
+                    </div>
+
+                    {/* Cosmic Effects for Scanning */}
+                    {scanState === 'scanning' && alignment === 'good' && (
+                      <>
+                        {/* Planetary symbols */}
+                        <div className="absolute inset-0 pointer-events-none">
+                          <div className="absolute top-1/4 left-1/4 w-8 h-8 bg-yellow-400 rounded-full animate-pulse opacity-80" />
+                          <div className="absolute top-1/3 right-1/4 w-6 h-6 bg-red-400 rounded-full animate-pulse opacity-80" />
+                          <div className="absolute bottom-1/3 left-1/3 w-7 h-7 bg-blue-400 rounded-full animate-pulse opacity-80" />
+                          <div className="absolute bottom-1/4 right-1/3 w-5 h-5 bg-purple-400 rounded-full animate-pulse opacity-80" />
+                        </div>
+                        
+                        {/* Scanning lines */}
+                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/30 to-transparent animate-pulse" />
+                      </>
+                    )}
+                    
+                    {/* Analysis Phase Effects */}
+                    {scanState === 'analyzing' && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="text-2xl font-bold text-primary animate-pulse">
+                          <Sparkles className="h-12 w-12" />
+                        </div>
+                      </div>
                     )}
                   </div>
-                  
-                  {/* Countdown Display */}
-                  {scanState === 'scanning' && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-6xl font-bold text-white drop-shadow-2xl animate-pulse-glow">
-                        {countdown}
-                      </div>
-                    </div>
-                  )}
                 </div>
                 
-                {/* Scanning Animation */}
-                {scanState === 'scanning' && (
-                  <div className="absolute inset-0 bg-primary/20 animate-pulse z-5"></div>
+                {/* Scanning Progress Overlay */}
+                {(scanState === 'scanning' || scanState === 'analyzing') && (
+                  <div className="absolute inset-0 bg-primary/10 animate-pulse z-5 rounded-lg" />
                 )}
               </>
             )}
           </div>
           
-          {/* Instructions */}
+          {/* Progress Bar */}
+          {(scanState === 'scanning' || scanState === 'analyzing') && (
+            <div className="p-4">
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">
+                    {scanState === 'scanning' ? 'Scanning Progress' : 'Analyzing...'}
+                  </span>
+                  <span className="text-primary font-medium">
+                    {scanState === 'scanning' ? `${progress}%` : '100%'}
+                  </span>
+                </div>
+                <Progress 
+                  value={scanState === 'analyzing' ? 100 : progress} 
+                  className="h-2"
+                />
+              </div>
+            </div>
+          )}
+          
+          {/* Controls */}
           <div className="p-6 text-center space-y-4">
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
               <Camera className="h-4 w-4" />
               <span>
-                {alignment === 'good' ? 'Perfect alignment!' : 'Adjust your hand position'}
+                {alignment === 'good' 
+                  ? 'Perfect alignment! Hold steady...' 
+                  : 'Adjust your hand position within the outline'
+                }
               </span>
             </div>
             
             {scanState === 'ready' && (
               <Button 
-                variant="glow" 
-                size="lg" 
                 onClick={startScan}
-                className="w-full"
+                className="w-full bg-primary hover:bg-primary/90"
+                size="lg"
               >
-                <Hand className="h-5 w-5" />
-                Start Palm Scan
+                <Hand className="h-5 w-5 mr-2" />
+                Start {currentHand} Palm Scan
               </Button>
             )}
             
             {scanState === 'complete' && (
-              <div className="space-y-2">
-                <CheckCircle className="h-12 w-12 text-green-500 mx-auto animate-pulse-glow" />
-                <p className="text-green-500 font-semibold">Both palms scanned successfully!</p>
+              <div className="space-y-3">
+                <CheckCircle className="h-16 w-16 text-green-500 mx-auto animate-pulse" />
+                <p className="text-green-500 font-semibold text-lg">
+                  {currentHand === 'right' ? 'Both palms scanned successfully!' : 'Left palm complete!'}
+                </p>
               </div>
             )}
           </div>
         </Card>
         
-        {/* Progress Indicator */}
-        <div className="flex justify-center space-x-4">
-          <div className={`w-3 h-3 rounded-full transition-colors ${
-            currentHand === 'left' || scanState === 'complete' 
-              ? 'bg-primary' 
-              : 'bg-muted'
-          }`}></div>
-          <div className={`w-3 h-3 rounded-full transition-colors ${
-            currentHand === 'right' || scanState === 'complete' 
-              ? 'bg-primary' 
-              : 'bg-muted'
-          }`}></div>
+        {/* Hand Progress Indicator */}
+        <div className="flex justify-center items-center space-x-6">
+          <div className="flex items-center space-x-2">
+            <div className={`w-4 h-4 rounded-full transition-all duration-300 ${
+              currentHand === 'left' && scanState !== 'complete'
+                ? 'bg-primary ring-2 ring-primary/30 ring-offset-2' 
+                : scanState === 'complete' || (currentHand === 'right')
+                ? 'bg-green-500'
+                : 'bg-muted'
+            }`} />
+            <span className="text-sm text-muted-foreground">Left Palm</span>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <div className={`w-4 h-4 rounded-full transition-all duration-300 ${
+              currentHand === 'right' && scanState !== 'complete'
+                ? 'bg-primary ring-2 ring-primary/30 ring-offset-2' 
+                : scanState === 'complete'
+                ? 'bg-green-500'
+                : 'bg-muted'
+            }`} />
+            <span className="text-sm text-muted-foreground">Right Palm</span>
+          </div>
         </div>
       </div>
     </div>

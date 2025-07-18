@@ -2,67 +2,42 @@ import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Heart, 
-  Brain, 
-  Zap, 
-  Star, 
-  TrendingUp, 
-  Calendar,
-  ArrowRight,
-  Sparkles
-} from 'lucide-react';
 import { useScans } from '@/hooks/useScans';
+import { Sparkles, Heart, Brain, TrendingUp, Star, ArrowRight, Calendar } from 'lucide-react';
 
-const ResultsScreen = ({ onGoToDashboard }: { onGoToDashboard: () => void }) => {
+interface ResultsScreenProps {
+  onGoToDashboard: () => void;
+  scanData?: any;
+}
+
+const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
   const { saveScan } = useScans();
-  const palmResults = {
-    lifeLine: {
-      strength: 'Strong',
-      description: 'Your life line indicates vitality and a long, healthy life. You have a strong constitution and natural resilience.',
-      traits: ['Energetic', 'Resilient', 'Health-conscious']
-    },
-    heartLine: {
-      strength: 'Deep',
-      description: 'A deep heart line reveals your capacity for profound emotional connections and passionate relationships.',
-      traits: ['Empathetic', 'Loyal', 'Romantic']
-    },
-    headLine: {
-      strength: 'Clear',
-      description: 'Your head line shows analytical thinking balanced with creative intuition. You approach problems methodically.',
-      traits: ['Analytical', 'Creative', 'Strategic']
-    },
-    fateLine: {
-      strength: 'Present',
-      description: 'The presence of a fate line suggests you will find your true calling and achieve success through dedication.',
-      traits: ['Ambitious', 'Destined', 'Focused']
+
+  // Use the passed scan data or fallback to default results
+  const palmResults = scanData || {
+    life_line_strength: "Strong",
+    heart_line_strength: "Deep", 
+    head_line_strength: "Clear",
+    fate_line_strength: "Prominent",
+    overall_insight: "Your palm reveals a harmonious balance of emotional depth and intellectual clarity. The planets and cosmic energy are perfectly aligned, indicating a period of growth and self-discovery ahead.",
+    traits: {
+      emotional_capacity: "High",
+      intellectual_approach: "Analytical", 
+      life_energy: "Vibrant",
+      destiny_path: "Self-directed"
     }
   };
 
-  const overallInsight = "Your palm reveals a harmonious balance between emotional depth, intellectual clarity, and life force energy. The cosmic patterns suggest a period of growth and self-discovery ahead.";
-
-  // Save scan results to database when component mounts
   useEffect(() => {
-    const saveCurrentScan = async () => {
-      const scanData = {
-        life_line_strength: palmResults.lifeLine.strength,
-        heart_line_strength: palmResults.heartLine.strength,
-        head_line_strength: palmResults.headLine.strength,
-        fate_line_strength: palmResults.fateLine.strength,
-        overall_insight: overallInsight,
-        traits: {
-          lifeLine: palmResults.lifeLine.traits,
-          heartLine: palmResults.heartLine.traits,
-          headLine: palmResults.headLine.traits,
-          fateLine: palmResults.fateLine.traits
-        }
-      };
-
-      await saveScan(scanData);
+    // Save the scan results to the database
+    const saveResults = async () => {
+      if (palmResults) {
+        await saveScan(palmResults);
+      }
     };
-
-    saveCurrentScan();
-  }, [saveScan]);
+    
+    saveResults();
+  }, [saveScan, palmResults]);
 
   return (
     <div className="min-h-screen bg-background">

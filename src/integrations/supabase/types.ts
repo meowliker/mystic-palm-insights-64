@@ -159,6 +159,7 @@ export type Database = {
           id: string
           life_line_strength: string | null
           overall_insight: string | null
+          palm_image_url: string | null
           scan_date: string
           traits: Json | null
           updated_at: string
@@ -172,6 +173,7 @@ export type Database = {
           id?: string
           life_line_strength?: string | null
           overall_insight?: string | null
+          palm_image_url?: string | null
           scan_date?: string
           traits?: Json | null
           updated_at?: string
@@ -185,6 +187,7 @@ export type Database = {
           id?: string
           life_line_strength?: string | null
           overall_insight?: string | null
+          palm_image_url?: string | null
           scan_date?: string
           traits?: Json | null
           updated_at?: string
