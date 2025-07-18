@@ -20,16 +20,19 @@ import {
   Trash2,
   Eye,
   FileText,
-  PlusCircle
+  PlusCircle,
+  Share
 } from 'lucide-react';
 import constellationPattern from '@/assets/constellation-pattern.jpg';
 import { useScans } from '@/hooks/useScans';
 import { useAuth } from '@/hooks/useAuth';
 import { useBlogs } from '@/hooks/useBlogs';
 import { EditProfileDialog } from '@/components/EditProfileDialog';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import HoroscopeForm from '@/components/HoroscopeForm';
 import { HoroscopeResultDialog } from '@/components/HoroscopeResultDialog';
+import ScanDetailDialog from '@/components/ScanDetailDialog';
 
 const ProfilePicture = ({ userId, onUpdate }: { userId?: string; onUpdate?: () => void }) => {
   const [profilePictureUrl, setProfilePictureUrl] = useState<string>('');
@@ -105,6 +108,7 @@ const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
   const { scans } = useScans();
   const { user } = useAuth();
   const { fetchUserBlogs, publishDraft, deleteBlog } = useBlogs();
+  const { toast } = useToast();
 
   // Load user's blogs when blog tab is active
   useEffect(() => {
@@ -137,19 +141,24 @@ const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
     }
   };
 
-  // Format scans for display
-  const recentReadings = scans.map((scan) => ({
-    id: scan.id,
-    date: new Date(scan.scan_date).toLocaleDateString(),
-    time: new Date(scan.scan_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    lines: [
-      scan.life_line_strength && `Life Line (${scan.life_line_strength})`,
-      scan.heart_line_strength && `Heart Line (${scan.heart_line_strength})`,
-      scan.head_line_strength && `Head Line (${scan.head_line_strength})`,
-      scan.fate_line_strength && `Fate Line (${scan.fate_line_strength})`
-    ].filter(Boolean),
-    insights: scan.overall_insight
-  }));
+  const handleShareReading = (reading: any) => {
+    if (navigator.share) {
+      navigator.share({
+        title: 'My Palm Reading',
+        text: `Check out my palm reading insights: ${reading.overall_insight?.substring(0, 100)}...`,
+        url: window.location.href
+      });
+    } else {
+      // Fallback for browsers that don't support Web Share API
+      navigator.clipboard.writeText(
+        `My Palm Reading:\n${reading.overall_insight}\n\nGenerated on ${new Date(reading.scan_date).toLocaleDateString()}`
+      );
+      toast({
+        title: "Copied to clipboard",
+        description: "Your palm reading has been copied to clipboard"
+      });
+    }
+  };
 
   const handleHoroscopeGenerated = (generatedHoroscope: any) => {
     setHoroscope(generatedHoroscope);
@@ -303,30 +312,50 @@ const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
               {/* Tab Content */}
               {activeTab === 'readings' && (
                 <div className="space-y-4">
-                  {recentReadings.length > 0 ? recentReadings.map((reading) => (
-                    <Card key={reading.id} className="p-6 bg-card/80 backdrop-blur-sm hover:shadow-mystical transition-all">
+                  {scans.length > 0 ? scans.map((scan) => (
+                    <Card key={scan.id} className="p-6 bg-card/80 backdrop-blur-sm hover:shadow-mystical transition-all">
                       <div className="flex justify-between items-start mb-4">
                         <div>
                           <div className="flex items-center gap-2 mb-2">
                             <Clock className="h-4 w-4 text-muted-foreground" />
                             <span className="text-sm text-muted-foreground">
-                              {reading.date} at {reading.time}
+                              {new Date(scan.scan_date).toLocaleDateString()} at {new Date(scan.scan_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
                           </div>
                           <h3 className="font-semibold text-foreground">Palm Reading</h3>
                         </div>
-                        <Button variant="outline" size="sm">View Details</Button>
+                        <div className="flex items-center gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleShareReading(scan)}
+                          >
+                            <Share className="h-4 w-4 mr-2" />
+                            Share
+                          </Button>
+                          <ScanDetailDialog scan={scan}>
+                            <Button variant="outline" size="sm">
+                              <Eye className="h-4 w-4 mr-2" />
+                              View Details
+                            </Button>
+                          </ScanDetailDialog>
+                        </div>
                       </div>
                       
                       <div className="space-y-3">
                         <div className="flex flex-wrap gap-2">
-                          {reading.lines.map((line) => (
+                          {[
+                            scan.life_line_strength && `Life Line (${scan.life_line_strength})`,
+                            scan.heart_line_strength && `Heart Line (${scan.heart_line_strength})`,
+                            scan.head_line_strength && `Head Line (${scan.head_line_strength})`,
+                            scan.fate_line_strength && `Fate Line (${scan.fate_line_strength})`
+                          ].filter(Boolean).map((line) => (
                             <Badge key={line} variant="secondary" className="bg-primary/10 text-primary">
                               {line}
                             </Badge>
                           ))}
                         </div>
-                        <p className="text-muted-foreground">{reading.insights}</p>
+                        <p className="text-muted-foreground">{scan.overall_insight}</p>
                       </div>
                     </Card>
                   )) : (
