@@ -21,25 +21,52 @@ import { useAuth } from '@/hooks/useAuth';
 import { EditProfileDialog } from '@/components/EditProfileDialog';
 import { supabase } from '@/integrations/supabase/client';
 
-const ProfilePicture = ({ userId }: { userId?: string }) => {
+const ProfilePicture = ({ userId, onUpdate }: { userId?: string; onUpdate?: () => void }) => {
   const [profilePictureUrl, setProfilePictureUrl] = useState<string>('');
 
-  useEffect(() => {
-    const loadProfilePicture = async () => {
-      if (!userId) return;
-      
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('profile_picture_url')
-        .eq('id', userId)
-        .single();
-      
-      if (profile?.profile_picture_url) {
-        setProfilePictureUrl(profile.profile_picture_url);
-      }
-    };
+  const loadProfilePicture = async () => {
+    if (!userId) return;
+    
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('profile_picture_url')
+      .eq('id', userId)
+      .single();
+    
+    if (profile?.profile_picture_url) {
+      setProfilePictureUrl(profile.profile_picture_url);
+    } else {
+      setProfilePictureUrl('');
+    }
+  };
 
+  useEffect(() => {
     loadProfilePicture();
+  }, [userId]);
+
+  // Listen for profile updates
+  useEffect(() => {
+    if (!userId) return;
+
+    const channel = supabase
+      .channel('profile-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${userId}`
+        },
+        () => {
+          loadProfilePicture();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [userId]);
 
   return (

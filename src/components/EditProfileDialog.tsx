@@ -344,13 +344,23 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
                         <User className="h-8 w-8 text-primary-foreground" />
                       )}
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 space-y-2">
                       <Input
                         type="file"
                         accept="image/*"
                         onChange={handleProfilePictureChange}
                       />
-                      <p className="text-xs text-muted-foreground mt-1">
+                      {(profilePictureUrl || profilePicture) && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleRemoveProfilePicture}
+                          className="w-full"
+                        >
+                          Remove Picture
+                        </Button>
+                      )}
+                      <p className="text-xs text-muted-foreground">
                         Upload a profile picture (JPG, PNG)
                       </p>
                     </div>
