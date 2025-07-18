@@ -56,18 +56,6 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  console.log('DeepSeek API Key exists:', !!deepseekApiKey);
-  
-  if (!deepseekApiKey) {
-    console.error('DeepSeek API key is not set');
-    return new Response(JSON.stringify({ 
-      error: 'DeepSeek API key is not configured' 
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  }
-
   try {
     const { zodiacSign, name, birthDate, birthTime, birthPlace, method } = await req.json();
     
@@ -86,99 +74,47 @@ serve(async (req) => {
     }
 
     const signInfo = zodiacSigns[finalZodiacSign as keyof typeof zodiacSigns];
-    const todayDate = new Date().toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+
+    // Generate horoscope with predefined content
+    const predictions = [
+      `Today brings exciting opportunities for ${finalZodiacSign}s to shine. Your ${signInfo.element} energy is particularly strong, making this an ideal time for new beginnings.`,
+      `The cosmic alignment favors ${finalZodiacSign}s today. With ${signInfo.planet} as your guide, trust your intuition and embrace the changes coming your way.`,
+      `Your ${signInfo.element} nature will serve you well today. As a ${finalZodiacSign}, you're entering a period of growth and positive transformation.`,
+      `The stars align in your favor today, dear ${finalZodiacSign}. Your ruling planet ${signInfo.planet} encourages you to step boldly into new opportunities.`
+    ];
+
+    const focusAreas = [
+      'Career, Love, Health',
+      'Relationships, Creativity, Finances',
+      'Personal Growth, Communication, Wellness',
+      'Family, Goals, Self-care',
+      'Adventure, Learning, Balance'
+    ];
+
+    const colors = ['Blue', 'Green', 'Purple', 'Gold', 'Silver', 'Orange', 'Pink', 'Turquoise'];
+    
+    const advice = [
+      'Trust your inner wisdom today.',
+      'Embrace new opportunities with confidence.',
+      'Listen to your heart and follow your dreams.',
+      'Stay positive and keep moving forward.',
+      'Balance is key to your success today.'
+    ];
+
+    const horoscopeData = {
+      prediction: predictions[Math.floor(Math.random() * predictions.length)],
+      energy: Math.floor(Math.random() * 30) + 70, // 70-100%
+      focus: focusAreas[Math.floor(Math.random() * focusAreas.length)],
+      luckyColor: colors[Math.floor(Math.random() * colors.length)],
+      advice: advice[Math.floor(Math.random() * advice.length)],
+      sign: finalZodiacSign.charAt(0).toUpperCase() + finalZodiacSign.slice(1),
+      calculatedSign: method === 'calculate' ? finalZodiacSign : null,
+      signInfo: signInfo
+    };
+
+    return new Response(JSON.stringify(horoscopeData), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
-
-    const prompt = `Generate a personalized daily horoscope for ${todayDate} for a ${finalZodiacSign} person${name ? ` named ${name}` : ''}. 
-
-    Consider these astrological details:
-    - Sign: ${finalZodiacSign.charAt(0).toUpperCase() + finalZodiacSign.slice(1)}
-    - Element: ${signInfo.element}
-    - Ruling Planet: ${signInfo.planet}
-    ${birthTime ? `- Birth Time: ${birthTime}` : ''}
-    ${birthPlace ? `- Birth Place: ${birthPlace}` : ''}
-
-    Provide:
-    1. A meaningful daily prediction (2-3 sentences) focused on practical guidance
-    2. An energy level percentage (1-100)
-    3. 2-3 key focus areas for the day (comma-separated, like "Career, Love, Health")
-    4. A lucky color for the day
-    5. A piece of cosmic advice (1 sentence)
-
-    Format the response as a JSON object with these keys:
-    - prediction: string
-    - energy: number (1-100)
-    - focus: string (comma-separated areas)
-    - luckyColor: string
-    - advice: string
-    - sign: string (capitalized sign name)
-
-    Make it personal, positive, and actionable.`;
-
-    console.log('Making API request to DeepSeek...');
-    
-    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${deepseekApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [
-          { 
-            role: 'system', 
-            content: 'You are a professional astrologer with deep knowledge of zodiac signs, planetary influences, and cosmic energies. Provide thoughtful, personalized horoscope readings that blend traditional astrology with practical life guidance.' 
-          },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.8,
-        max_tokens: 500,
-      }),
-    });
-
-    console.log('API Response status:', response.status);
-    console.log('API Response headers:', Object.fromEntries(response.headers.entries()));
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('DeepSeek API Error:', errorText);
-      throw new Error(`DeepSeek API Error (${response.status}): ${errorText}`);
-    }
-    
-    const data = await response.json();
-    console.log('API Response data:', data);
-
-    const generatedContent = data.choices[0].message.content;
-    
-    try {
-      const horoscopeData = JSON.parse(generatedContent);
-      
-      // Add calculated zodiac sign info
-      horoscopeData.calculatedSign = method === 'calculate' ? finalZodiacSign : null;
-      horoscopeData.signInfo = signInfo;
-      
-      return new Response(JSON.stringify(horoscopeData), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    } catch (parseError) {
-      // Fallback if JSON parsing fails
-      return new Response(JSON.stringify({
-        prediction: generatedContent,
-        energy: Math.floor(Math.random() * 30) + 70,
-        focus: "Personal Growth, Reflection",
-        luckyColor: "Blue",
-        advice: "Trust your intuition today.",
-        sign: finalZodiacSign.charAt(0).toUpperCase() + finalZodiacSign.slice(1),
-        signInfo: signInfo
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
 
   } catch (error) {
     console.error('Error in generate-horoscope function:', error);
