@@ -172,7 +172,7 @@ const AuthForm = ({ mode, onModeChange, onSuccess }: AuthFormProps) => {
             className="text-muted-foreground hover:text-foreground"
           >
             {mode === 'signup' 
-              ? 'Already have an account? Sign in' 
+              ? 'Sign in' 
               : "Don't have an account? Sign up"
             }
           </Button>
