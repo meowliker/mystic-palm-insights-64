@@ -117,9 +117,10 @@ const PalmScanner = ({ onScanComplete }: { onScanComplete: (scanData: any) => vo
     try {
       const { data, error } = await supabase.functions.invoke('generate-horoscope', {
         body: { 
-          palmImageUrl: imageUrl,
-          zodiacSign: 'leo', // You might want to get this from user profile
-          birthDate: new Date().toISOString() // You might want to get this from user profile
+          palmImageUrl: imageUrl
+        },
+        headers: {
+          'user-id': user?.id
         }
       });
 

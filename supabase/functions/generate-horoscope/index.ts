@@ -1,7 +1,12 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 const deepseekApiKey = Deno.env.get('DEEPSEEK_API_KEY');
+const supabaseUrl = Deno.env.get('SUPABASE_URL');
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -51,14 +56,172 @@ function calculateZodiacSign(day: number, month: number): string {
   return 'capricorn'; // fallback
 }
 
+const analyzePalmImage = async (imageUrl: string) => {
+  if (!deepseekApiKey) {
+    throw new Error('DeepSeek API key not found');
+  }
+
+  const palmAnalysisPrompt = `You are a professional palmist with decades of experience. Analyze this palm image in detail and provide a comprehensive reading following traditional palmistry principles.
+
+Focus on these key elements:
+
+1. **Life Line Analysis**: Examine the curve, depth, length, and any breaks or islands. What does this reveal about vitality, health, and life journey?
+
+2. **Heart Line Analysis**: Study the line's path, depth, and clarity. What does this indicate about emotional capacity, relationships, and love life?
+
+3. **Head Line Analysis**: Analyze the line's direction, length, and strength. What does this suggest about intellect, reasoning, creativity, and mental approach?
+
+4. **Fate Line Analysis**: Look for the presence, clarity, and path of the fate line. What does this reveal about destiny, career path, and external influences?
+
+5. **Palm Mounts**: Examine the mounts of Venus, Mars, Moon, etc. What do their prominence or flatness indicate?
+
+6. **Hand Shape & Fingers**: Consider overall hand shape, finger lengths, and proportions for additional character insights.
+
+7. **Additional Markings**: Note any crosses, stars, triangles, or other significant markings.
+
+Provide specific, detailed insights for each palm line strength (Strong/Moderate/Weak) and overall character traits. Be authentic to palmistry tradition while being insightful and personal.
+
+Format your response as a detailed analysis that can be parsed into structured data.`;
+
+  try {
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${deepseekApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          {
+            role: 'system',
+            content: palmAnalysisPrompt
+          },
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: 'Please analyze this palm image and provide a detailed palmistry reading.'
+              },
+              {
+                type: 'image_url',
+                image_url: {
+                  url: imageUrl
+                }
+              }
+            ]
+          }
+        ],
+        max_tokens: 1500,
+        temperature: 0.7
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('DeepSeek API error:', response.status, await response.text());
+      throw new Error(`DeepSeek API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.choices[0]?.message?.content || '';
+  } catch (error) {
+    console.error('Error calling DeepSeek API:', error);
+    throw error;
+  }
+};
+
+const parsePalmReading = (aiResponse: string) => {
+  // Extract key insights from AI response and structure them
+  const response = aiResponse.toLowerCase();
+  
+  // Determine line strengths based on AI analysis
+  const getLineStrength = (lineType: string) => {
+    if (response.includes(`${lineType} line`) || response.includes(`${lineType}:`)) {
+      if (response.includes('strong') || response.includes('deep') || response.includes('prominent') || response.includes('clear')) {
+        return 'Strong';
+      } else if (response.includes('weak') || response.includes('faint') || response.includes('shallow')) {
+        return 'Weak';
+      } else {
+        return 'Moderate';
+      }
+    }
+    return 'Moderate';
+  };
+
+  // Extract overall insight (first substantial paragraph)
+  const sentences = aiResponse.split(/[.!?]+/).filter(s => s.trim().length > 50);
+  const overallInsight = sentences.slice(0, 2).join('. ').trim() + '.';
+
+  // Extract character traits based on analysis
+  const traits = {
+    life_energy: response.includes('vibrant') || response.includes('strong vitality') ? 'Vibrant' : 
+                response.includes('low energy') || response.includes('weak vitality') ? 'Low' : 'Balanced',
+    emotional_capacity: response.includes('high emotional') || response.includes('deep emotions') ? 'High' :
+                       response.includes('reserved') || response.includes('guarded') ? 'Reserved' : 'Moderate',
+    intellectual_approach: response.includes('analytical') || response.includes('logical') ? 'Analytical' :
+                          response.includes('creative') || response.includes('artistic') ? 'Creative' : 'Practical',
+    destiny_path: response.includes('self-directed') || response.includes('independent') ? 'Self-directed' :
+                 response.includes('influenced by others') ? 'Guided by others' : 'Balanced'
+  };
+
+  return {
+    life_line_strength: getLineStrength('life'),
+    heart_line_strength: getLineStrength('heart'),
+    head_line_strength: getLineStrength('head'),
+    fate_line_strength: getLineStrength('fate'),
+    overall_insight: overallInsight || 'Your palm reveals unique patterns that suggest a journey of personal growth and discovery ahead.',
+    traits
+  };
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { zodiacSign, name, birthDate, birthTime, birthPlace, method } = await req.json();
+    const { palmImageUrl, zodiacSign, name, birthDate, birthTime, birthPlace, method } = await req.json();
     
+    // Check if this is a palm reading request or horoscope request
+    if (palmImageUrl) {
+      console.log('Processing palm reading request with image:', palmImageUrl);
+      
+      // Analyze the palm image using DeepSeek AI
+      const aiAnalysis = await analyzePalmImage(palmImageUrl);
+      console.log('AI Analysis result:', aiAnalysis);
+      
+      // Parse the AI response into structured palm reading data
+      const palmReading = parsePalmReading(aiAnalysis);
+      console.log('Parsed palm reading:', palmReading);
+      
+      // Save the palm reading to database
+      const { data: savedReading, error: saveError } = await supabase
+        .from('palm_scans')
+        .insert({
+          user_id: req.headers.get('user-id'), // This should be passed from the client
+          life_line_strength: palmReading.life_line_strength,
+          heart_line_strength: palmReading.heart_line_strength,
+          head_line_strength: palmReading.head_line_strength,
+          fate_line_strength: palmReading.fate_line_strength,
+          overall_insight: palmReading.overall_insight,
+          traits: palmReading.traits,
+          palm_image_url: palmImageUrl
+        })
+        .select()
+        .single();
+
+      if (saveError) {
+        console.error('Error saving palm reading:', saveError);
+        // Continue anyway, don't fail the request
+      }
+
+      return new Response(JSON.stringify(palmReading), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Handle horoscope generation (existing functionality)
     let finalZodiacSign = zodiacSign;
     
     // Calculate zodiac sign from birth details if method is 'calculate'
