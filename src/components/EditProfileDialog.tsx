@@ -3,10 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
-import { User, Lock, Mail, Calendar, Phone, Camera, Eye, EyeOff, Shield, X } from 'lucide-react';
+import { User, Lock, Mail, Calendar, Phone, Camera, Eye, EyeOff, Shield, X, LogOut, Trash2, Settings } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -17,7 +18,7 @@ interface EditProfileDialogProps {
 }
 
 export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   
@@ -48,6 +49,11 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isSendingResetEmail, setIsSendingResetEmail] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  
+  // Account settings states
+  const [deleteAccountPassword, setDeleteAccountPassword] = useState('');
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   // Load profile data on mount
   useEffect(() => {
@@ -276,6 +282,90 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
     }
   };
 
+  const handleSignOut = async () => {
+    setIsSigningOut(true);
+    try {
+      const { error } = await signOut();
+      if (error) throw error;
+      
+      // Close the dialog
+      setOpen(false);
+      
+      // The app will redirect to welcome screen automatically via useAuth
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to sign out.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user?.email || !deleteAccountPassword) return;
+
+    setIsDeletingAccount(true);
+    try {
+      // First verify password by trying to sign in
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: deleteAccountPassword
+      });
+
+      if (signInError) {
+        toast({
+          title: "Error",
+          description: "Incorrect Password!",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Delete user's profile data
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', user.id);
+
+      if (profileError) throw profileError;
+
+      // Delete user's palm scans
+      const { error: scansError } = await supabase
+        .from('palm_scans')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (scansError) throw scansError;
+
+      // Delete profile picture from storage if it exists
+      if (profilePictureUrl && profilePictureUrl.includes('profiles/')) {
+        const fileName = profilePictureUrl.split('/profiles/')[1].split('?')[0];
+        await supabase.storage.from('profiles').remove([fileName]);
+      }
+
+      toast({
+        title: "Account Deleted",
+        description: "Your account and all data have been deleted successfully.",
+      });
+
+      // Close the dialog
+      setOpen(false);
+      setDeleteAccountPassword('');
+      
+      // The user will be automatically signed out and redirected
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete account.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeletingAccount(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -290,9 +380,10 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
         </DialogHeader>
 
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="security">Security</TabsTrigger>
+            <TabsTrigger value="account">Account Settings</TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile" className="space-y-6">
@@ -551,6 +642,124 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
                 >
                   Forgot Password?
                 </Button>
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="account" className="space-y-6">
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                Account Settings
+              </h3>
+              
+              <div className="space-y-4">
+                {/* Sign Out */}
+                <div className="space-y-2">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start">
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Sign Out
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          You will be signed out of your account and redirected to the welcome screen.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>No</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleSignOut} disabled={isSigningOut}>
+                          {isSigningOut ? 'Signing out...' : 'Yes, Sign Out'}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+
+                {/* Delete Account */}
+                <div className="space-y-2">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" className="w-full justify-start">
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete Account
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete your account and all associated data.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>No</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={() => {
+                            // Close this dialog and open password confirmation
+                            const dialog = document.querySelector('[data-state="open"]') as HTMLElement;
+                            if (dialog) {
+                              const cancelButton = dialog.querySelector('[role="button"]') as HTMLButtonElement;
+                              cancelButton?.click();
+                            }
+                            // Open password confirmation dialog
+                            setTimeout(() => {
+                              const passwordDialog = document.getElementById('delete-password-dialog');
+                              if (passwordDialog) {
+                                passwordDialog.click();
+                              }
+                            }, 100);
+                          }}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Yes, Delete Account
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+
+                  {/* Password Confirmation for Delete Account */}
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <button id="delete-password-dialog" className="hidden" />
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                          <Trash2 className="h-5 w-5 text-destructive" />
+                          Delete Account Confirmation
+                        </DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <p className="text-muted-foreground">
+                          Please enter your password to confirm account deletion. This action cannot be undone.
+                        </p>
+                        <div className="space-y-2">
+                          <Label htmlFor="deletePassword">Enter your password</Label>
+                          <Input
+                            id="deletePassword"
+                            type="password"
+                            value={deleteAccountPassword}
+                            onChange={(e) => setDeleteAccountPassword(e.target.value)}
+                            placeholder="Enter your password"
+                          />
+                        </div>
+                        <Button 
+                          onClick={handleDeleteAccount}
+                          disabled={isDeletingAccount || !deleteAccountPassword}
+                          variant="destructive"
+                          className="w-full"
+                        >
+                          {isDeletingAccount ? 'Deleting Account...' : 'Delete Account'}
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </div>
             </Card>
           </TabsContent>

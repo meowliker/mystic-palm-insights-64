@@ -154,10 +154,6 @@ const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
                               Edit Profile
                             </Button>
                           </EditProfileDialog>
-                          <Button variant="ghost" size="sm" className="w-full">
-                            <Settings className="h-4 w-4 mr-2" />
-                            Settings
-                          </Button>
                         </div>
                       </Card>
 
@@ -364,10 +360,6 @@ const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
                     Edit Profile
                   </Button>
                 </EditProfileDialog>
-                <Button variant="ghost" size="sm" className="w-full">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Settings
-                </Button>
               </div>
             </Card>
 
