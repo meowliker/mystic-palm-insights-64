@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,11 +15,17 @@ import {
   Brain,
   Zap,
   Star,
-  Clock
+  Clock,
+  Edit,
+  Trash2,
+  Eye,
+  FileText,
+  PlusCircle
 } from 'lucide-react';
 import constellationPattern from '@/assets/constellation-pattern.jpg';
 import { useScans } from '@/hooks/useScans';
 import { useAuth } from '@/hooks/useAuth';
+import { useBlogs } from '@/hooks/useBlogs';
 import { EditProfileDialog } from '@/components/EditProfileDialog';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -89,8 +96,42 @@ const ProfilePicture = ({ userId, onUpdate }: { userId?: string; onUpdate?: () =
 const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
   const [activeTab, setActiveTab] = useState<'readings' | 'horoscope' | 'blog'>('readings');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [userBlogs, setUserBlogs] = useState<any[]>([]);
+  const [blogsLoading, setBlogsLoading] = useState(false);
   const { scans } = useScans();
   const { user } = useAuth();
+  const { fetchUserBlogs, publishDraft, deleteBlog } = useBlogs();
+
+  // Load user's blogs when blog tab is active
+  useEffect(() => {
+    if (activeTab === 'blog' && user) {
+      loadUserBlogs();
+    }
+  }, [activeTab, user]);
+
+  const loadUserBlogs = async () => {
+    setBlogsLoading(true);
+    try {
+      const blogs = await fetchUserBlogs();
+      setUserBlogs(blogs);
+    } finally {
+      setBlogsLoading(false);
+    }
+  };
+
+  const handlePublishDraft = async (blogId: string) => {
+    const success = await publishDraft(blogId);
+    if (success) {
+      loadUserBlogs(); // Refresh the list
+    }
+  };
+
+  const handleDeleteBlog = async (blogId: string) => {
+    const success = await deleteBlog(blogId);
+    if (success) {
+      loadUserBlogs(); // Refresh the list
+    }
+  };
 
   // Format scans for display
   const recentReadings = scans.map((scan) => ({
@@ -332,23 +373,107 @@ const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
 
               {activeTab === 'blog' && (
                 <div className="space-y-4">
-                  <div className="text-center space-y-4">
-                    <div className="text-6xl mb-4">📝</div>
-                    <h3 className="text-xl font-semibold text-foreground">Astrology Blog</h3>
-                    <p className="text-muted-foreground">
-                      Share your cosmic insights and read what others have discovered about astrology
-                    </p>
-                    <div className="flex gap-4 justify-center">
-                      <Button onClick={() => window.location.href = '/blogs'} variant="default">
-                        <BookOpen className="h-4 w-4 mr-2" />
-                        Read Blogs
-                      </Button>
-                      <Button onClick={() => window.location.href = '/blogs/create'} variant="outline">
-                        <BookOpen className="h-4 w-4 mr-2" />
-                        Write Blog
-                      </Button>
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold">My Blogs</h3>
+                    <div className="flex gap-2">
+                      <Link to="/blogs">
+                        <Button variant="outline" size="sm">
+                          <Eye className="h-4 w-4 mr-2" />
+                          View All Blogs
+                        </Button>
+                      </Link>
+                      <Link to="/blogs/create">
+                        <Button size="sm">
+                          <PlusCircle className="h-4 w-4 mr-2" />
+                          Write Blog
+                        </Button>
+                      </Link>
                     </div>
                   </div>
+
+                  {blogsLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                      <p className="text-muted-foreground">Loading your blogs...</p>
+                    </div>
+                  ) : userBlogs.length > 0 ? (
+                    <div className="space-y-4">
+                      {userBlogs.map((blog) => (
+                        <Card key={blog.id} className="p-4 bg-card/80 backdrop-blur-sm hover:shadow-mystical transition-all">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <h4 className="font-semibold text-foreground line-clamp-1">{blog.title}</h4>
+                                <Badge variant={blog.published ? "default" : "secondary"}>
+                                  {blog.published ? "Published" : "Draft"}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
+                                {blog.content.substring(0, 100)}...
+                              </p>
+                              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                <span>
+                                  {new Date(blog.created_at).toLocaleDateString()}
+                                </span>
+                                {blog.published && (
+                                  <>
+                                    <span className="flex items-center gap-1">
+                                      <Heart className="h-3 w-3" />
+                                      {blog.likes_count}
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                      <FileText className="h-3 w-3" />
+                                      {blog.comments_count}
+                                    </span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 ml-4">
+                              {!blog.published && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handlePublishDraft(blog.id)}
+                                >
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  Publish
+                                </Button>
+                              )}
+                              <Link to={`/blog/${blog.id}`}>
+                                <Button variant="outline" size="sm">
+                                  <Edit className="h-4 w-4 mr-1" />
+                                  {blog.published ? "View" : "Edit"}
+                                </Button>
+                              </Link>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDeleteBlog(blog.id)}
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <Card className="p-8 bg-card/80 backdrop-blur-sm text-center">
+                      <div className="space-y-4">
+                        <BookOpen className="h-12 w-12 text-muted-foreground mx-auto" />
+                        <h3 className="text-lg font-semibold text-foreground">No blogs yet</h3>
+                        <p className="text-muted-foreground">Share your astrology insights with the community!</p>
+                        <Link to="/blogs/create">
+                          <Button>
+                            <PlusCircle className="h-4 w-4 mr-2" />
+                            Write Your First Blog
+                          </Button>
+                        </Link>
+                      </div>
+                    </Card>
+                  )}
                 </div>
               )}
             </div>

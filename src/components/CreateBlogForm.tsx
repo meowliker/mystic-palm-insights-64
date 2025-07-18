@@ -11,13 +11,14 @@ import { useAuth } from "@/hooks/useAuth";
 
 export const CreateBlogForm = () => {
   const navigate = useNavigate();
-  const { createBlog } = useBlogs();
+  const { createBlog, saveDraft } = useBlogs();
   const { user } = useAuth();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDraftSaving, setIsDraftSaving] = useState(false);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -53,6 +54,20 @@ export const CreateBlogForm = () => {
       }
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleSaveDraft = async () => {
+    if (!title.trim() || !content.trim()) return;
+
+    setIsDraftSaving(true);
+    try {
+      const success = await saveDraft(title, content, imageFile || undefined);
+      if (success) {
+        navigate("/blogs");
+      }
+    } finally {
+      setIsDraftSaving(false);
     }
   };
 
@@ -156,7 +171,15 @@ export const CreateBlogForm = () => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate("/blogs")}
+              onClick={handleSaveDraft}
+              disabled={!title.trim() || !content.trim() || isDraftSaving}
+            >
+              {isDraftSaving ? "Saving..." : "Save Draft"}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => navigate(-1)}
             >
               Cancel
             </Button>

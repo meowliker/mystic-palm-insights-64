@@ -149,11 +149,11 @@ export const BlogDetail = () => {
       {/* Back button */}
       <Button
         variant="ghost"
-        onClick={() => navigate("/blogs")}
+        onClick={() => navigate(-1)}
         className="mb-6 flex items-center gap-2"
       >
         <ArrowLeft className="w-4 h-4" />
-        Back to Blogs
+        Back
       </Button>
 
       {/* Blog post */}

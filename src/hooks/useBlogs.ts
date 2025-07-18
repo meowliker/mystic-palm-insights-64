@@ -374,6 +374,192 @@ export const useBlogs = () => {
     }
   };
 
+  const fetchUserBlogs = async () => {
+    if (!user) return [];
+
+    try {
+      // Get user's blogs (both published and drafts)
+      const { data: blogsData, error: blogsError } = await supabase
+        .from('blogs')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (blogsError) throw blogsError;
+
+      // Get user profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError) throw profileError;
+
+      // Get likes for the blogs
+      const blogIds = blogsData?.map(blog => blog.id) || [];
+      const { data: likesData, error: likesError } = await supabase
+        .from('blog_likes')
+        .select('blog_id, user_id')
+        .in('blog_id', blogIds);
+
+      if (likesError) throw likesError;
+
+      // Transform the data
+      const transformedBlogs = blogsData?.map(blog => {
+        const blogLikes = likesData?.filter(like => like.blog_id === blog.id) || [];
+        
+        return {
+          ...blog,
+          author_name: profileData?.full_name || 'Unknown',
+          author_email: profileData?.email || '',
+          likes_count: blogLikes.length,
+          comments_count: 0,
+          isLikedByUser: blogLikes.some(like => like.user_id === user.id)
+        };
+      }) || [];
+
+      return transformedBlogs;
+    } catch (error) {
+      console.error('Error fetching user blogs:', error);
+      return [];
+    }
+  };
+
+  const saveDraft = async (title: string, content: string, imageFile?: File) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to save a draft",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      let imageUrl: string | null = null;
+
+      if (imageFile) {
+        const fileExt = imageFile.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('blog-images')
+          .upload(fileName, imageFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('blog-images')
+          .getPublicUrl(fileName);
+
+        imageUrl = publicUrl;
+      }
+
+      const { error } = await supabase
+        .from('blogs')
+        .insert([
+          {
+            title,
+            content,
+            image_url: imageUrl,
+            user_id: user.id,
+            published: false // Save as draft
+          }
+        ]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Draft saved successfully!"
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error saving draft:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save draft",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
+  const publishDraft = async (blogId: string) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to publish a blog",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('blogs')
+        .update({ published: true })
+        .eq('id', blogId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Blog published successfully!"
+      });
+
+      fetchBlogs(); // Refresh blogs
+      return true;
+    } catch (error) {
+      console.error('Error publishing blog:', error);
+      toast({
+        title: "Error",
+        description: "Failed to publish blog",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
+  const deleteBlog = async (blogId: string) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to delete a blog",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('blogs')
+        .delete()
+        .eq('id', blogId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Blog deleted successfully!"
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error deleting blog:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete blog",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
   useEffect(() => {
     fetchBlogs();
   }, []);
@@ -386,6 +572,10 @@ export const useBlogs = () => {
     likeBlog,
     fetchBlogComments,
     addComment,
-    likeComment
+    likeComment,
+    fetchUserBlogs,
+    saveDraft,
+    publishDraft,
+    deleteBlog
   };
 };

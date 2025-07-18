@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { PlusCircle, Search, Filter } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { PlusCircle, Search, Filter, ArrowLeft, FileText, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -9,12 +9,38 @@ import { useBlogs } from "@/hooks/useBlogs";
 import { useAuth } from "@/hooks/useAuth";
 
 export const Blogs = () => {
-  const { blogs, loading, likeBlog } = useBlogs();
+  const { blogs, loading, likeBlog, fetchUserBlogs } = useBlogs();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("newest");
+  const [showDrafts, setShowDrafts] = useState(false);
+  const [userBlogs, setUserBlogs] = useState<any[]>([]);
+  const [userBlogsLoading, setUserBlogsLoading] = useState(false);
 
-  const filteredAndSortedBlogs = blogs
+  // Load user's blogs when showDrafts is true
+  const loadUserBlogs = async () => {
+    if (!user) return;
+    setUserBlogsLoading(true);
+    try {
+      const userBlogsData = await fetchUserBlogs();
+      setUserBlogs(userBlogsData);
+    } finally {
+      setUserBlogsLoading(false);
+    }
+  };
+
+  // Load user blogs when showDrafts is toggled
+  useEffect(() => {
+    if (showDrafts && user) {
+      loadUserBlogs();
+    }
+  }, [showDrafts, user]);
+
+  const blogsToShow = showDrafts ? userBlogs : blogs;
+  const isLoading = showDrafts ? userBlogsLoading : loading;
+
+  const filteredAndSortedBlogs = blogsToShow
     .filter(blog => 
       blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       blog.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -35,7 +61,7 @@ export const Blogs = () => {
       }
     });
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
@@ -50,6 +76,16 @@ export const Blogs = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Back button */}
+      <Button
+        variant="ghost"
+        onClick={() => navigate(-1)}
+        className="mb-6 flex items-center gap-2"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back
+      </Button>
+
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
         <div>
@@ -59,14 +95,31 @@ export const Blogs = () => {
           </p>
         </div>
         
-        {user && (
-          <Link to="/blogs/create">
-            <Button className="flex items-center gap-2 mt-4 md:mt-0">
-              <PlusCircle className="w-4 h-4" />
-              Write Blog
-            </Button>
-          </Link>
-        )}
+        <div className="flex items-center gap-4 mt-4 md:mt-0">
+          {user && (
+            <>
+              <Button
+                variant={showDrafts ? "default" : "outline"}
+                onClick={() => {
+                  setShowDrafts(!showDrafts);
+                  if (!showDrafts) {
+                    loadUserBlogs();
+                  }
+                }}
+                className="flex items-center gap-2"
+              >
+                {showDrafts ? <Eye className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
+                {showDrafts ? "Show All Blogs" : "My Blogs & Drafts"}
+              </Button>
+              <Link to="/blogs/create">
+                <Button className="flex items-center gap-2">
+                  <PlusCircle className="w-4 h-4" />
+                  Write Blog
+                </Button>
+              </Link>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Search and Filter */}
@@ -99,16 +152,22 @@ export const Blogs = () => {
       {filteredAndSortedBlogs.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">🌟</div>
-          <h3 className="text-xl font-semibold mb-2">No blogs found</h3>
+          <h3 className="text-xl font-semibold mb-2">
+            {showDrafts ? "No blogs found" : "No blogs found"}
+          </h3>
           <p className="text-muted-foreground mb-6">
             {searchTerm 
               ? "No blogs match your search criteria" 
-              : "Be the first to write about astrology!"
+              : showDrafts 
+                ? "You haven't written any blogs yet!"
+                : "Be the first to write about astrology!"
             }
           </p>
           {user && !searchTerm && (
             <Link to="/blogs/create">
-              <Button>Write the First Blog</Button>
+              <Button>
+                {showDrafts ? "Write Your First Blog" : "Write the First Blog"}
+              </Button>
             </Link>
           )}
         </div>
