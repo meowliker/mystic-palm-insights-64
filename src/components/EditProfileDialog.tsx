@@ -350,20 +350,25 @@ export const EditProfileDialog = ({ children }: EditProfileDialogProps) => {
       
       if (deleteUserError) {
         console.error('Error deleting user account:', deleteUserError);
-        // If the RPC doesn't exist, we'll create it via migration
         throw new Error('Account deletion failed. Please try again.');
       }
 
+      // First sign out the user before showing success message
+      await supabase.auth.signOut();
+
       toast({
         title: "Account Deleted",
-        description: "Your account and all data have been deleted successfully.",
+        description: "Your account and all data have been deleted successfully. Redirecting to welcome page...",
       });
 
       // Close the dialog
       setOpen(false);
       setDeleteAccountPassword('');
       
-      // The user will be automatically signed out and redirected
+      // Small delay to ensure the toast is shown, then redirect to welcome page
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 1500);
     } catch (error: any) {
       toast({
         title: "Error",
