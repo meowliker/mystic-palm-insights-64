@@ -427,7 +427,12 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
                             </Badge>
                           ))}
                         </div>
-                        <p className="text-muted-foreground">{scan.overall_insight}</p>
+                        <p className="text-muted-foreground line-clamp-3">
+                          {scan.overall_insight.length > 150 
+                            ? `${scan.overall_insight.substring(0, 150)}...` 
+                            : scan.overall_insight
+                          }
+                        </p>
                       </div>
                     </Card>
                   )) : (
