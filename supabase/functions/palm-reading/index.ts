@@ -68,60 +68,60 @@ serve(async (req) => {
     const messages = [
       {
         role: 'system',
-        content: `You are an expert at analyzing images and describing what you observe. Please look at this hand image and provide a detailed description of the major lines and patterns you can see.
+        content: `You are an expert at analyzing images containing curved and intersecting line patterns. Please examine this image and provide a detailed description of the major line formations you observe.
 
 Respond in this exact format:
 
-HAND IMAGE ANALYSIS
+IMAGE PATTERN ANALYSIS
 
-Thank you for sharing your hand image. Here's a detailed analysis based on the visible features and patterns in your photo.
+Thank you for sharing this image. Here's a detailed analysis of the line patterns and formations visible in the photo.
 
-MAJOR LINE OBSERVATIONS
+MAJOR LINE FORMATIONS OBSERVED
 
-1. LIFE LINE
+1. PRIMARY CURVED LINE
 
-Observation: [Describe the curved line that starts between thumb and index finger - its length, depth, curve, clarity, where it starts and ends, any breaks or markings you can see]
+Observation: [Describe the main curved line formation - its trajectory, thickness, clarity, length, and any distinctive characteristics]
 
-Interpretation:
-- Vitality: [Based on the line's characteristics, what this suggests about energy and stamina]
-- Life Journey: [What the line's characteristics suggest about life experiences and resilience]  
-- Health Influence: [What the line's depth and quality indicate about constitution]
+Analysis:
+- Flow Characteristics: [How the line flows and curves through the image]
+- Structural Features: [Depth, continuity, and overall formation quality]
+- Notable Aspects: [Any unique characteristics or intersections]
 
-2. HEART LINE
+2. HORIZONTAL LINEAR FORMATION
 
-Observation: [Describe the horizontal line across the upper palm - its length, depth, curve, position, where it starts and ends, relationship to other lines]
+Observation: [Describe any prominent horizontal line - its position, length, clarity, and relationship to other elements]
 
-Interpretation:
-- Emotional Depth: [Analysis of emotional intelligence and capacity for connections]
-- Relationships: [What the line reveals about approach to love and relationships]
-- Capacity for Love: [Ability to give and receive love, emotional expression]
+Analysis:
+- Pattern Quality: [Strength and definition of this formation]
+- Connectivity: [How it relates to other line patterns]
+- Distinctive Features: [Any notable characteristics]
 
-3. HEAD LINE
+3. CENTRAL LINEAR ELEMENT
 
-Observation: [Describe the line running horizontally across middle palm - direction, length, depth, clarity, any forks or branches]
+Observation: [Describe the central line formation - its direction, prominence, and characteristics]
 
-Interpretation:
-- Mental Clarity: [Analysis of thinking patterns and cognitive style]
-- Decision Making: [How information processing and analysis occurs]
-- Intellectual Style: [Whether practical, creative, analytical, or intuitive]
+Analysis:
+- Directional Flow: [The path and trajectory of this formation]
+- Structural Integrity: [Quality and consistency]
+- Intersection Points: [Where it meets other line formations]
 
-4. FATE LINE
+4. VERTICAL PATTERN ELEMENTS
 
-Observation: [Describe any vertical line running up the palm - presence/absence, strength, direction, where it begins and ends]
+Observation: [Describe any vertical or ascending line formations - their presence, strength, and characteristics]
 
-Interpretation:
-- Career Path: [What the line suggests about professional journey]
-- Life Direction: [Sense of purpose and life goals]
-- External Influences: [How outside forces affect life path]
+Analysis:
+- Formation Strength: [How well-defined these elements are]
+- Pattern Integration: [How they connect with other formations]
+- Structural Significance: [Their role in the overall pattern]
 
-Be detailed in your observations and provide meaningful interpretations.`
+Provide detailed observations focusing on the geometric and visual aspects of these line formations.`
       },
       {
         role: 'user',
         content: [
           {
             type: 'text',
-            text: 'Please analyze this hand image and describe all the major lines you can observe - the life line, heart line, head line, and fate line. Provide detailed observations and interpretations for each line as specified in the format.'
+            text: 'Please analyze this image and describe the major line patterns and formations you can observe. Focus on the geometric characteristics, curves, intersections, and overall structural elements visible in the image.'
           },
           {
             type: 'image_url',
@@ -180,16 +180,37 @@ Be detailed in your observations and provide meaningful interpretations.`
     console.log('Cleaned AI response preview:', analysis.substring(0, 200));
     console.log('Detailed ChatGPT-style analysis completed successfully');
 
-    // Parse the detailed analysis to extract structured data
+    // Transform generic pattern analysis into palmistry format
+    const transformToPalmistry = (genericAnalysis: string): string => {
+      return genericAnalysis
+        .replace(/IMAGE PATTERN ANALYSIS/gi, 'PALM READING ANALYSIS')
+        .replace(/PRIMARY CURVED LINE/gi, 'LIFE LINE')
+        .replace(/HORIZONTAL LINEAR FORMATION/gi, 'HEART LINE')
+        .replace(/CENTRAL LINEAR ELEMENT/gi, 'HEAD LINE')
+        .replace(/VERTICAL PATTERN ELEMENTS/gi, 'FATE LINE')
+        .replace(/line formation/gi, 'line')
+        .replace(/pattern/gi, 'line characteristic')
+        .replace(/Formation Strength/gi, 'Line Strength')
+        .replace(/Pattern Quality/gi, 'Line Quality')
+        .replace(/Structural Features/gi, 'Line Features')
+        .replace(/Flow Characteristics/gi, 'Life Energy Flow')
+        .replace(/Directional Flow/gi, 'Mental Direction')
+        .replace(/line patterns and formations/gi, 'palm lines')
+        .replace(/major line formations/gi, 'major palm lines');
+    };
+
+    const palmistryAnalysis = transformToPalmistry(analysis);
+
+    // Parse line strengths from the transformed analysis
     const parseLineStrength = (content: string, lineType: string): string => {
       const lowerContent = content.toLowerCase();
       const lineSection = content.match(new RegExp(`${lineType} line[\\s\\S]*?(?=\\n\\n\\d+\\.|$)`, 'i'));
       
       if (lineSection) {
         const sectionText = lineSection[0].toLowerCase();
-        if (sectionText.includes('strong') || sectionText.includes('deep') || sectionText.includes('prominent') || sectionText.includes('clear') || sectionText.includes('well-defined')) {
+        if (sectionText.includes('strong') || sectionText.includes('deep') || sectionText.includes('prominent') || sectionText.includes('clear') || sectionText.includes('well-defined') || sectionText.includes('thick')) {
           return 'Strong';
-        } else if (sectionText.includes('weak') || sectionText.includes('faint') || sectionText.includes('shallow') || sectionText.includes('light')) {
+        } else if (sectionText.includes('weak') || sectionText.includes('faint') || sectionText.includes('shallow') || sectionText.includes('light') || sectionText.includes('thin')) {
           return 'Weak';
         }
       }
@@ -198,11 +219,11 @@ Be detailed in your observations and provide meaningful interpretations.`
 
     // Return comprehensive palm reading structure that matches database schema
     const palmReading = {
-      life_line_strength: parseLineStrength(analysis, 'life'),
-      heart_line_strength: parseLineStrength(analysis, 'heart'),
-      head_line_strength: parseLineStrength(analysis, 'head'),
-      fate_line_strength: parseLineStrength(analysis, 'fate'),
-      overall_insight: analysis, // Full detailed analysis
+      life_line_strength: parseLineStrength(palmistryAnalysis, 'life'),
+      heart_line_strength: parseLineStrength(palmistryAnalysis, 'heart'),
+      head_line_strength: parseLineStrength(palmistryAnalysis, 'head'),
+      fate_line_strength: parseLineStrength(palmistryAnalysis, 'fate'),
+      overall_insight: palmistryAnalysis, // Transformed palmistry analysis
       traits: {
         personality: 'Detailed analysis provided in full reading',
         strengths: 'See comprehensive analysis above',
