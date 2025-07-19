@@ -23,7 +23,8 @@ import {
   FileText,
   PlusCircle,
   Share,
-  AlertTriangle
+  AlertTriangle,
+  Upload
 } from 'lucide-react';
 import constellationPattern from '@/assets/constellation-pattern.jpg';
 import { useScans } from '@/hooks/useScans';
@@ -100,7 +101,7 @@ const ProfilePicture = ({ userId, onUpdate }: { userId?: string; onUpdate?: () =
   );
 };
 
-const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
+const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; onStartUpload?: () => void }) => {
   const [activeTab, setActiveTab] = useState<'readings' | 'horoscope' | 'blog'>('readings');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userBlogs, setUserBlogs] = useState<any[]>([]);
@@ -210,8 +211,19 @@ const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
                 size="sm"
               >
                 <Scan className="h-4 w-4" />
-                <span className="hidden sm:inline">New Scan</span>
+                <span className="hidden sm:inline">Camera Scan</span>
               </Button>
+              {onStartUpload && (
+                <Button 
+                  variant="outline" 
+                  onClick={onStartUpload}
+                  className="gap-2"
+                  size="sm"
+                >
+                  <Upload className="h-4 w-4" />
+                  <span className="hidden sm:inline">Upload Images</span>
+                </Button>
+              )}
               {/* Mobile Settings */}
               <div className="lg:hidden">
                 <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>

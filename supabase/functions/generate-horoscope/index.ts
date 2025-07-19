@@ -57,37 +57,97 @@ function calculateZodiacSign(day: number, month: number): string {
   return 'capricorn'; // fallback
 }
 
-const analyzePalmImage = async (imageUrl: string) => {
+const analyzePalmImage = async (imageUrl: string, rightImageUrl?: string) => {
   console.log('Starting palm image analysis for URL:', imageUrl);
+  if (rightImageUrl) {
+    console.log('Dual palm analysis - right palm URL:', rightImageUrl);
+  }
   console.log('OpenAI API Key available:', !!openaiApiKey);
   
   if (!openaiApiKey) {
     throw new Error('OpenAI API key not configured');
   }
 
+  // Determine if this is dual palm analysis
+  const isDualPalm = !!rightImageUrl;
+
   try {
     console.log('Calling OpenAI for comprehensive palm analysis...');
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
-        messages: [
-          {
-            role: 'system',
-            content: `You are a master palmist with decades of experience in traditional palmistry and astrological sciences. You combine ancient wisdom with intuitive insights to provide comprehensive palm readings.
+    
+    let messages;
+    
+    if (isDualPalm) {
+      messages = [
+        {
+          role: 'system',
+          content: `You are a master palmist with decades of experience in traditional palmistry and astrological sciences. You combine ancient wisdom with intuitive insights to provide comprehensive palm readings.
+
+IMPORTANT: You are analyzing BOTH palms (left and right hands). Compare and synthesize the readings from both hands to provide a unified, comprehensive analysis.`
+        },
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: `Analyze these TWO palm photos (left and right hands) and provide a comprehensive combined palm reading. Compare the lines between both hands and provide a unified analysis:
+
+DUAL PALM ANALYSIS:
+
+Life Line (both hands):
+- Compare strength and depth between hands
+- What does the combination suggest about vitality, overall life journey, and health?
+
+Heart Line (both hands):
+- Compare emotional patterns shown in each hand
+- What does this reveal about emotional depth, relationships, and capacity for love?
+
+Head Line (both hands):
+- Compare intellectual indicators between hands
+- How do they indicate decision-making processes, mental clarity, and thinking patterns?
+
+Fate Line (both hands):
+- Compare presence and strength in each hand
+- What does this suggest about destiny, career path, and life direction?
+
+Dominant vs Non-Dominant Hand:
+- Note differences between the hands and what they reveal
+- How do they show conscious vs subconscious traits?
+
+Synthesis:
+- Provide an overall personality analysis combining insights from both palms
+- Give character traits and future insights based on the complete reading
+
+Focus on creating a unified reading that takes advantage of having both palms to provide deeper, more accurate insights.`
+            },
+            {
+              type: 'image_url',
+              image_url: {
+                url: imageUrl
+              }
+            },
+            {
+              type: 'image_url',
+              image_url: {
+                url: rightImageUrl
+              }
+            }
+          ]
+        }
+      ];
+    } else {
+      messages = [
+        {
+          role: 'system',
+          content: `You are a master palmist with decades of experience in traditional palmistry and astrological sciences. You combine ancient wisdom with intuitive insights to provide comprehensive palm readings.
 
 IMPORTANT: Based on the palm image provided, give a detailed palmistry reading following traditional palmistry principles. Analyze what you can actually observe in the image.`
-          },
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: `Analyze the following palm photo and provide a detailed palm reading based on the visible lines and markings. Include interpretations for the following palm features:
+        },
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: `Analyze the following palm photo and provide a detailed palm reading based on the visible lines and markings. Include interpretations for the following palm features:
 
 Life Line:
 - Is it strong or weak, deep or shallow?
@@ -113,16 +173,27 @@ Mounts:
 - Analyze the mounts at the base of the fingers (Venus, Mars, Jupiter, etc.) and how they relate to the user's personality traits.
 
 Provide an overall personality analysis, character traits, and potential future insights based on the palm features observed in the photo.`
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: imageUrl
-                }
+            },
+            {
+              type: 'image_url',
+              image_url: {
+                url: imageUrl
               }
-            ]
-          }
-        ],
+            }
+          ]
+        }
+      ];
+    }
+    
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openaiApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4.1-2025-04-14',
+        messages,
         max_tokens: 1500,
         temperature: 0.7
       }),
@@ -219,14 +290,14 @@ serve(async (req) => {
       console.log('Request body received');
       
       // Parse request body
-      const { zodiacSign, name, birthDate, birthTime, birthPlace, method, palmImageUrl } = JSON.parse(body);
+      const { zodiacSign, name, birthDate, birthTime, birthPlace, method, palmImageUrl, rightPalmImageUrl, analysisType } = JSON.parse(body);
       
       // Check if this is a palm reading request
       if (palmImageUrl) {
         console.log('Processing palm reading request with AI analysis...');
         
-        // Analyze the palm image using OpenAI's vision API
-        const aiAnalysis = await analyzePalmImage(palmImageUrl);
+        // Analyze the palm image(s) using OpenAI's vision API
+        const aiAnalysis = await analyzePalmImage(palmImageUrl, rightPalmImageUrl);
         console.log('AI Analysis completed successfully');
         
         // Parse the AI response into structured palm reading data
@@ -250,7 +321,8 @@ serve(async (req) => {
               fate_line_strength: palmReading.fate_line_strength,
               overall_insight: palmReading.overall_insight,
               traits: palmReading.traits,
-              palm_image_url: palmImageUrl
+              palm_image_url: palmImageUrl,
+              right_palm_image_url: rightPalmImageUrl
             })
             .select()
             .single();

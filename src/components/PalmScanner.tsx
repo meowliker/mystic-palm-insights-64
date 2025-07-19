@@ -7,6 +7,8 @@ import { Camera, Hand, CheckCircle, AlertCircle, RefreshCw, Sparkles, ArrowLeft 
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import palmOutline from '@/assets/palm-outline.png';
+import leftPalmOutline from '@/assets/left-palm-outline.png';
+import rightPalmOutline from '@/assets/right-palm-outline.png';
 
 type ScanState = 'ready' | 'detecting' | 'scanning' | 'analyzing' | 'complete' | 'error';
 
@@ -29,10 +31,9 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Initialize camera
+  // Initialize camera only when component mounts
   useEffect(() => {
-    initializeCamera();
-
+    // Don't auto-start camera for privacy - user needs to explicitly start it
     return () => {
       stopCamera();
       if (progressIntervalRef.current) {
@@ -311,22 +312,22 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
 
         {/* Header */}
         <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold text-foreground flex items-center justify-center gap-2">
-            <Sparkles className="h-8 w-8 text-primary" />
+          <h1 className="text-2xl sm:text-4xl font-bold text-foreground flex items-center justify-center gap-2">
+            <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
             Palm Reading
           </h1>
-          <p className="text-muted-foreground text-lg">
+          <p className="text-muted-foreground text-base sm:text-lg px-4">
             {getStatusMessage()}
           </p>
           {scanState === 'ready' && (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground px-4">
               Please use the flashlight for better scans in dark backgrounds
             </p>
           )}
           
           {/* Camera Privacy Controls */}
-          <div className="flex items-center justify-center gap-4">
-            <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 px-4">
+            <div className={`flex items-center gap-2 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm ${
               cameraActive ? 'bg-red-500/20 text-red-600' : 'bg-green-500/20 text-green-600'
             }`}>
               <div className={`w-2 h-2 rounded-full ${cameraActive ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`} />
@@ -337,7 +338,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
                 variant="outline" 
                 size="sm" 
                 onClick={stopCamera}
-                className="text-red-600 border-red-200 hover:bg-red-50"
+                className="text-red-600 border-red-200 hover:bg-red-50 text-xs sm:text-sm"
               >
                 Stop Camera
               </Button>
@@ -347,7 +348,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
                 variant="outline" 
                 size="sm" 
                 onClick={initializeCamera}
-                className="text-green-600 border-green-200 hover:bg-green-50"
+                className="text-green-600 border-green-200 hover:bg-green-50 text-xs sm:text-sm"
               >
                 Start Camera
               </Button>
@@ -356,8 +357,8 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
         </div>
 
         {/* Main Scanning Area */}
-        <Card className="relative overflow-hidden bg-card/80 backdrop-blur-sm border-primary/20">
-          <div className="aspect-[4/3] relative flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5">
+        <Card className="relative overflow-hidden bg-card/80 backdrop-blur-sm border-primary/20 mx-2 sm:mx-0">
+          <div className="aspect-[4/3] sm:aspect-[4/3] relative flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5">
             {cameraError ? (
               <div className="flex flex-col items-center space-y-4 text-center p-8">
                 <AlertCircle className="h-12 w-12 text-destructive" />
@@ -385,9 +386,9 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
                 <div className="relative z-10 flex items-center justify-center">
                   <div className="relative">
                     <img 
-                      src={palmOutline} 
-                      alt="Palm Outline" 
-                      className={`w-56 h-72 transition-all duration-500 ${
+                      src={currentHand === 'left' ? leftPalmOutline : rightPalmOutline} 
+                      alt={`${currentHand} Palm Outline`} 
+                      className={`w-40 h-52 sm:w-56 sm:h-72 transition-all duration-500 ${
                         alignment === 'good' 
                           ? 'opacity-90 drop-shadow-[0_0_30px_rgba(168,85,247,0.9)] scale-105' 
                           : 'opacity-60 scale-100'
@@ -445,9 +446,9 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
           
           {/* Progress Bar */}
           {(scanState === 'scanning' || scanState === 'analyzing') && (
-            <div className="p-4">
+            <div className="p-3 sm:p-4">
               <div className="space-y-2">
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-xs sm:text-sm">
                   <span className="text-muted-foreground">
                     {scanState === 'scanning' ? 'Scanning Progress' : 'Analyzing...'}
                   </span>
@@ -464,10 +465,10 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
           )}
           
           {/* Controls */}
-          <div className="p-6 text-center space-y-4">
-            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-              <Camera className="h-4 w-4" />
-              <span>
+          <div className="p-4 sm:p-6 text-center space-y-3 sm:space-y-4">
+            <div className="flex items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground px-2">
+              <Camera className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+              <span className="text-center">
                 {alignment === 'good' 
                   ? 'Perfect alignment! Hold steady...' 
                   : 'Adjust your hand position within the outline'
@@ -481,14 +482,14 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
                 className="w-full bg-primary hover:bg-primary/90"
                 size="lg"
               >
-                <Hand className="h-5 w-5 mr-2" />
+                <Hand className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                 Start {currentHand} Palm Scan
               </Button>
             )}
             
             {scanState === 'ready' && !cameraActive && (
-              <div className="space-y-3">
-                <p className="text-muted-foreground text-sm">Camera is stopped for privacy</p>
+              <div className="space-y-3 px-2">
+                <p className="text-muted-foreground text-xs sm:text-sm">Camera is stopped for privacy</p>
                 <Button 
                   onClick={initializeCamera}
                   className="w-full bg-primary hover:bg-primary/90"
