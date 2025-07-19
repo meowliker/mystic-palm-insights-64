@@ -322,7 +322,7 @@ serve(async (req) => {
               overall_insight: palmReading.overall_insight,
               traits: palmReading.traits,
               palm_image_url: palmImageUrl,
-              right_palm_image_url: rightPalmImageUrl
+              right_palm_image_url: rightPalmImageUrl || null
             })
             .select()
             .single();
