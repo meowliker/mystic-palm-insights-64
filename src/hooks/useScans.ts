@@ -143,29 +143,35 @@ export const useScans = () => {
         .eq('user_id', user.id)
         .not('palm_image_url', 'is', null);
 
-      // Delete images from storage
-      if (scansWithImages && scansWithImages.length > 0) {
-        for (const scan of scansWithImages) {
-          if (scan.palm_image_url) {
-            const fileName = scan.palm_image_url.split('/').pop();
-            if (fileName) {
-              await supabase.storage
-                .from('palm-images')
-                .remove([`${user.id}/${fileName}`]);
-            }
-          }
-        }
-      }
-
-      // Delete all scan records
-      const { error } = await supabase
+      // Delete all scan records from database first (faster)
+      const { error: deleteError } = await supabase
         .from('palm_scans')
         .delete()
         .eq('user_id', user.id);
 
-      if (error) {
-        console.error('Error clearing all scans:', error);
+      if (deleteError) {
+        console.error('Error clearing all scans:', deleteError);
         return false;
+      }
+
+      // Delete images from storage in parallel (faster)
+      if (scansWithImages && scansWithImages.length > 0) {
+        const filePaths = scansWithImages
+          .map(scan => {
+            if (scan.palm_image_url) {
+              const fileName = scan.palm_image_url.split('/').pop();
+              return fileName ? `${user.id}/${fileName}` : null;
+            }
+            return null;
+          })
+          .filter(Boolean) as string[];
+
+        if (filePaths.length > 0) {
+          // Delete all images at once
+          await supabase.storage
+            .from('palm-images')
+            .remove(filePaths);
+        }
       }
 
       // Refresh the scans list
