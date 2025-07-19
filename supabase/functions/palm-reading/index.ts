@@ -68,58 +68,48 @@ serve(async (req) => {
     const messages = [
       {
         role: 'system',
-        content: `You are an expert in analyzing hand images and line patterns. Analyze the hand image and provide a detailed structured analysis of the visible lines and patterns.
+        content: `You are a visual pattern analyst specializing in describing line formations and patterns in hand images. Your task is to provide detailed observations about visible line patterns for educational and entertainment purposes only.
 
-Start with: "Thank you for sharing your hand image. Here's a detailed analysis based on the visible features and patterns in your photo. This is an interpretive analysis for entertainment purposes."
+Please analyze the hand image and describe what you observe in this format:
 
-Then provide this exact structure (NO markdown symbols, NO asterisks, NO hashtags):
+VISUAL PATTERN ANALYSIS
 
-HAND LINE ANALYSIS
+Thank you for sharing your hand image. Here's a detailed visual analysis of the line patterns and formations visible in your photo. This analysis is for educational interest and entertainment purposes only.
 
-1. LIFE LINE
+MAJOR LINE PATTERNS OBSERVED
 
-Observation: [Describe exactly what you observe about the prominent curved line that typically starts between thumb and index finger - its length, depth, curve, clarity, where it starts and ends, any breaks or markings you can see in the image]
+Line Pattern A (Curved Formation):
+Location: [Describe where you see this curved line in the image]
+Visual Characteristics: [Length, depth, curvature, clarity, any branches or intersections]
+Pattern Details: [What makes this line unique or notable in the image]
 
-Interpretation:
-- Vitality: [Detailed analysis of the line's characteristics suggesting energy patterns]
-- Life Journey: [What the line's characteristics suggest about life experiences and resilience]  
-- Physical Indicators: [What the line's depth and quality indicate about constitution]
+Line Pattern B (Horizontal Formation):
+Location: [Describe the position of this horizontal line]
+Visual Characteristics: [Thickness, length, how it relates to other lines]
+Pattern Details: [Any interesting visual features you notice]
 
-2. HEART LINE
+Line Pattern C (Central Formation):
+Location: [Where this line appears in the image]
+Visual Characteristics: [Direction, prominence, any unique features]
+Pattern Details: [Visual relationship to other patterns]
 
-Observation: [Describe exactly what you observe about the horizontal line across the upper palm - its length, depth, curve, position, where it starts and ends, its relationship to other lines]
+Line Pattern D (Vertical Elements):
+Location: [Position of any vertical or diagonal lines]
+Visual Characteristics: [Strength, clarity, direction]
+Pattern Details: [How these elements contribute to the overall pattern]
 
-Interpretation:
-- Emotional Patterns: [Analysis of emotional expression and processing]
-- Relationship Style: [What the line reveals about interpersonal connections]
-- Emotional Capacity: [Analysis of emotional depth and expression patterns]
+OVERALL PATTERN SUMMARY
 
-3. HEAD LINE
+Describe the general visual composition, how the lines create an overall pattern, and any particularly interesting visual features you notice in the hand image. Focus on what can be directly observed rather than making interpretations.
 
-Observation: [Describe exactly what you observe about the line that typically runs horizontally across the middle palm - its direction, length, depth, clarity, any forks, branches, or unique characteristics]
-
-Interpretation:
-- Mental Approach: [Analysis of thinking patterns and cognitive style]
-- Decision Making: [How information processing and analysis occurs]
-- Intellectual Style: [Whether patterns suggest practical, creative, analytical, or intuitive approaches]
-
-4. FATE LINE
-
-Observation: [Describe what you observe about any vertical line running up the palm - its presence/absence, strength, direction, where it begins and ends, how prominent it is]
-
-Interpretation:
-- Life Direction: [What the line suggests about goal orientation and focus]
-- Achievement Patterns: [Patterns related to accomplishment and direction]
-- External Influences: [How outside factors may influence life patterns]
-
-Be extremely detailed in your observations of what you actually see in the hand image. Look closely at line depth, length, curves, intersections, and unique features. Provide comprehensive, insightful interpretations that feel personal and meaningful. Format everything with clear line breaks and proper spacing for readability.`
+Be thorough in describing exactly what you see in terms of lines, their intersections, depths, and visual characteristics.`
       },
       {
         role: 'user',
         content: [
           {
             type: 'text',
-            text: 'Please analyze my hand image and provide a detailed analysis in the format specified. Look closely at all the major lines, their patterns, depth, length, and characteristics. Provide specific observations about what you can see in the image.'
+            text: 'Please provide a detailed visual analysis of the line patterns visible in this hand image. Focus on describing what you can observe in terms of line formations, patterns, intersections, and visual characteristics. Describe the patterns as Line Pattern A, B, C, D etc.'
           },
           {
             type: 'image_url',
