@@ -68,48 +68,60 @@ serve(async (req) => {
     const messages = [
       {
         role: 'system',
-        content: `You are a visual pattern analyst specializing in describing line formations and patterns in hand images. Your task is to provide detailed observations about visible line patterns for educational and entertainment purposes only.
+        content: `You are an expert at analyzing images and describing what you observe. Please look at this hand image and provide a detailed description of the major lines and patterns you can see.
 
-Please analyze the hand image and describe what you observe in this format:
+Respond in this exact format:
 
-VISUAL PATTERN ANALYSIS
+HAND IMAGE ANALYSIS
 
-Thank you for sharing your hand image. Here's a detailed visual analysis of the line patterns and formations visible in your photo. This analysis is for educational interest and entertainment purposes only.
+Thank you for sharing your hand image. Here's a detailed analysis based on the visible features and patterns in your photo.
 
-MAJOR LINE PATTERNS OBSERVED
+MAJOR LINE OBSERVATIONS
 
-Line Pattern A (Curved Formation):
-Location: [Describe where you see this curved line in the image]
-Visual Characteristics: [Length, depth, curvature, clarity, any branches or intersections]
-Pattern Details: [What makes this line unique or notable in the image]
+1. LIFE LINE
 
-Line Pattern B (Horizontal Formation):
-Location: [Describe the position of this horizontal line]
-Visual Characteristics: [Thickness, length, how it relates to other lines]
-Pattern Details: [Any interesting visual features you notice]
+Observation: [Describe the curved line that starts between thumb and index finger - its length, depth, curve, clarity, where it starts and ends, any breaks or markings you can see]
 
-Line Pattern C (Central Formation):
-Location: [Where this line appears in the image]
-Visual Characteristics: [Direction, prominence, any unique features]
-Pattern Details: [Visual relationship to other patterns]
+Interpretation:
+- Vitality: [Based on the line's characteristics, what this suggests about energy and stamina]
+- Life Journey: [What the line's characteristics suggest about life experiences and resilience]  
+- Health Influence: [What the line's depth and quality indicate about constitution]
 
-Line Pattern D (Vertical Elements):
-Location: [Position of any vertical or diagonal lines]
-Visual Characteristics: [Strength, clarity, direction]
-Pattern Details: [How these elements contribute to the overall pattern]
+2. HEART LINE
 
-OVERALL PATTERN SUMMARY
+Observation: [Describe the horizontal line across the upper palm - its length, depth, curve, position, where it starts and ends, relationship to other lines]
 
-Describe the general visual composition, how the lines create an overall pattern, and any particularly interesting visual features you notice in the hand image. Focus on what can be directly observed rather than making interpretations.
+Interpretation:
+- Emotional Depth: [Analysis of emotional intelligence and capacity for connections]
+- Relationships: [What the line reveals about approach to love and relationships]
+- Capacity for Love: [Ability to give and receive love, emotional expression]
 
-Be thorough in describing exactly what you see in terms of lines, their intersections, depths, and visual characteristics.`
+3. HEAD LINE
+
+Observation: [Describe the line running horizontally across middle palm - direction, length, depth, clarity, any forks or branches]
+
+Interpretation:
+- Mental Clarity: [Analysis of thinking patterns and cognitive style]
+- Decision Making: [How information processing and analysis occurs]
+- Intellectual Style: [Whether practical, creative, analytical, or intuitive]
+
+4. FATE LINE
+
+Observation: [Describe any vertical line running up the palm - presence/absence, strength, direction, where it begins and ends]
+
+Interpretation:
+- Career Path: [What the line suggests about professional journey]
+- Life Direction: [Sense of purpose and life goals]
+- External Influences: [How outside forces affect life path]
+
+Be detailed in your observations and provide meaningful interpretations.`
       },
       {
         role: 'user',
         content: [
           {
             type: 'text',
-            text: 'Please provide a detailed visual analysis of the line patterns visible in this hand image. Focus on describing what you can observe in terms of line formations, patterns, intersections, and visual characteristics. Describe the patterns as Line Pattern A, B, C, D etc.'
+            text: 'Please analyze this hand image and describe all the major lines you can observe - the life line, heart line, head line, and fate line. Provide detailed observations and interpretations for each line as specified in the format.'
           },
           {
             type: 'image_url',
@@ -171,21 +183,26 @@ Be thorough in describing exactly what you see in terms of lines, their intersec
     // Parse the detailed analysis to extract structured data
     const parseLineStrength = (content: string, lineType: string): string => {
       const lowerContent = content.toLowerCase();
-      if (lowerContent.includes(`${lineType} line`) && (lowerContent.includes('strong') || lowerContent.includes('deep') || lowerContent.includes('prominent') || lowerContent.includes('clear'))) {
-        return 'Strong';
-      } else if (lowerContent.includes(`${lineType} line`) && (lowerContent.includes('weak') || lowerContent.includes('faint') || lowerContent.includes('shallow'))) {
-        return 'Weak';
+      const lineSection = content.match(new RegExp(`${lineType} line[\\s\\S]*?(?=\\n\\n\\d+\\.|$)`, 'i'));
+      
+      if (lineSection) {
+        const sectionText = lineSection[0].toLowerCase();
+        if (sectionText.includes('strong') || sectionText.includes('deep') || sectionText.includes('prominent') || sectionText.includes('clear') || sectionText.includes('well-defined')) {
+          return 'Strong';
+        } else if (sectionText.includes('weak') || sectionText.includes('faint') || sectionText.includes('shallow') || sectionText.includes('light')) {
+          return 'Weak';
+        }
       }
       return 'Moderate';
     };
 
-    // Return comprehensive palm reading structure
+    // Return comprehensive palm reading structure that matches database schema
     const palmReading = {
       life_line_strength: parseLineStrength(analysis, 'life'),
       heart_line_strength: parseLineStrength(analysis, 'heart'),
       head_line_strength: parseLineStrength(analysis, 'head'),
       fate_line_strength: parseLineStrength(analysis, 'fate'),
-      overall_insight: analysis, // Full detailed ChatGPT-style analysis
+      overall_insight: analysis, // Full detailed analysis
       traits: {
         personality: 'Detailed analysis provided in full reading',
         strengths: 'See comprehensive analysis above',
