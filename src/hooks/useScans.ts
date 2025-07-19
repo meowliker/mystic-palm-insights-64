@@ -63,6 +63,8 @@ export const useScans = () => {
     if (!user) return null;
 
     try {
+      console.log('Attempting to save scan data:', scanData);
+      
       const { data, error } = await supabase
         .from('palm_scans')
         .insert({
@@ -73,10 +75,12 @@ export const useScans = () => {
         .single();
 
       if (error) {
-        console.error('Error saving scan:', error);
+        console.error('Error saving scan to database:', error);
         return null;
       }
 
+      console.log('Scan saved successfully to database:', data);
+      
       // Refresh scans after saving
       fetchScans();
       return data;
