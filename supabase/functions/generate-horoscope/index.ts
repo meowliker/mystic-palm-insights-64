@@ -68,11 +68,30 @@ const analyzePalmImage = async (imageUrl: string, rightImageUrl?: string) => {
     throw new Error('OpenAI API key not configured');
   }
 
+  // Helper function to download image and convert to base64
+  const downloadImageAsBase64 = async (url: string): Promise<string> => {
+    console.log('Downloading image from:', url);
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to download image: ${response.status}`);
+    }
+    const arrayBuffer = await response.arrayBuffer();
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    console.log('Image downloaded and converted to base64, size:', base64.length);
+    return base64;
+  };
+
   // Determine if this is dual palm analysis
   const isDualPalm = !!rightImageUrl;
 
   try {
-    console.log('Calling OpenAI for comprehensive palm analysis...');
+    console.log('Downloading images for analysis...');
+    
+    // Download images and convert to base64
+    const leftPalmBase64 = await downloadImageAsBase64(imageUrl);
+    const rightPalmBase64 = rightImageUrl ? await downloadImageAsBase64(rightImageUrl) : null;
+    
+    console.log('Images downloaded successfully, calling OpenAI for comprehensive palm analysis...');
     
     let messages;
     
@@ -122,13 +141,13 @@ Focus on creating a unified reading that takes advantage of having both palms to
             {
               type: 'image_url',
               image_url: {
-                url: imageUrl
+                url: `data:image/jpeg;base64,${leftPalmBase64}`
               }
             },
             {
               type: 'image_url',
               image_url: {
-                url: rightImageUrl
+                url: `data:image/jpeg;base64,${rightPalmBase64}`
               }
             }
           ]
@@ -177,7 +196,7 @@ Provide an overall personality analysis, character traits, and potential future 
             {
               type: 'image_url',
               image_url: {
-                url: imageUrl
+                url: `data:image/jpeg;base64,${leftPalmBase64}`
               }
             }
           ]
