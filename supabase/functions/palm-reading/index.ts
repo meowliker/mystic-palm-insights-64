@@ -1,6 +1,5 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,8 +7,6 @@ const corsHeaders = {
 };
 
 const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-const supabaseUrl = Deno.env.get('SUPABASE_URL');
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 serve(async (req) => {
   console.log('=== DETAILED PALM READING FUNCTION CALLED ===');
@@ -68,36 +65,47 @@ serve(async (req) => {
     
     console.log('All images downloaded successfully');
 
-    // Create OpenAI request with detailed palm reading format
+    // Create detailed ChatGPT-style palm reading request
     const messages = [
       {
         role: 'system',
-        content: `You are a master palmist with decades of experience in traditional palmistry and astrological sciences. Analyze the palm image(s) and provide a detailed palm reading in this EXACT format:
+        content: `You are a master palmist with decades of experience. Analyze the palm images in great detail and provide a comprehensive palmistry-style reading exactly like a professional palmist would.
 
-### Life Line
-**Location**: [Describe where the line is located on the palm]
-**Meaning**: [Explain what this line represents about vitality and life energy]
-**Your Reading**: [Provide specific analysis of their life line - length, depth, clarity, and what it reveals about their health, vitality, and life path]
+Start with: "Thank you for sharing ${rightBase64 ? 'both palm images' : 'your palm image'}. Here's a detailed palmistry-style reading based on the visible features from your ${rightBase64 ? 'photos' : 'photo'}. This is an interpretive analysis and should be seen as symbolic guidance, not a scientific assessment."
 
-### Heart Line
-**Location**: [Describe where the line is located on the palm]
-**Meaning**: [Explain what this line represents about emotions and relationships]
-**Your Reading**: [Provide specific analysis of their heart line and what it reveals about their emotional nature, relationships, and capacity for love]
+Then provide this exact structure:
 
-### Head Line
-**Location**: [Describe where the line is located on the palm]
-**Meaning**: [Explain what this line represents about intellect and thinking patterns]
-**Your Reading**: [Provide specific analysis of their head line and what it reveals about their mental abilities, decision-making, and thought processes]
+## 🔮 Palm Reading Analysis
 
-### Fate Line
-**Location**: [Describe where the line is located on the palm]
-**Meaning**: [Explain what this line represents about destiny and career path]
-**Your Reading**: [Provide specific analysis of their fate line and what it reveals about their life direction, career success, and external influences]
+### ✋ 1. Life Line
+• **Observation:** [Describe exactly what you observe about the life line - its length, depth, curve, clarity, where it starts and ends, any breaks or markings you can see in the image]
+• **Interpretation:**
+  • **Vitality:** [Detailed analysis of their physical energy and stamina based on what you observe]
+  • **Life Journey:** [What the line's characteristics suggest about their life path, stability, major life changes]
+  • **Health Influence:** [What the line's depth and quality indicate about their health and capacity to recover]
 
-### Overall Insight
-[Provide a comprehensive 2-3 paragraph overview combining all the palm lines to give insights about their personality, character traits, strengths, potential challenges, and guidance for their future path. Be mystical, insightful, and encouraging.]
+### ❤️ 2. Heart Line  
+• **Observation:** [Describe exactly what you observe about the heart line - its length, depth, curve, position, where it starts and ends, its relationship to other lines]
+• **Interpretation:**
+  • **Emotional Depth:** [Analysis of their emotional intelligence and capacity for deep connections]
+  • **Relationships:** [What the line reveals about their approach to love, commitment, and relationships]
+  • **Capacity for Love:** [Their ability to give and receive love, emotional expression, romantic tendencies]
 
-Be detailed, mystical, and provide specific insights based on what you observe in the palm lines.`
+### 🧠 3. Head Line
+• **Observation:** [Describe exactly what you observe about the head line - its direction, length, depth, clarity, any forks, branches, or unique characteristics]
+• **Interpretation:**
+  • **Mental Clarity:** [Analysis of their thinking patterns, mental approach, and cognitive style]
+  • **Decision Making:** [How they process information, analyze situations, and make choices]
+  • **Intellectual Style:** [Whether they're more practical, creative, analytical, intuitive, etc.]
+
+### 📈 4. Fate Line
+• **Observation:** [Describe what you observe about the fate line - its presence/absence, strength, direction, where it begins and ends, how prominent it is]
+• **Interpretation:**
+  • **Career Path:** [What the line suggests about their professional journey and work life]
+  • **Life Direction:** [Their sense of purpose, destiny, and life goals]
+  • **External Influences:** [How outside forces, family, society affect their life path]
+
+Be extremely detailed in your observations of what you actually see in the palm images. Look closely at line depth, length, curves, intersections, and unique features. Provide comprehensive, insightful interpretations that feel personal and meaningful.`
       },
       {
         role: 'user',
@@ -105,8 +113,8 @@ Be detailed, mystical, and provide specific insights based on what you observe i
           {
             type: 'text',
             text: rightBase64 ? 
-              'Analyze both palm images (left and right hands) and provide a comprehensive palm reading in the detailed format specified. Compare insights from both hands to give a complete reading.' :
-              'Analyze this palm image and provide a detailed palm reading in the format specified above.'
+              'Please analyze both of my palm images and provide a comprehensive palmistry reading in the detailed format specified. Look closely at all the major lines and their characteristics.' :
+              'Please analyze my palm image and provide a detailed palmistry reading in the format specified. Look closely at all the major lines and their characteristics.'
           },
           {
             type: 'image_url',
@@ -128,7 +136,7 @@ Be detailed, mystical, and provide specific insights based on what you observe i
       });
     }
 
-    console.log('Calling OpenAI API for detailed palm analysis...');
+    console.log('Calling OpenAI API for detailed ChatGPT-style palm analysis...');
     
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -139,7 +147,7 @@ Be detailed, mystical, and provide specific insights based on what you observe i
       body: JSON.stringify({
         model: 'gpt-4o',
         messages,
-        max_tokens: 2000,
+        max_tokens: 3000,
         temperature: 0.7
       }),
     });
@@ -159,12 +167,12 @@ Be detailed, mystical, and provide specific insights based on what you observe i
       throw new Error('No analysis content received');
     }
 
-    console.log('Detailed analysis completed successfully');
+    console.log('Detailed ChatGPT-style analysis completed successfully');
 
     // Parse the detailed analysis to extract structured data
     const parseLineStrength = (content: string, lineType: string): string => {
       const lowerContent = content.toLowerCase();
-      if (lowerContent.includes(`${lineType} line`) && (lowerContent.includes('strong') || lowerContent.includes('deep') || lowerContent.includes('prominent'))) {
+      if (lowerContent.includes(`${lineType} line`) && (lowerContent.includes('strong') || lowerContent.includes('deep') || lowerContent.includes('prominent') || lowerContent.includes('clear'))) {
         return 'Strong';
       } else if (lowerContent.includes(`${lineType} line`) && (lowerContent.includes('weak') || lowerContent.includes('faint') || lowerContent.includes('shallow'))) {
         return 'Weak';
@@ -178,11 +186,11 @@ Be detailed, mystical, and provide specific insights based on what you observe i
       heart_line_strength: parseLineStrength(analysis, 'heart'),
       head_line_strength: parseLineStrength(analysis, 'head'),
       fate_line_strength: parseLineStrength(analysis, 'fate'),
-      overall_insight: analysis, // Full detailed analysis
+      overall_insight: analysis, // Full detailed ChatGPT-style analysis
       traits: {
-        personality: 'Complex and multifaceted individual',
-        strengths: 'Strong intuition and analytical abilities',
-        challenges: 'Balancing emotions with logic'
+        personality: 'Detailed analysis provided in full reading',
+        strengths: 'See comprehensive analysis above',
+        challenges: 'Covered in detailed interpretation'
       }
     };
 
