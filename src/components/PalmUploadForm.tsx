@@ -60,24 +60,23 @@ const PalmUploadForm = ({ onScanComplete, onGoBack }: PalmUploadFormProps) => {
 
   const generatePalmReading = async (leftImageUrl: string, rightImageUrl: string) => {
     try {
-      console.log('Calling edge function with both palm images:', { leftImageUrl, rightImageUrl });
-      
-      const { data, error } = await supabase.functions.invoke('generate-horoscope', {
-        body: { 
-          palmImageUrl: leftImageUrl, // Primary image
-          rightPalmImageUrl: rightImageUrl, // Secondary image for dual analysis
-          analysisType: 'dual-palm'
-        },
-        headers: {
-          'user-id': user?.id || 'anonymous'
+      console.log('Calling new palm reading function with image URLs:', {
+        leftImageUrl,
+        rightImageUrl
+      });
+
+      const { data, error } = await supabase.functions.invoke('palm-reading', {
+        body: {
+          leftImageUrl,
+          rightImageUrl
         }
       });
 
-      console.log('Edge function response:', { data, error });
+      console.log('Palm reading response:', { data, error });
 
       if (error) {
-        console.error('Error generating reading:', error);
-        throw new Error(error.message || 'Failed to generate palm reading');
+        console.error('Error from palm reading function:', error);
+        throw new Error(error.message);
       }
 
       if (!data) {
