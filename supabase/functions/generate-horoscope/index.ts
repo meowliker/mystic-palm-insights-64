@@ -2,7 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
-const deepseekApiKey = Deno.env.get('DEEPSEEK_API_KEY');
+const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
@@ -57,41 +57,46 @@ function calculateZodiacSign(day: number, month: number): string {
 }
 
 const analyzePalmImage = async (imageUrl: string) => {
-  if (!deepseekApiKey) {
-    throw new Error('DeepSeek API key not found');
+  if (!openaiApiKey) {
+    console.error('OpenAI API key not found - falling back to simulated analysis');
+    return generateSimulatedPalmAnalysis();
   }
 
   console.log('Starting palm image analysis for URL:', imageUrl);
 
-  // First, use OpenAI's vision model to analyze the palm image
-  const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-  if (!openaiApiKey) {
-    console.error('OpenAI API key not found - falling back to simulated analysis');
-    // Fallback to simulated analysis if no OpenAI key
-    return generateSimulatedPalmAnalysis();
-  }
-
   try {
-    console.log('Calling OpenAI Vision API for palm analysis...');
-    const visionResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    console.log('Calling OpenAI for comprehensive palm analysis...');
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openaiApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4.1-2025-04-14',
         messages: [
           {
             role: 'system',
-            content: 'You are a professional palmist. Analyze this palm image and describe what you see in the palm lines, mounts, and overall hand characteristics. Focus on observable features like line depth, length, curves, and clarity.'
+            content: `You are a master palmist with decades of experience in traditional palmistry and astrological sciences. You combine ancient wisdom with intuitive insights to provide comprehensive palm readings.
+
+IMPORTANT: Based on the palm image provided, give a detailed palmistry reading following traditional palmistry principles. Analyze what you can actually observe in the image.
+
+Provide specific insights about:
+- Life Line: vitality, health, life journey, strength and clarity
+- Heart Line: emotions, relationships, love capacity, depth and characteristics  
+- Head Line: intellect, mental approach, creativity, length and curve
+- Fate Line: destiny, career path, external influences, presence and definition
+- Character traits and personality insights based on observable features
+- Palm mounts, finger characteristics, and overall hand shape if visible
+
+Be authentic to traditional palmistry while being insightful and personal. Focus on what you can actually see in the palm image and provide meaningful interpretations based on those observations.`
           },
           {
             role: 'user',
             content: [
               {
                 type: 'text',
-                text: 'Please analyze this palm image and describe the visible palm lines and features you can observe.'
+                text: 'Please analyze this palm image and provide a comprehensive palmistry reading. Focus on the palm lines, mounts, and any other observable features. Give detailed insights about the person\'s character, destiny, and life path according to traditional palmistry principles.'
               },
               {
                 type: 'image_url',
@@ -102,69 +107,21 @@ const analyzePalmImage = async (imageUrl: string) => {
             ]
           }
         ],
-        max_tokens: 800,
-        temperature: 0.3
-      }),
-    });
-
-    if (!visionResponse.ok) {
-      console.error('OpenAI Vision API error:', visionResponse.status, await visionResponse.text());
-      throw new Error(`OpenAI Vision API error: ${visionResponse.status}`);
-    }
-
-    const visionData = await visionResponse.json();
-    const palmObservations = visionData.choices[0]?.message?.content || '';
-    console.log('OpenAI Vision analysis received:', palmObservations.substring(0, 200) + '...');
-
-    // Now use DeepSeek to provide detailed palmistry interpretation
-    console.log('Using DeepSeek for palmistry interpretation...');
-    const interpretationResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${deepseekApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [
-          {
-            role: 'system',
-            content: `You are a master palmist with decades of experience in traditional palmistry. Based on the palm observations provided, give a detailed palmistry reading following ancient palmistry principles.
-
-Provide specific insights about:
-- Life Line: vitality, health, life journey
-- Heart Line: emotions, relationships, love capacity  
-- Head Line: intellect, mental approach, creativity
-- Fate Line: destiny, career path, external influences
-- Character traits and personality insights
-
-Be authentic to traditional palmistry while being insightful and personal.`
-          },
-          {
-            role: 'user',
-            content: `Based on these palm observations, please provide a detailed palmistry reading:
-
-${palmObservations}
-
-Please analyze what these features reveal about the person's character, destiny, and life path according to traditional palmistry.`
-          }
-        ],
-        max_tokens: 1200,
+        max_tokens: 1500,
         temperature: 0.7
       }),
     });
 
-    if (!interpretationResponse.ok) {
-      console.error('DeepSeek API error:', interpretationResponse.status, await interpretationResponse.text());
-      throw new Error(`DeepSeek API error: ${interpretationResponse.status}`);
+    if (!response.ok) {
+      console.error('OpenAI API error:', response.status, await response.text());
+      throw new Error(`OpenAI API error: ${response.status}`);
     }
 
-    const interpretationData = await interpretationResponse.json();
-    const palmInterpretation = interpretationData.choices[0]?.message?.content || '';
-    console.log('DeepSeek interpretation received:', palmInterpretation.substring(0, 200) + '...');
+    const data = await response.json();
+    const palmAnalysis = data.choices[0]?.message?.content || '';
+    console.log('OpenAI palm analysis received:', palmAnalysis.substring(0, 200) + '...');
 
-    // Combine both analyses
-    return `${palmObservations}\n\n=== PALMISTRY INTERPRETATION ===\n\n${palmInterpretation}`;
+    return palmAnalysis;
     
   } catch (error) {
     console.error('Error in palm analysis:', error);
@@ -248,7 +205,7 @@ serve(async (req) => {
     if (palmImageUrl) {
       console.log('Processing palm reading request with image:', palmImageUrl);
       
-      // Analyze the palm image using DeepSeek AI
+      // Analyze the palm image using OpenAI
       const aiAnalysis = await analyzePalmImage(palmImageUrl);
       console.log('AI Analysis result:', aiAnalysis);
       
