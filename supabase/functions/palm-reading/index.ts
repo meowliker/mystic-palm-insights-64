@@ -12,7 +12,7 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 serve(async (req) => {
-  console.log('=== NEW PALM READING FUNCTION CALLED ===');
+  console.log('=== DETAILED PALM READING FUNCTION CALLED ===');
   console.log('Method:', req.method);
   
   // Handle CORS preflight requests
@@ -68,11 +68,36 @@ serve(async (req) => {
     
     console.log('All images downloaded successfully');
 
-    // Create OpenAI request
+    // Create OpenAI request with detailed palm reading format
     const messages = [
       {
         role: 'system',
-        content: 'You are a professional palmist. Analyze the palm image(s) and provide insights about the person\'s life lines, personality, and future. Be detailed but concise.'
+        content: `You are a master palmist with decades of experience in traditional palmistry and astrological sciences. Analyze the palm image(s) and provide a detailed palm reading in this EXACT format:
+
+### Life Line
+**Location**: [Describe where the line is located on the palm]
+**Meaning**: [Explain what this line represents about vitality and life energy]
+**Your Reading**: [Provide specific analysis of their life line - length, depth, clarity, and what it reveals about their health, vitality, and life path]
+
+### Heart Line
+**Location**: [Describe where the line is located on the palm]
+**Meaning**: [Explain what this line represents about emotions and relationships]
+**Your Reading**: [Provide specific analysis of their heart line and what it reveals about their emotional nature, relationships, and capacity for love]
+
+### Head Line
+**Location**: [Describe where the line is located on the palm]
+**Meaning**: [Explain what this line represents about intellect and thinking patterns]
+**Your Reading**: [Provide specific analysis of their head line and what it reveals about their mental abilities, decision-making, and thought processes]
+
+### Fate Line
+**Location**: [Describe where the line is located on the palm]
+**Meaning**: [Explain what this line represents about destiny and career path]
+**Your Reading**: [Provide specific analysis of their fate line and what it reveals about their life direction, career success, and external influences]
+
+### Overall Insight
+[Provide a comprehensive 2-3 paragraph overview combining all the palm lines to give insights about their personality, character traits, strengths, potential challenges, and guidance for their future path. Be mystical, insightful, and encouraging.]
+
+Be detailed, mystical, and provide specific insights based on what you observe in the palm lines.`
       },
       {
         role: 'user',
@@ -80,8 +105,8 @@ serve(async (req) => {
           {
             type: 'text',
             text: rightBase64 ? 
-              'Analyze both palm images (left and right hands) and provide a comprehensive palm reading covering life line, heart line, head line, and overall personality insights.' :
-              'Analyze this palm image and provide a palm reading covering life line, heart line, head line, and overall personality insights.'
+              'Analyze both palm images (left and right hands) and provide a comprehensive palm reading in the detailed format specified. Compare insights from both hands to give a complete reading.' :
+              'Analyze this palm image and provide a detailed palm reading in the format specified above.'
           },
           {
             type: 'image_url',
@@ -103,7 +128,7 @@ serve(async (req) => {
       });
     }
 
-    console.log('Calling OpenAI API...');
+    console.log('Calling OpenAI API for detailed palm analysis...');
     
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -114,7 +139,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'gpt-4o',
         messages,
-        max_tokens: 1000,
+        max_tokens: 2000,
         temperature: 0.7
       }),
     });
@@ -134,30 +159,41 @@ serve(async (req) => {
       throw new Error('No analysis content received');
     }
 
-    console.log('Analysis completed successfully');
+    console.log('Detailed analysis completed successfully');
 
-    // Return simplified palm reading structure
+    // Parse the detailed analysis to extract structured data
+    const parseLineStrength = (content: string, lineType: string): string => {
+      const lowerContent = content.toLowerCase();
+      if (lowerContent.includes(`${lineType} line`) && (lowerContent.includes('strong') || lowerContent.includes('deep') || lowerContent.includes('prominent'))) {
+        return 'Strong';
+      } else if (lowerContent.includes(`${lineType} line`) && (lowerContent.includes('weak') || lowerContent.includes('faint') || lowerContent.includes('shallow'))) {
+        return 'Weak';
+      }
+      return 'Moderate';
+    };
+
+    // Return comprehensive palm reading structure
     const palmReading = {
-      life_line_strength: 'Moderate',
-      heart_line_strength: 'Strong', 
-      head_line_strength: 'Moderate',
-      fate_line_strength: 'Moderate',
-      overall_insight: analysis.substring(0, 500) + '...',
+      life_line_strength: parseLineStrength(analysis, 'life'),
+      heart_line_strength: parseLineStrength(analysis, 'heart'),
+      head_line_strength: parseLineStrength(analysis, 'head'),
+      fate_line_strength: parseLineStrength(analysis, 'fate'),
+      overall_insight: analysis, // Full detailed analysis
       traits: {
-        personality: 'Analytical and intuitive',
-        strengths: 'Creative and determined',
-        challenges: 'May overthink decisions'
+        personality: 'Complex and multifaceted individual',
+        strengths: 'Strong intuition and analytical abilities',
+        challenges: 'Balancing emotions with logic'
       }
     };
 
-    console.log('Palm reading processed successfully');
+    console.log('Detailed palm reading processed successfully');
 
     return new Response(JSON.stringify(palmReading), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error('Error in palm reading function:', error);
+    console.error('Error in detailed palm reading function:', error);
     return new Response(
       JSON.stringify({ 
         error: 'Palm reading failed', 
