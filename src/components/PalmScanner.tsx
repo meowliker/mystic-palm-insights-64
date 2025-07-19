@@ -89,23 +89,33 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
     
     if (!ctx) return null;
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    ctx.drawImage(video, 0, 0);
+    // Set high-quality canvas dimensions
+    canvas.width = Math.min(video.videoWidth, 1280);
+    canvas.height = Math.min(video.videoHeight, 720);
     
-    return canvas.toDataURL('image/jpeg', 0.8);
+    // Enable high-quality image rendering
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    
+    // Draw the video frame to canvas
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    // Return high-quality JPEG with good compression
+    return canvas.toDataURL('image/jpeg', 0.9);
   };
 
   const uploadImageToStorage = async (imageDataUrl: string): Promise<string | null> => {
     if (!user) return null;
 
     try {
-      // Convert data URL to blob
+      // Convert data URL to blob with better quality
       const response = await fetch(imageDataUrl);
       const blob = await response.blob();
       
       // Create unique filename
       const fileName = `${user.id}/${Date.now()}-palm.jpg`;
+      
+      console.log('Uploading captured image to storage, size:', blob.size);
       
       const { data, error } = await supabase.storage
         .from('palm-images')
@@ -124,6 +134,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
         .from('palm-images')
         .getPublicUrl(fileName);
 
+      console.log('Image uploaded successfully:', publicUrl);
       return publicUrl;
     } catch (error) {
       console.error('Error uploading image:', error);
@@ -133,8 +144,11 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
 
   const generatePalmReading = async (imageUrl: string) => {
     try {
-      console.log('Calling edge function with image URL:', imageUrl);
+      console.log('Calling palm reading function with captured image URL:', imageUrl);
       console.log('User ID:', user?.id);
+      
+      // Add a small delay to ensure image is fully uploaded and accessible
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
       const { data, error } = await supabase.functions.invoke('palm-reading', {
         body: { 
@@ -142,10 +156,10 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
         }
       });
 
-      console.log('Edge function response:', { data, error });
+      console.log('Palm reading response:', { data, error });
 
       if (error) {
-        console.error('Error generating reading:', error);
+        console.error('Error from palm reading function:', error);
         throw new Error(error.message || 'Failed to generate palm reading');
       }
 
@@ -156,7 +170,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
       return data;
     } catch (error) {
       console.error('Error generating reading:', error);
-      throw error; // Re-throw the error instead of falling back
+      throw error;
     }
   };
 
