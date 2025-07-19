@@ -26,11 +26,11 @@ serve(async (req) => {
 
     console.log('OpenAI API Key available: true');
     
-    const { leftImageUrl, rightImageUrl } = await req.json();
-    console.log('Request received with image URLs:', { leftImageUrl, rightImageUrl });
+    const { imageUrl } = await req.json();
+    console.log('Request received with image URL:', { imageUrl });
 
-    if (!leftImageUrl) {
-      throw new Error('Left palm image URL is required');
+    if (!imageUrl) {
+      throw new Error('Palm image URL is required');
     }
 
     // Download and convert images to base64
@@ -60,8 +60,7 @@ serve(async (req) => {
       return base64;
     };
 
-    const leftBase64 = await downloadImage(leftImageUrl);
-    const rightBase64 = rightImageUrl ? await downloadImage(rightImageUrl) : null;
+    const palmBase64 = await downloadImage(imageUrl);
     
     console.log('All images downloaded successfully');
 
@@ -69,9 +68,9 @@ serve(async (req) => {
     const messages = [
       {
         role: 'system',
-        content: `You are a master palmist with decades of experience. Analyze the palm images in great detail and provide a comprehensive palmistry-style reading exactly like a professional palmist would.
+        content: `You are a master palmist with decades of experience. Analyze the palm image in great detail and provide a comprehensive palmistry-style reading exactly like a professional palmist would.
 
-Start with: "Thank you for sharing ${rightBase64 ? 'both palm images' : 'your palm image'}. Here's a detailed palmistry-style reading based on the visible features from your ${rightBase64 ? 'photos' : 'photo'}. This is an interpretive analysis and should be seen as symbolic guidance, not a scientific assessment."
+Start with: "Thank you for sharing your palm image. Here's a detailed palmistry-style reading based on the visible features from your photo. This is an interpretive analysis and should be seen as symbolic guidance, not a scientific assessment."
 
 Then provide this exact structure (NO markdown symbols, NO asterisks, NO hashtags):
 
@@ -120,29 +119,18 @@ Be extremely detailed in your observations of what you actually see in the palm 
         content: [
           {
             type: 'text',
-            text: rightBase64 ? 
-              'Please analyze both of my palm images and provide a comprehensive palmistry reading in the detailed format specified. Look closely at all the major lines and their characteristics.' :
-              'Please analyze my palm image and provide a detailed palmistry reading in the format specified. Look closely at all the major lines and their characteristics.'
+            text: 'Please analyze my palm image and provide a detailed palmistry reading in the format specified. Look closely at all the major lines and their characteristics.'
           },
           {
             type: 'image_url',
             image_url: {
-              url: `data:image/jpeg;base64,${leftBase64}`
+              url: `data:image/jpeg;base64,${palmBase64}`
             }
           }
         ]
       }
     ];
 
-    // Add right hand image if available
-    if (rightBase64) {
-      messages[1].content.push({
-        type: 'image_url',
-        image_url: {
-          url: `data:image/jpeg;base64,${rightBase64}`
-        }
-      });
-    }
 
     console.log('Calling OpenAI API for detailed ChatGPT-style palm analysis...');
     
@@ -155,7 +143,7 @@ Be extremely detailed in your observations of what you actually see in the palm 
       body: JSON.stringify({
         model: 'gpt-4o',
         messages,
-        max_tokens: 3000,
+        max_tokens: 4000,
         temperature: 0.7
       }),
     });

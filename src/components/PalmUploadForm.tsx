@@ -14,25 +14,20 @@ interface PalmUploadFormProps {
 }
 
 const PalmUploadForm = ({ onScanComplete, onGoBack }: PalmUploadFormProps) => {
-  const [leftPalmFile, setLeftPalmFile] = useState<File | null>(null);
-  const [rightPalmFile, setRightPalmFile] = useState<File | null>(null);
+  const [palmFile, setPalmFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const handleFileChange = (file: File | null, hand: 'left' | 'right') => {
-    if (hand === 'left') {
-      setLeftPalmFile(file);
-    } else {
-      setRightPalmFile(file);
-    }
+  const handleFileChange = (file: File | null) => {
+    setPalmFile(file);
   };
 
-  const uploadImageToStorage = async (file: File, hand: 'left' | 'right'): Promise<string | null> => {
+  const uploadImageToStorage = async (file: File): Promise<string | null> => {
     if (!user) return null;
 
     try {
-      const fileName = `${user.id}/${Date.now()}-${hand}-palm.jpg`;
+      const fileName = `${user.id}/${Date.now()}-palm.jpg`;
       
       const { data, error } = await supabase.storage
         .from('palm-images')
@@ -58,17 +53,14 @@ const PalmUploadForm = ({ onScanComplete, onGoBack }: PalmUploadFormProps) => {
     }
   };
 
-  const generatePalmReading = async (leftImageUrl: string, rightImageUrl: string) => {
+  const generatePalmReading = async (imageUrl: string) => {
     try {
-      console.log('Calling new palm reading function with image URLs:', {
-        leftImageUrl,
-        rightImageUrl
-      });
+      console.log('Calling palm reading function with image URL:', imageUrl);
+      console.log('User ID:', user?.id);
 
       const { data, error } = await supabase.functions.invoke('palm-reading', {
         body: {
-          leftImageUrl,
-          rightImageUrl
+          imageUrl
         }
       });
 
@@ -91,10 +83,10 @@ const PalmUploadForm = ({ onScanComplete, onGoBack }: PalmUploadFormProps) => {
   };
 
   const handleSubmit = async () => {
-    if (!leftPalmFile || !rightPalmFile) {
+    if (!palmFile) {
       toast({
-        title: "Missing images",
-        description: "Please upload images of both palms",
+        title: "Missing image",
+        description: "Please upload an image of your palm",
         variant: "destructive"
       });
       return;
@@ -103,22 +95,20 @@ const PalmUploadForm = ({ onScanComplete, onGoBack }: PalmUploadFormProps) => {
     setIsUploading(true);
 
     try {
-      // Upload both images
-      const leftImageUrl = await uploadImageToStorage(leftPalmFile, 'left');
-      const rightImageUrl = await uploadImageToStorage(rightPalmFile, 'right');
+      // Upload palm image
+      const imageUrl = await uploadImageToStorage(palmFile);
 
-      if (!leftImageUrl || !rightImageUrl) {
-        throw new Error("Failed to upload palm images");
+      if (!imageUrl) {
+        throw new Error("Failed to upload palm image");
       }
 
-      // Generate reading from both palms
-      const palmReading = await generatePalmReading(leftImageUrl, rightImageUrl);
+      // Generate reading from palm
+      const palmReading = await generatePalmReading(imageUrl);
       
       // Pass the complete scan data
       const scanData = {
         ...palmReading,
-        palm_image_url: leftImageUrl,
-        right_palm_image_url: rightImageUrl
+        palm_image_url: imageUrl
       };
       
       onScanComplete(scanData);
@@ -163,71 +153,39 @@ const PalmUploadForm = ({ onScanComplete, onGoBack }: PalmUploadFormProps) => {
             Upload Palm Images
           </h1>
           <p className="text-muted-foreground text-base sm:text-lg px-4">
-            Upload clear images of both your palms for accurate AI analysis
+            Upload a clear image of your palm for AI analysis
           </p>
         </div>
 
         {/* Upload Form */}
         <Card className="p-6 sm:p-8 bg-card/80 backdrop-blur-sm border-primary/20">
           <div className="space-y-6">
-            {/* Left Palm Upload */}
+            {/* Palm Upload */}
             <div className="space-y-3">
-              <Label htmlFor="left-palm" className="text-base font-semibold text-foreground">
-                Left Palm Image
+              <Label htmlFor="palm" className="text-base font-semibold text-foreground">
+                Palm Image
               </Label>
               <div className="border-2 border-dashed border-primary/30 rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
                 <Input
-                  id="left-palm"
+                  id="palm"
                   type="file"
                   accept="image/*"
-                  onChange={(e) => handleFileChange(e.target.files?.[0] || null, 'left')}
+                  onChange={(e) => handleFileChange(e.target.files?.[0] || null)}
                   className="hidden"
                 />
                 <Label 
-                  htmlFor="left-palm" 
+                  htmlFor="palm" 
                   className="cursor-pointer flex flex-col items-center gap-3"
                 >
-                  {leftPalmFile ? (
+                  {palmFile ? (
                     <>
                       <FileImage className="h-8 w-8 text-green-600" />
-                      <span className="text-green-600 font-medium">{leftPalmFile.name}</span>
+                      <span className="text-green-600 font-medium">{palmFile.name}</span>
                     </>
                   ) : (
                     <>
                       <Upload className="h-8 w-8 text-muted-foreground" />
-                      <span className="text-muted-foreground">Click to upload left palm image</span>
-                    </>
-                  )}
-                </Label>
-              </div>
-            </div>
-
-            {/* Right Palm Upload */}
-            <div className="space-y-3">
-              <Label htmlFor="right-palm" className="text-base font-semibold text-foreground">
-                Right Palm Image
-              </Label>
-              <div className="border-2 border-dashed border-primary/30 rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
-                <Input
-                  id="right-palm"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleFileChange(e.target.files?.[0] || null, 'right')}
-                  className="hidden"
-                />
-                <Label 
-                  htmlFor="right-palm" 
-                  className="cursor-pointer flex flex-col items-center gap-3"
-                >
-                  {rightPalmFile ? (
-                    <>
-                      <FileImage className="h-8 w-8 text-green-600" />
-                      <span className="text-green-600 font-medium">{rightPalmFile.name}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="h-8 w-8 text-muted-foreground" />
-                      <span className="text-muted-foreground">Click to upload right palm image</span>
+                      <span className="text-muted-foreground">Click to upload your palm image</span>
                     </>
                   )}
                 </Label>
@@ -248,19 +206,19 @@ const PalmUploadForm = ({ onScanComplete, onGoBack }: PalmUploadFormProps) => {
             {/* Submit Button */}
             <Button
               onClick={handleSubmit}
-              disabled={!leftPalmFile || !rightPalmFile || isUploading}
+              disabled={!palmFile || isUploading}
               className="w-full bg-primary hover:bg-primary/90"
               size="lg"
             >
               {isUploading ? (
                 <>
                   <Sparkles className="h-5 w-5 mr-2 animate-spin" />
-                  Analyzing your palms...
+                  Analyzing your palm...
                 </>
               ) : (
                 <>
                   <Sparkles className="h-5 w-5 mr-2" />
-                  Analyze Both Palms
+                  Analyze Palm
                 </>
               )}
             </Button>

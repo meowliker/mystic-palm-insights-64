@@ -17,7 +17,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
   onGoBack?: () => void;
 }) => {
   const [scanState, setScanState] = useState<ScanState>('ready');
-  const [currentHand, setCurrentHand] = useState<'left' | 'right'>('left');
+  
   const [progress, setProgress] = useState(0);
   const [alignment, setAlignment] = useState<'good' | 'poor'>('poor');
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -136,12 +136,9 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
       console.log('Calling edge function with image URL:', imageUrl);
       console.log('User ID:', user?.id);
       
-      const { data, error } = await supabase.functions.invoke('generate-horoscope', {
+      const { data, error } = await supabase.functions.invoke('palm-reading', {
         body: { 
-          palmImageUrl: imageUrl
-        },
-        headers: {
-          'user-id': user?.id || 'anonymous'
+          imageUrl
         }
       });
 
@@ -237,19 +234,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
         throw new Error("Failed to generate palm reading");
       }
 
-      // Check if we need to scan the other hand
-      if (currentHand === 'left') {
-        setCurrentHand('right');
-        setScanState('ready');
-        setProgress(0);
-        toast({
-          title: "Left palm complete!",
-          description: "Now position your right palm for scanning"
-        });
-        return;
-      }
-
-      // Both hands complete - stop camera for privacy
+      // Palm scan complete - stop camera for privacy
       setScanState('complete');
       stopCamera();
       
@@ -279,11 +264,11 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
   const getStatusMessage = () => {
     switch (scanState) {
       case 'ready':
-        return `Position your ${currentHand} palm within the outline`;
+        return 'Position your palm within the outline';
       case 'detecting':
-        return `Looking for ${currentHand} palm...`;
+        return 'Looking for your palm...';
       case 'scanning':
-        return `Scanning your ${currentHand} palm for insights...`;
+        return 'Scanning your palm for insights...';
       case 'analyzing':
         return 'Analyzing cosmic patterns in your palm...';
       case 'complete':
@@ -386,8 +371,8 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
                 <div className="relative z-10 flex items-center justify-center">
                   <div className="relative">
                     <img 
-                      src={currentHand === 'left' ? leftPalmOutline : rightPalmOutline} 
-                      alt={`${currentHand} Palm Outline`} 
+                      src={palmOutline} 
+                      alt="Palm Outline" 
                       className={`w-40 h-52 sm:w-56 sm:h-72 transition-all duration-500 ${
                         alignment === 'good' 
                           ? 'opacity-90 drop-shadow-[0_0_30px_rgba(168,85,247,0.9)] scale-105' 
@@ -483,7 +468,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
                 size="lg"
               >
                 <Hand className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-                Start {currentHand} Palm Scan
+                Start Palm Scan
               </Button>
             )}
             
@@ -505,37 +490,13 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
               <div className="space-y-3">
                 <CheckCircle className="h-16 w-16 text-green-500 mx-auto animate-pulse" />
                 <p className="text-green-500 font-semibold text-lg">
-                  {currentHand === 'right' ? 'Both palms scanned successfully!' : 'Left palm complete!'}
+                  Palm scanned successfully!
                 </p>
               </div>
             )}
           </div>
         </Card>
         
-        {/* Hand Progress Indicator */}
-        <div className="flex justify-center items-center space-x-6">
-          <div className="flex items-center space-x-2">
-            <div className={`w-4 h-4 rounded-full transition-all duration-300 ${
-              currentHand === 'left' && scanState !== 'complete'
-                ? 'bg-primary ring-2 ring-primary/30 ring-offset-2' 
-                : scanState === 'complete' || (currentHand === 'right')
-                ? 'bg-green-500'
-                : 'bg-muted'
-            }`} />
-            <span className="text-sm text-muted-foreground">Left Palm</span>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <div className={`w-4 h-4 rounded-full transition-all duration-300 ${
-              currentHand === 'right' && scanState !== 'complete'
-                ? 'bg-primary ring-2 ring-primary/30 ring-offset-2' 
-                : scanState === 'complete'
-                ? 'bg-green-500'
-                : 'bg-muted'
-            }`} />
-            <span className="text-sm text-muted-foreground">Right Palm</span>
-          </div>
-        </div>
       </div>
     </div>
   );
