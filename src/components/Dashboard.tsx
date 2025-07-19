@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { 
   Scan, 
   Calendar, 
@@ -166,13 +167,13 @@ const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
       const success = await clearAllScans();
       if (success) {
         toast({
-          title: "History cleared",
+          title: "Readings cleared",
           description: "All palm readings have been deleted successfully."
         });
       } else {
         toast({
           title: "Error",
-          description: "Failed to clear history. Please try again.",
+          description: "Failed to clear readings. Please try again.",
           variant: "destructive"
         });
       }
@@ -180,7 +181,7 @@ const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
       console.error('Error clearing scans:', error);
       toast({
         title: "Error",
-        description: "Failed to clear history. Please try again.",
+        description: "Failed to clear readings. Please try again.",
         variant: "destructive"
       });
     }
@@ -342,15 +343,32 @@ const Dashboard = ({ onStartScan }: { onStartScan: () => void }) => {
                   {scans.length > 0 && (
                     <div className="flex justify-between items-center">
                       <h3 className="text-lg font-semibold">Recent Readings</h3>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleClearAllScans}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 flex items-center gap-2"
-                      >
-                        <AlertTriangle className="h-4 w-4" />
-                        Clear All History
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50 flex items-center gap-2"
+                          >
+                            <AlertTriangle className="h-4 w-4" />
+                            Clear All Readings
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Clear All Readings</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete all your palm readings? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>No</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleClearAllScans} className="bg-red-600 hover:bg-red-700">
+                              Yes, Delete All
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   )}
                   
