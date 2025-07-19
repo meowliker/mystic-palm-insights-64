@@ -70,15 +70,23 @@ const analyzePalmImage = async (imageUrl: string, rightImageUrl?: string) => {
 
   // Helper function to download image and convert to base64
   const downloadImageAsBase64 = async (url: string): Promise<string> => {
-    console.log('Downloading image from:', url);
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Failed to download image: ${response.status}`);
+    try {
+      console.log('Downloading image from:', url);
+      const response = await fetch(url);
+      console.log('Image fetch response status:', response.status);
+      if (!response.ok) {
+        console.error('Failed to fetch image:', response.status, response.statusText);
+        throw new Error(`Failed to download image: ${response.status} ${response.statusText}`);
+      }
+      const arrayBuffer = await response.arrayBuffer();
+      console.log('Image downloaded, size in bytes:', arrayBuffer.byteLength);
+      const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+      console.log('Image converted to base64, size:', base64.length);
+      return base64;
+    } catch (error) {
+      console.error('Error downloading image:', error);
+      throw error;
     }
-    const arrayBuffer = await response.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-    console.log('Image downloaded and converted to base64, size:', base64.length);
-    return base64;
   };
 
   // Determine if this is dual palm analysis
@@ -314,10 +322,20 @@ serve(async (req) => {
       // Check if this is a palm reading request
       if (palmImageUrl) {
         console.log('Processing palm reading request with AI analysis...');
+        console.log('Left palm URL:', palmImageUrl);
+        if (rightPalmImageUrl) {
+          console.log('Right palm URL:', rightPalmImageUrl);
+        }
         
-        // Analyze the palm image(s) using OpenAI's vision API
-        const aiAnalysis = await analyzePalmImage(palmImageUrl, rightPalmImageUrl);
-        console.log('AI Analysis completed successfully');
+        let aiAnalysis;
+        try {
+          // Analyze the palm image(s) using OpenAI's vision API
+          aiAnalysis = await analyzePalmImage(palmImageUrl, rightPalmImageUrl);
+          console.log('AI Analysis completed successfully');
+        } catch (analysisError) {
+          console.error('Analysis failed:', analysisError);
+          throw new Error(`Palm analysis failed: ${analysisError.message}`);
+        }
         
         // Parse the AI response into structured palm reading data
         const palmReading = parsePalmReading(aiAnalysis);
