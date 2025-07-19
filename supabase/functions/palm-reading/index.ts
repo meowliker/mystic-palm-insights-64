@@ -73,39 +73,47 @@ serve(async (req) => {
 
 Start with: "Thank you for sharing ${rightBase64 ? 'both palm images' : 'your palm image'}. Here's a detailed palmistry-style reading based on the visible features from your ${rightBase64 ? 'photos' : 'photo'}. This is an interpretive analysis and should be seen as symbolic guidance, not a scientific assessment."
 
-Then provide this exact structure:
+Then provide this exact structure (NO markdown symbols, NO asterisks, NO hashtags):
 
-## 🔮 Palm Reading Analysis
+PALM READING ANALYSIS
 
-### ✋ 1. Life Line
-• **Observation:** [Describe exactly what you observe about the life line - its length, depth, curve, clarity, where it starts and ends, any breaks or markings you can see in the image]
-• **Interpretation:**
-  • **Vitality:** [Detailed analysis of their physical energy and stamina based on what you observe]
-  • **Life Journey:** [What the line's characteristics suggest about their life path, stability, major life changes]
-  • **Health Influence:** [What the line's depth and quality indicate about their health and capacity to recover]
+1. LIFE LINE
 
-### ❤️ 2. Heart Line  
-• **Observation:** [Describe exactly what you observe about the heart line - its length, depth, curve, position, where it starts and ends, its relationship to other lines]
-• **Interpretation:**
-  • **Emotional Depth:** [Analysis of their emotional intelligence and capacity for deep connections]
-  • **Relationships:** [What the line reveals about their approach to love, commitment, and relationships]
-  • **Capacity for Love:** [Their ability to give and receive love, emotional expression, romantic tendencies]
+Observation: [Describe exactly what you observe about the life line - its length, depth, curve, clarity, where it starts and ends, any breaks or markings you can see in the image]
 
-### 🧠 3. Head Line
-• **Observation:** [Describe exactly what you observe about the head line - its direction, length, depth, clarity, any forks, branches, or unique characteristics]
-• **Interpretation:**
-  • **Mental Clarity:** [Analysis of their thinking patterns, mental approach, and cognitive style]
-  • **Decision Making:** [How they process information, analyze situations, and make choices]
-  • **Intellectual Style:** [Whether they're more practical, creative, analytical, intuitive, etc.]
+Interpretation:
+- Vitality: [Detailed analysis of their physical energy and stamina based on what you observe]
+- Life Journey: [What the line's characteristics suggest about their life path, stability, major life changes]  
+- Health Influence: [What the line's depth and quality indicate about their health and capacity to recover]
 
-### 📈 4. Fate Line
-• **Observation:** [Describe what you observe about the fate line - its presence/absence, strength, direction, where it begins and ends, how prominent it is]
-• **Interpretation:**
-  • **Career Path:** [What the line suggests about their professional journey and work life]
-  • **Life Direction:** [Their sense of purpose, destiny, and life goals]
-  • **External Influences:** [How outside forces, family, society affect their life path]
+2. HEART LINE
 
-Be extremely detailed in your observations of what you actually see in the palm images. Look closely at line depth, length, curves, intersections, and unique features. Provide comprehensive, insightful interpretations that feel personal and meaningful.`
+Observation: [Describe exactly what you observe about the heart line - its length, depth, curve, position, where it starts and ends, its relationship to other lines]
+
+Interpretation:
+- Emotional Depth: [Analysis of their emotional intelligence and capacity for deep connections]
+- Relationships: [What the line reveals about their approach to love, commitment, and relationships]
+- Capacity for Love: [Their ability to give and receive love, emotional expression, romantic tendencies]
+
+3. HEAD LINE
+
+Observation: [Describe exactly what you observe about the head line - its direction, length, depth, clarity, any forks, branches, or unique characteristics]
+
+Interpretation:
+- Mental Clarity: [Analysis of their thinking patterns, mental approach, and cognitive style]
+- Decision Making: [How they process information, analyze situations, and make choices]
+- Intellectual Style: [Whether they're more practical, creative, analytical, intuitive, etc.]
+
+4. FATE LINE
+
+Observation: [Describe what you observe about the fate line - its presence/absence, strength, direction, where it begins and ends, how prominent it is]
+
+Interpretation:
+- Career Path: [What the line suggests about their professional journey and work life]
+- Life Direction: [Their sense of purpose, destiny, and life goals]
+- External Influences: [How outside forces, family, society affect their life path]
+
+Be extremely detailed in your observations of what you actually see in the palm images. Look closely at line depth, length, curves, intersections, and unique features. Provide comprehensive, insightful interpretations that feel personal and meaningful. Format everything with clear line breaks and proper spacing for readability.`
       },
       {
         role: 'user',

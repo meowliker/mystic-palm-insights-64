@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -63,6 +63,9 @@ const ScanDetailDialog = ({ scan, children }: ScanDetailDialogProps) => {
               {format(new Date(scan.created_at), 'PPP')}
             </div>
           </div>
+          <DialogDescription className="sr-only">
+            Detailed palm reading analysis with insights and interpretations
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -111,9 +114,9 @@ const ScanDetailDialog = ({ scan, children }: ScanDetailDialogProps) => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-foreground leading-relaxed text-lg">
+              <div className="text-foreground leading-relaxed whitespace-pre-line">
                 {scan.overall_insight}
-              </p>
+              </div>
             </CardContent>
           </Card>
 
