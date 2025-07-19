@@ -13,6 +13,7 @@ interface ScanData {
   overall_insight: string;
   traits: any;
   palm_image_url?: string;
+  right_palm_image_url?: string;
   created_at: string;
   updated_at: string;
 }
@@ -57,6 +58,7 @@ export const useScans = () => {
     overall_insight: string;
     traits: any;
     palm_image_url?: string;
+    right_palm_image_url?: string;
   }) => {
     if (!user) return null;
 

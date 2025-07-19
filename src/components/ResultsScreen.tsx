@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useScans } from '@/hooks/useScans';
-import { Sparkles, Heart, Brain, TrendingUp, Star, ArrowRight, Calendar, Zap } from 'lucide-react';
+import { Sparkles, Star, ArrowRight, Calendar } from 'lucide-react';
 
 interface ResultsScreenProps {
   onGoToDashboard: () => void;
@@ -60,9 +60,9 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
           <Card className="p-8 bg-card/80 backdrop-blur-sm border-primary/20">
             <div className="text-center space-y-4">
               <h2 className="text-2xl font-bold text-foreground">Your Cosmic Overview</h2>
-              <p className="text-lg text-muted-foreground leading-relaxed">
+              <div className="text-lg text-muted-foreground leading-relaxed whitespace-pre-line text-left max-w-4xl">
                 {palmResults.overall_insight}
-              </p>
+              </div>
               <div className="flex justify-center gap-2">
                 <Star className="h-5 w-5 text-secondary fill-current" />
                 <Star className="h-5 w-5 text-secondary fill-current" />
@@ -72,89 +72,6 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
               </div>
             </div>
           </Card>
-
-          {/* Palm Line Analysis */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-            {/* Life Line */}
-            <Card className="p-4 sm:p-6 bg-card/80 backdrop-blur-sm hover:shadow-mystical transition-all">
-              <div className="flex items-start gap-3 sm:gap-4">
-                <div className="p-2 sm:p-3 bg-primary/10 rounded-lg flex-shrink-0">
-                  <Zap className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-2">
-                    <h3 className="font-semibold text-foreground text-sm sm:text-base">Life Line</h3>
-                    <Badge variant="secondary" className="bg-primary/20 text-primary text-xs self-start sm:self-center">
-                      {palmResults.life_line_strength}
-                    </Badge>
-                  </div>
-                  <p className="text-muted-foreground mb-3 text-xs sm:text-sm">
-                    Represents vitality, health, and general life journey. Your life line indicates {palmResults.life_line_strength?.toLowerCase()} life force.
-                  </p>
-                </div>
-              </div>
-            </Card>
-
-            {/* Heart Line */}
-            <Card className="p-4 sm:p-6 bg-card/80 backdrop-blur-sm hover:shadow-mystical transition-all">
-              <div className="flex items-start gap-3 sm:gap-4">
-                <div className="p-2 sm:p-3 bg-accent/10 rounded-lg flex-shrink-0">
-                  <Heart className="h-5 w-5 sm:h-6 sm:w-6 text-accent" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-2">
-                    <h3 className="font-semibold text-foreground text-sm sm:text-base">Heart Line</h3>
-                    <Badge variant="secondary" className="bg-accent/20 text-accent text-xs self-start sm:self-center">
-                      {palmResults.heart_line_strength}
-                    </Badge>
-                  </div>
-                  <p className="text-muted-foreground mb-3 text-xs sm:text-sm">
-                    Relates to emotions, relationships, and love life. Your heart line shows {palmResults.heart_line_strength?.toLowerCase()} emotional capacity.
-                  </p>
-                </div>
-              </div>
-            </Card>
-
-            {/* Head Line */}
-            <Card className="p-4 sm:p-6 bg-card/80 backdrop-blur-sm hover:shadow-mystical transition-all">
-              <div className="flex items-start gap-3 sm:gap-4">
-                <div className="p-2 sm:p-3 bg-secondary/10 rounded-lg flex-shrink-0">
-                  <Brain className="h-5 w-5 sm:h-6 sm:w-6 text-secondary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-2">
-                    <h3 className="font-semibold text-foreground text-sm sm:text-base">Head Line</h3>
-                    <Badge variant="secondary" className="bg-secondary/20 text-secondary text-xs self-start sm:self-center">
-                      {palmResults.head_line_strength}
-                    </Badge>
-                  </div>
-                  <p className="text-muted-foreground mb-3 text-xs sm:text-sm">
-                    Represents intellect, reasoning, and thought processes. Your head line suggests {palmResults.head_line_strength?.toLowerCase()} mental clarity.
-                  </p>
-                </div>
-              </div>
-            </Card>
-
-            {/* Fate Line */}
-            <Card className="p-4 sm:p-6 bg-card/80 backdrop-blur-sm hover:shadow-mystical transition-all">
-              <div className="flex items-start gap-3 sm:gap-4">
-                <div className="p-2 sm:p-3 bg-primary/10 rounded-lg flex-shrink-0">
-                  <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-2">
-                    <h3 className="font-semibold text-foreground text-sm sm:text-base">Fate Line</h3>
-                    <Badge variant="secondary" className="bg-primary/20 text-primary text-xs self-start sm:self-center">
-                      {palmResults.fate_line_strength}
-                    </Badge>
-                  </div>
-                  <p className="text-muted-foreground mb-3 text-xs sm:text-sm">
-                    Indicates destiny, life's path, and external influences. Your fate line shows {palmResults.fate_line_strength?.toLowerCase()} destiny connection.
-                  </p>
-                </div>
-              </div>
-            </Card>
-          </div>
 
           {/* Next Steps */}
           <Card className="p-6 sm:p-8 bg-card/80 backdrop-blur-sm text-center">
