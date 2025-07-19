@@ -148,32 +148,18 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
 
       if (error) {
         console.error('Error generating reading:', error);
-        // Fallback to simulated reading
-        return generateSimulatedReading();
+        throw new Error(error.message || 'Failed to generate palm reading');
+      }
+
+      if (!data) {
+        throw new Error('No data received from palm analysis');
       }
 
       return data;
     } catch (error) {
       console.error('Error generating reading:', error);
-      // Fallback to simulated reading
-      return generateSimulatedReading();
+      throw error; // Re-throw the error instead of falling back
     }
-  };
-
-  const generateSimulatedReading = () => {
-    return {
-      life_line_strength: 'Strong',
-      heart_line_strength: 'Moderate',
-      head_line_strength: 'Strong',
-      fate_line_strength: 'Moderate',
-      overall_insight: 'Your palm reveals a person with strong vitality and clear thinking. You have moderate emotional capacity and a balanced approach to destiny.',
-      traits: {
-        life_energy: 'Vibrant',
-        emotional_capacity: 'Moderate',
-        intellectual_approach: 'Analytical',
-        destiny_path: 'Balanced'
-      }
-    };
   };
 
   const startScan = () => {
@@ -230,64 +216,59 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
   const handleScanComplete = async () => {
     setScanState('analyzing');
     
-    // Capture the palm image
-    const imageDataUrl = await captureImage();
-    if (!imageDataUrl) {
+    try {
+      // Capture the palm image
+      const imageDataUrl = await captureImage();
+      if (!imageDataUrl) {
+        throw new Error("Failed to capture palm image");
+      }
+
+      setCapturedImage(imageDataUrl);
+      
+      // Upload image and generate reading
+      const imageUrl = await uploadImageToStorage(imageDataUrl);
+      if (!imageUrl) {
+        throw new Error("Failed to save palm image");
+      }
+
+      const palmReading = await generatePalmReading(imageUrl);
+      if (!palmReading) {
+        throw new Error("Failed to generate palm reading");
+      }
+
+      // Check if we need to scan the other hand
+      if (currentHand === 'left') {
+        setCurrentHand('right');
+        setScanState('ready');
+        setProgress(0);
+        toast({
+          title: "Left palm complete!",
+          description: "Now position your right palm for scanning"
+        });
+        return;
+      }
+
+      // Both hands complete - stop camera for privacy
+      setScanState('complete');
+      stopCamera();
+      
+      // Pass the complete scan data (ResultsScreen will save it ONCE)
+      const scanData = {
+        ...palmReading,
+        palm_image_url: imageUrl,
+        capturedImage: imageDataUrl
+      };
+      
+      setTimeout(() => onScanComplete(scanData), 2000);
+    } catch (error) {
+      console.error('Error during scan completion:', error);
+      setScanState('error');
       toast({
-        title: "Error",
-        description: "Failed to capture palm image",
+        title: "Analysis Failed",
+        description: error instanceof Error ? error.message : "Failed to analyze palm. Please try again.",
         variant: "destructive"
       });
-      return;
     }
-
-    setCapturedImage(imageDataUrl);
-    
-    // Upload image and generate reading
-    const imageUrl = await uploadImageToStorage(imageDataUrl);
-    if (!imageUrl) {
-      toast({
-        title: "Error", 
-        description: "Failed to save palm image",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const palmReading = await generatePalmReading(imageUrl);
-    if (!palmReading) {
-      toast({
-        title: "Error",
-        description: "Failed to generate palm reading", 
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Check if we need to scan the other hand
-    if (currentHand === 'left') {
-      setCurrentHand('right');
-      setScanState('ready');
-      setProgress(0);
-      toast({
-        title: "Left palm complete!",
-        description: "Now position your right palm for scanning"
-      });
-      return;
-    }
-
-    // Both hands complete - stop camera for privacy
-    setScanState('complete');
-    stopCamera();
-    
-    // Pass the complete scan data (ResultsScreen will save it ONCE)
-    const scanData = {
-      ...palmReading,
-      palm_image_url: imageUrl,
-      capturedImage: imageDataUrl
-    };
-    
-    setTimeout(() => onScanComplete(scanData), 2000);
   };
 
   const retryCamera = async () => {

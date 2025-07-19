@@ -13,25 +13,24 @@ interface ResultsScreenProps {
 const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
   const { saveScan } = useScans();
 
-  // Use the passed scan data or fallback to default results
-  const palmResults = scanData || {
-    life_line_strength: "Strong",
-    heart_line_strength: "Deep", 
-    head_line_strength: "Clear",
-    fate_line_strength: "Prominent",
-    overall_insight: "Your palm reveals a harmonious balance of emotional depth and intellectual clarity. The planets and cosmic energy are perfectly aligned, indicating a period of growth and self-discovery ahead.",
-    traits: {
-      emotional_capacity: "High",
-      intellectual_approach: "Analytical", 
-      life_energy: "Vibrant",
-      destiny_path: "Self-directed"
-    }
-  };
+  // Require scan data - no fallback
+  if (!scanData) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="p-8 text-center">
+          <p className="text-muted-foreground mb-4">No palm reading data available.</p>
+          <Button onClick={onGoToDashboard}>Go to Dashboard</Button>
+        </Card>
+      </div>
+    );
+  }
+
+  const palmResults = scanData;
 
   useEffect(() => {
     // Save the scan results to the database ONLY ONCE
     const saveResults = async () => {
-      if (palmResults && scanData) { // Only save if scanData is passed (real scan)
+      if (palmResults) {
         console.log('Saving palm reading to database...');
         await saveScan(palmResults);
       }
