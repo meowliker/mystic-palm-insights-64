@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useScans } from '@/hooks/useScans';
+import { cleanupMarkdown } from '@/utils/cleanupMarkdown';
 import { Sparkles, Star, ArrowRight, Calendar } from 'lucide-react';
 
 interface ResultsScreenProps {
@@ -61,7 +62,7 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
             <div className="text-center space-y-4">
               <h2 className="text-2xl font-bold text-foreground">Your Cosmic Overview</h2>
               <div className="text-lg text-muted-foreground leading-relaxed whitespace-pre-line text-left max-w-4xl">
-                {palmResults.overall_insight}
+                {cleanupMarkdown(palmResults.overall_insight)}
               </div>
               <div className="flex justify-center gap-2">
                 <Star className="h-5 w-5 text-secondary fill-current" />

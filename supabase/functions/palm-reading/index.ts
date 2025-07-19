@@ -169,12 +169,25 @@ Be extremely detailed in your observations of what you actually see in the palm 
     }
 
     const data = await openaiResponse.json();
-    const analysis = data.choices?.[0]?.message?.content || '';
+    let analysis = data.choices?.[0]?.message?.content || '';
     
     if (!analysis) {
       throw new Error('No analysis content received');
     }
 
+    console.log('Raw AI response length:', analysis.length);
+    console.log('Raw AI response preview:', analysis.substring(0, 200));
+    
+    // Clean up any remaining markdown symbols and formatting
+    analysis = analysis
+      .replace(/#{1,6}\s*/g, '') // Remove hashtags
+      .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold markers
+      .replace(/\*(.*?)\*/g, '$1') // Remove italic markers
+      .replace(/•/g, '-') // Replace bullet points with dashes
+      .replace(/\n{3,}/g, '\n\n') // Replace multiple line breaks with double
+      .trim();
+    
+    console.log('Cleaned AI response preview:', analysis.substring(0, 200));
     console.log('Detailed ChatGPT-style analysis completed successfully');
 
     // Parse the detailed analysis to extract structured data

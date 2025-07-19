@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import constellationPattern from '@/assets/constellation-pattern.jpg';
 import { useScans } from '@/hooks/useScans';
+import { cleanupMarkdown } from '@/utils/cleanupMarkdown';
 import { useAuth } from '@/hooks/useAuth';
 import { useBlogs } from '@/hooks/useBlogs';
 import { EditProfileDialog } from '@/components/EditProfileDialog';
@@ -428,10 +429,12 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
                           ))}
                         </div>
                         <p className="text-muted-foreground line-clamp-3">
-                          {scan.overall_insight.length > 150 
-                            ? `${scan.overall_insight.substring(0, 150)}...` 
-                            : scan.overall_insight
-                          }
+                          {(() => {
+                            const cleanedText = cleanupMarkdown(scan.overall_insight);
+                            return cleanedText.length > 150 
+                              ? `${cleanedText.substring(0, 150)}...` 
+                              : cleanedText;
+                          })()}
                         </p>
                       </div>
                     </Card>

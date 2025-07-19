@@ -7,6 +7,7 @@ import { Heart, Brain, TrendingUp, Star, Eye, Trash2, Calendar } from 'lucide-re
 import { useToast } from '@/hooks/use-toast';
 import { useScans } from '@/hooks/useScans';
 import { format } from 'date-fns';
+import { cleanupMarkdown } from '@/utils/cleanupMarkdown';
 
 interface ScanDetailDialogProps {
   scan: any;
@@ -115,7 +116,7 @@ const ScanDetailDialog = ({ scan, children }: ScanDetailDialogProps) => {
             </CardHeader>
             <CardContent>
               <div className="text-foreground leading-relaxed whitespace-pre-line">
-                {scan.overall_insight}
+                {cleanupMarkdown(scan.overall_insight)}
               </div>
             </CardContent>
           </Card>
