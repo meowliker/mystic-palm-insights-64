@@ -47,7 +47,18 @@ serve(async (req) => {
         throw new Error(`Failed to download: ${response.status}`);
       }
       const buffer = await response.arrayBuffer();
-      const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+      
+      // Convert to base64 in chunks to avoid stack overflow
+      const bytes = new Uint8Array(buffer);
+      let binary = '';
+      const chunkSize = 8192;
+      
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        const chunk = bytes.subarray(i, i + chunkSize);
+        binary += String.fromCharCode.apply(null, Array.from(chunk));
+      }
+      
+      const base64 = btoa(binary);
       console.log('Download successful, base64 length:', base64.length);
       return base64;
     };
