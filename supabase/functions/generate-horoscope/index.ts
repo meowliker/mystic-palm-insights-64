@@ -61,8 +61,7 @@ const analyzePalmImage = async (imageUrl: string) => {
   console.log('OpenAI API Key available:', !!openaiApiKey);
   
   if (!openaiApiKey) {
-    console.error('OpenAI API key not found - falling back to simulated analysis');
-    return generateSimulatedPalmAnalysis();
+    throw new Error('OpenAI API key not configured');
   }
 
   try {
@@ -80,24 +79,43 @@ const analyzePalmImage = async (imageUrl: string) => {
             role: 'system',
             content: `You are a master palmist with decades of experience in traditional palmistry and astrological sciences. You combine ancient wisdom with intuitive insights to provide comprehensive palm readings.
 
-IMPORTANT: Based on the palm image provided, give a detailed palmistry reading following traditional palmistry principles. Analyze what you can actually observe in the image.
-
-Provide specific insights about:
-- Life Line: vitality, health, life journey, strength and clarity
-- Heart Line: emotions, relationships, love capacity, depth and characteristics  
-- Head Line: intellect, mental approach, creativity, length and curve
-- Fate Line: destiny, career path, external influences, presence and definition
-- Character traits and personality insights based on observable features
-- Palm mounts, finger characteristics, and overall hand shape if visible
-
-Be authentic to traditional palmistry while being insightful and personal. Focus on what you can actually see in the palm image and provide meaningful interpretations based on those observations.`
+IMPORTANT: Based on the palm image provided, give a detailed palmistry reading following traditional palmistry principles. Analyze what you can actually observe in the image.`
           },
           {
             role: 'user',
             content: [
               {
                 type: 'text',
-                text: 'Please analyze this palm image and provide a comprehensive palmistry reading. Focus on the palm lines, mounts, and any other observable features. Give detailed insights about the person\'s character, destiny, and life path according to traditional palmistry principles.'
+                text: `Analyze the following palm photo and provide a detailed palm reading based on the visible lines and markings. Include interpretations for the following palm features:
+
+Life Line:
+- Is it strong or weak, deep or shallow?
+- What does it suggest about the user's vitality, overall life journey, and potential health influences?
+
+Heart Line:
+- Is it deep, clear, or shallow?
+- What does it reveal about the user's emotional depth, relationships, and capacity for love?
+
+Head Line:
+- Is it clear, fragmented, or straight?
+- How does it indicate intellectual abilities, decision-making processes, and mental clarity?
+
+Fate Line:
+- Is it present or absent?
+- If present, is it deep or faint? What does it suggest about destiny, career path, and external influences?
+
+Additional Markings:
+- Are there any notable markings such as crosses, stars, or other unique features?
+- What might they signify in the user's life or future?
+
+Mounts:
+- Analyze the mounts at the base of the fingers (Venus, Mars, Jupiter, etc.) and how they relate to the user's personality traits.
+
+Astrological Considerations:
+Zodiac Sign Influence:
+- Based on the user's zodiac sign, how do the palm's lines and features align with typical astrological traits?
+
+Provide an overall personality analysis, character traits, and potential future insights based on the palm features observed in the photo.`
               },
               {
                 type: 'image_url',
@@ -137,22 +155,10 @@ Be authentic to traditional palmistry while being insightful and personal. Focus
   } catch (error) {
     console.error('Error in palm analysis:', error);
     console.error('Error details:', error.message);
-    // Fallback to simulated analysis
-    return generateSimulatedPalmAnalysis();
+    throw error;
   }
 };
 
-const generateSimulatedPalmAnalysis = () => {
-  const analyses = [
-    `Your palm reveals fascinating insights about your unique character and life path. The life line shows strong vitality and a dynamic approach to life's challenges, curving gracefully around the thumb mount indicating natural resilience. Your heart line displays deep emotional capacity with clear definition, suggesting you form meaningful relationships and have strong intuitive abilities. The head line shows excellent mental clarity and analytical thinking, running clearly across the palm indicating balanced decision-making skills. Your fate line is well-defined, pointing to a strong sense of purpose and the ability to shape your own destiny through determined effort.`,
-    
-    `The palm analysis reveals a remarkable balance of emotional depth and intellectual strength. Your life line shows robust health and vitality, with its strong curve indicating adaptability in life's journey. The heart line demonstrates significant emotional intelligence and capacity for deep connections, while maintaining healthy boundaries. Your head line suggests creative problem-solving abilities combined with practical wisdom. The fate line indicates periods of self-directed growth and opportunities for leadership roles. Overall, your palm suggests someone who combines intuition with logic, creating a harmonious approach to life's opportunities and challenges.`,
-    
-    `Your palm displays the characteristics of someone with natural leadership qualities and strong personal magnetism. The life line shows sustained energy throughout life with particular strength in creative endeavors. Your heart line reveals passionate nature balanced with emotional wisdom, indicating fulfilling relationships both personal and professional. The head line demonstrates innovative thinking and the ability to see solutions others might miss. Your fate line suggests a path of gradual but steady achievement, with major positive changes occurring through your own initiative and determination.`
-  ];
-  
-  return analyses[Math.floor(Math.random() * analyses.length)];
-};
 
 const parsePalmReading = (aiResponse: string) => {
   // Extract key insights from AI response and structure them
