@@ -216,16 +216,29 @@ serve(async (req) => {
   try {
     const requestBody = await req.text();
     console.log('Request body:', requestBody);
+    console.log('Request method:', req.method);
+    console.log('Request URL:', req.url);
     
-    const { palmImageUrl, zodiacSign, name, birthDate, birthTime, birthPlace, method } = JSON.parse(requestBody);
-    
-    // Check if this is a palm reading request or horoscope request
-    if (palmImageUrl) {
-      console.log('Processing palm reading request with image:', palmImageUrl);
-      
-      // Analyze the palm image using OpenAI
-      const aiAnalysis = await analyzePalmImage(palmImageUrl);
-      console.log('AI Analysis result:', aiAnalysis);
+    // Simple test response first
+    if (req.method === 'POST') {
+      console.log('POST request received successfully!');
+      return new Response(JSON.stringify({ 
+        test: 'success',
+        life_line_strength: 'Strong',
+        heart_line_strength: 'Deep',
+        head_line_strength: 'Clear', 
+        fate_line_strength: 'Prominent',
+        overall_insight: 'This is a test response from the working edge function!',
+        traits: {
+          life_energy: 'Vibrant',
+          emotional_capacity: 'High', 
+          intellectual_approach: 'Analytical',
+          destiny_path: 'Self-directed'
+        }
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
       
       // Parse the AI response into structured palm reading data
       const palmReading = parsePalmReading(aiAnalysis);
