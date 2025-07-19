@@ -136,42 +136,33 @@ export const useScans = () => {
     if (!user) return false;
 
     try {
-      // First, get all scans with images to delete from storage
+      // Get file paths before deleting database records
       const { data: scansWithImages } = await supabase
         .from('palm_scans')
         .select('palm_image_url')
         .eq('user_id', user.id)
         .not('palm_image_url', 'is', null);
 
-      // Delete all scan records from database first (faster)
-      const { error: deleteError } = await supabase
-        .from('palm_scans')
-        .delete()
-        .eq('user_id', user.id);
+      // Prepare file paths for batch deletion
+      const filePaths = scansWithImages
+        ?.map(scan => {
+          if (scan.palm_image_url) {
+            const fileName = scan.palm_image_url.split('/').pop();
+            return fileName ? `${user.id}/${fileName}` : null;
+          }
+          return null;
+        })
+        .filter(Boolean) as string[] || [];
 
-      if (deleteError) {
-        console.error('Error clearing all scans:', deleteError);
+      // Delete database records and storage files in parallel
+      const [deleteResult] = await Promise.allSettled([
+        supabase.from('palm_scans').delete().eq('user_id', user.id),
+        filePaths.length > 0 ? supabase.storage.from('palm-images').remove(filePaths) : Promise.resolve()
+      ]);
+
+      if (deleteResult.status === 'rejected' || deleteResult.value.error) {
+        console.error('Error clearing all scans:', deleteResult);
         return false;
-      }
-
-      // Delete images from storage in parallel (faster)
-      if (scansWithImages && scansWithImages.length > 0) {
-        const filePaths = scansWithImages
-          .map(scan => {
-            if (scan.palm_image_url) {
-              const fileName = scan.palm_image_url.split('/').pop();
-              return fileName ? `${user.id}/${fileName}` : null;
-            }
-            return null;
-          })
-          .filter(Boolean) as string[];
-
-        if (filePaths.length > 0) {
-          // Delete all images at once
-          await supabase.storage
-            .from('palm-images')
-            .remove(filePaths);
-        }
       }
 
       // Refresh the scans list

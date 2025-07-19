@@ -264,23 +264,14 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
       return;
     }
 
-    // Check if we need to scan the other hand
-    if (currentHand === 'left') {
-      setCurrentHand('right');
-      setScanState('ready');
-      setProgress(0);
-      toast({
-        title: "Left palm complete!",
-        description: "Now position your right palm for scanning"
-      });
-      return;
-    }
-
-    // Both hands complete - stop camera for privacy
+    // For now, we'll do single hand scanning to avoid duplicate saves
+    // TODO: Implement proper dual-hand scanning later
+    
+    // Stop camera for privacy
     setScanState('complete');
     stopCamera();
     
-    // Pass the complete scan data
+    // Pass the complete scan data (ResultsScreen will save it)
     const scanData = {
       ...palmReading,
       palm_image_url: imageUrl,
