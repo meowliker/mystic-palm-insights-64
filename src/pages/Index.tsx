@@ -11,6 +11,7 @@ type AppState = 'welcome' | 'scanner' | 'results' | 'dashboard';
 
 const Index = () => {
   const [currentScreen, setCurrentScreen] = useState<AppState>('welcome');
+  const [scanData, setScanData] = useState<any>(null);
   const { user, loading } = useAuth();
   const { hasScans, loading: scansLoading } = useScans();
 
@@ -31,7 +32,10 @@ const Index = () => {
     }
   };
 
-  const handleScanComplete = () => setCurrentScreen('results');
+  const handleScanComplete = (data: any) => {
+    setScanData(data);
+    setCurrentScreen('results');
+  };
   const handleGoToDashboard = () => setCurrentScreen('dashboard');
 
   // Show loading state while checking auth and scans
@@ -52,7 +56,7 @@ const Index = () => {
     case 'scanner':
       return user ? <PalmScanner onScanComplete={handleScanComplete} onGoBack={handleGoToDashboard} /> : <WelcomeScreen onStartScan={handleStartScan} onGoToDashboard={handleGoToDashboard} />;
     case 'results':
-      return user ? <ResultsScreen onGoToDashboard={handleGoToDashboard} /> : <WelcomeScreen onStartScan={handleStartScan} onGoToDashboard={handleGoToDashboard} />;
+      return user ? <ResultsScreen onGoToDashboard={handleGoToDashboard} scanData={scanData} /> : <WelcomeScreen onStartScan={handleStartScan} onGoToDashboard={handleGoToDashboard} />;
     case 'dashboard':
       return user ? <Dashboard onStartScan={handleStartScan} /> : <WelcomeScreen onStartScan={handleStartScan} onGoToDashboard={handleGoToDashboard} />;
     default:
