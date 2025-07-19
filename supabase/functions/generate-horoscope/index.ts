@@ -57,12 +57,13 @@ function calculateZodiacSign(day: number, month: number): string {
 }
 
 const analyzePalmImage = async (imageUrl: string) => {
+  console.log('Starting palm image analysis for URL:', imageUrl);
+  console.log('OpenAI API Key available:', !!openaiApiKey);
+  
   if (!openaiApiKey) {
     console.error('OpenAI API key not found - falling back to simulated analysis');
     return generateSimulatedPalmAnalysis();
   }
-
-  console.log('Starting palm image analysis for URL:', imageUrl);
 
   try {
     console.log('Calling OpenAI for comprehensive palm analysis...');
@@ -73,7 +74,7 @@ const analyzePalmImage = async (imageUrl: string) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
@@ -112,19 +113,30 @@ Be authentic to traditional palmistry while being insightful and personal. Focus
       }),
     });
 
+    console.log('OpenAI response status:', response.status);
+    
     if (!response.ok) {
-      console.error('OpenAI API error:', response.status, await response.text());
-      throw new Error(`OpenAI API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error('OpenAI API error details:', errorText);
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    const palmAnalysis = data.choices[0]?.message?.content || '';
+    console.log('OpenAI response data keys:', Object.keys(data));
+    
+    const palmAnalysis = data.choices?.[0]?.message?.content || '';
+    
+    if (!palmAnalysis) {
+      console.error('No analysis content in OpenAI response');
+      throw new Error('No analysis content received from OpenAI');
+    }
+    
     console.log('OpenAI palm analysis received:', palmAnalysis.substring(0, 200) + '...');
-
     return palmAnalysis;
     
   } catch (error) {
     console.error('Error in palm analysis:', error);
+    console.error('Error details:', error.message);
     // Fallback to simulated analysis
     return generateSimulatedPalmAnalysis();
   }
