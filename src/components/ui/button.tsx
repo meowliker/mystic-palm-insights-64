@@ -20,7 +20,7 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         mystical: "bg-mystical text-primary-foreground shadow-mystical hover:shadow-glow transform hover:scale-105",
         cosmic: "bg-cosmic text-foreground shadow-cosmic hover:shadow-glow border border-primary/20",
-        glow: "bg-primary text-primary-foreground shadow-glow hover:shadow-mystical transform hover:scale-105 animate-pulse-glow"
+        glow: "bg-primary text-primary-foreground shadow-glow hover:shadow-mystical transform hover:scale-105"
       },
       size: {
         default: "h-10 px-4 py-2",

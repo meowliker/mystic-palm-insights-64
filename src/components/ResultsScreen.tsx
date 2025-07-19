@@ -29,15 +29,16 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
   };
 
   useEffect(() => {
-    // Save the scan results to the database
+    // Save the scan results to the database ONLY ONCE
     const saveResults = async () => {
-      if (palmResults) {
+      if (palmResults && scanData) { // Only save if scanData is passed (real scan)
+        console.log('Saving palm reading to database...');
         await saveScan(palmResults);
       }
     };
     
     saveResults();
-  }, [saveScan, palmResults]);
+  }, []); // Empty dependency array to run only once
 
   return (
     <div className="min-h-screen bg-background">
