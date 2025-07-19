@@ -134,32 +134,22 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
     try {
       console.log('Calling edge function with image URL:', imageUrl);
       console.log('User ID:', user?.id);
-      console.log('Supabase URL:', 'https://klustrtcwdgjacdezoih.supabase.co');
       
-      // Try calling the edge function directly
-      const directResponse = await fetch('https://klustrtcwdgjacdezoih.supabase.co/functions/v1/generate-horoscope', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtsdXN0cnRjd2RnamFjZGV6b2loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI3NTU5MzEsImV4cCI6MjA2ODMzMTkzMX0.tMlEMp-TtfmxhJlx8K4ffSi0iVsvgi589RrxkiQOZ9U`,
-          'user-id': user?.id || 'anonymous'
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('generate-horoscope', {
+        body: { 
           palmImageUrl: imageUrl
-        })
+        },
+        headers: {
+          'user-id': user?.id || 'anonymous'
+        }
       });
 
-      console.log('Direct fetch response status:', directResponse.status);
-      console.log('Direct fetch response ok:', directResponse.ok);
+      console.log('Edge function response:', { data, error });
 
-      if (!directResponse.ok) {
-        const errorText = await directResponse.text();
-        console.error('Direct fetch error:', errorText);
-        throw new Error(`Direct fetch failed: ${directResponse.status} - ${errorText}`);
+      if (error) {
+        console.error('Error generating reading:', error);
+        throw new Error(error.message || 'Failed to generate palm reading');
       }
-
-      const data = await directResponse.json();
-      console.log('Direct fetch data:', data);
 
       if (!data) {
         throw new Error('No data received from palm analysis');

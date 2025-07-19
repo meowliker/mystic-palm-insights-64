@@ -1,1 +1,4 @@
 project_id = "klustrtcwdgjacdezoih"
+
+[functions.generate-horoscope]
+verify_jwt = false
