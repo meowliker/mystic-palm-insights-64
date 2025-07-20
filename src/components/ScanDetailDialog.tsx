@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Heart, Brain, TrendingUp, Star, Eye, Trash2, Calendar } from 'lucide-react';
+import { Heart, Brain, TrendingUp, Star, Eye, Trash2, Calendar, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useScans } from '@/hooks/useScans';
 import { format } from 'date-fns';
@@ -19,29 +19,42 @@ const ScanDetailDialog = ({ scan, children, onScanDeleted }: ScanDetailDialogPro
   const { deleteScan, fetchScans } = useScans();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
+    setIsDeleting(true);
     console.log('Deleting scan:', scan.id);
-    const success = await deleteScan(scan.id);
-    if (success) {
-      console.log('Scan deleted successfully, forcing refresh...');
-      // Force an immediate refresh of the scans
-      await fetchScans();
-      // Call the parent callback if provided
-      if (onScanDeleted) {
-        onScanDeleted();
+    
+    try {
+      const success = await deleteScan(scan.id);
+      if (success) {
+        console.log('Scan deleted successfully, forcing refresh...');
+        // Force an immediate refresh of the scans
+        await fetchScans();
+        // Call the parent callback if provided
+        if (onScanDeleted) {
+          onScanDeleted();
+        }
+        toast({
+          title: "Reading deleted",
+          description: "Your palm reading has been successfully deleted."
+        });
+        setOpen(false); // Close the dialog
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to delete reading. Please try again.",
+          variant: "destructive"
+        });
       }
-      toast({
-        title: "Reading deleted",
-        description: "Your palm reading has been successfully deleted."
-      });
-      setOpen(false); // Close the dialog
-    } else {
+    } catch (error) {
       toast({
         title: "Error",
         description: "Failed to delete reading. Please try again.",
         variant: "destructive"
       });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -128,10 +141,15 @@ const ScanDetailDialog = ({ scan, children, onScanDeleted }: ScanDetailDialogPro
               variant="destructive"
               size="sm"
               onClick={handleDelete}
+              disabled={isDeleting}
               className="flex items-center gap-2"
             >
-              <Trash2 className="h-4 w-4" />
-              Delete This Reading
+              {isDeleting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              {isDeleting ? "Deleting..." : "Delete This Reading"}
             </Button>
           </div>
         </div>
