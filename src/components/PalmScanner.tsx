@@ -31,9 +31,9 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Initialize camera only when component mounts
+  // Initialize camera automatically when component mounts
   useEffect(() => {
-    // Don't auto-start camera for privacy - user needs to explicitly start it
+    initializeCamera(); // Auto-start camera by default
     return () => {
       stopCamera();
       if (progressIntervalRef.current) {
@@ -660,40 +660,29 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
               </div>
               
               {scanState === 'ready' && cameraActive && (
-              <Button 
-                onClick={startScan}
-                className="w-full bg-primary hover:bg-primary/90"
-                size="lg"
-              >
-                <Hand className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-                Start Palm Scan
-              </Button>
-            )}
-            
-            {scanState === 'ready' && !cameraActive && (
-              <div className="space-y-3 px-2">
-                <p className="text-muted-foreground text-xs sm:text-sm">Camera is stopped for privacy</p>
                 <Button 
-                  onClick={initializeCamera}
-                  className="w-full bg-primary hover:bg-primary/90"
+                  onClick={startScan}
                   size="lg"
+                  variant="glow"
+                  disabled={!cameraActive}
+                  className="gap-2"
                 >
-                  <Camera className="h-5 w-5 mr-2" />
-                  Enable Camera to Start
+                  <Hand className="h-5 w-5" />
+                  Start Palm Scan
                 </Button>
-              </div>
-            )}
-            
-            {scanState === 'complete' && (
-              <div className="space-y-3">
-                <CheckCircle className="h-16 w-16 text-green-500 mx-auto animate-pulse" />
-                <p className="text-green-500 font-semibold text-lg">
-                  Palm scanned successfully!
-                </p>
-              </div>
-            )}
-          </div>
-        </Card>
+              )}
+              
+              {scanState === 'complete' && (
+                <div className="text-center space-y-3">
+                  <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
+                  <div>
+                    <h3 className="font-semibold text-foreground">Scan Complete!</h3>
+                    <p className="text-muted-foreground text-sm">Preparing your cosmic insights...</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </Card>
         </div>
       </div>
     </div>
