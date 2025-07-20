@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,6 +17,7 @@ interface ScanDetailDialogProps {
 const ScanDetailDialog = ({ scan, children }: ScanDetailDialogProps) => {
   const { deleteScan } = useScans();
   const { toast } = useToast();
+  const [open, setOpen] = useState(false);
 
   const handleDelete = async () => {
     const success = await deleteScan(scan.id);
@@ -25,6 +26,7 @@ const ScanDetailDialog = ({ scan, children }: ScanDetailDialogProps) => {
         title: "Reading deleted",
         description: "Your palm reading has been successfully deleted."
       });
+      setOpen(false); // Close the dialog
     } else {
       toast({
         title: "Error",
@@ -48,7 +50,7 @@ const ScanDetailDialog = ({ scan, children }: ScanDetailDialogProps) => {
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
@@ -109,28 +111,7 @@ const ScanDetailDialog = ({ scan, children }: ScanDetailDialogProps) => {
             </CardContent>
           </Card>
 
-          {/* Removed individual palm line cards - all details are in the main reading */}
-
-          {/* Character Traits */}
-          {scan.traits && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Character Traits & Insights</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-4">
-                  {Object.entries(scan.traits).map(([key, value]) => (
-                    <div key={key} className="flex justify-between">
-                      <span className="text-muted-foreground capitalize">
-                        {key.replace('_', ' ')}:
-                      </span>
-                      <Badge variant="outline">{value as string}</Badge>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {/* Removed individual palm line cards and character traits - all details are in the main reading */}
 
           {/* Delete Button */}
           <div className="flex justify-center pt-4">
