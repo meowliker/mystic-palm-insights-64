@@ -109,76 +109,7 @@ const ScanDetailDialog = ({ scan, children }: ScanDetailDialogProps) => {
             </CardContent>
           </Card>
 
-          {/* Palm Lines Analysis */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Heart className="h-5 w-5 text-red-500" />
-                  Life Line
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Badge className={getLineStrengthColor(scan.life_line_strength)}>
-                  {scan.life_line_strength}
-                </Badge>
-                <p className="text-sm text-muted-foreground">
-                  Represents vitality, health, and general life journey. Your life line indicates {scan.life_line_strength?.toLowerCase()} life force and energy.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Heart className="h-5 w-5 text-pink-500" />
-                  Heart Line
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Badge className={getLineStrengthColor(scan.heart_line_strength)}>
-                  {scan.heart_line_strength}
-                </Badge>
-                <p className="text-sm text-muted-foreground">
-                  Relates to emotions, relationships, and love life. Your heart line shows {scan.heart_line_strength?.toLowerCase()} emotional capacity.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Brain className="h-5 w-5 text-blue-500" />
-                  Head Line
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Badge className={getLineStrengthColor(scan.head_line_strength)}>
-                  {scan.head_line_strength}
-                </Badge>
-                <p className="text-sm text-muted-foreground">
-                  Represents intellect, reasoning, and thought processes. Your head line suggests {scan.head_line_strength?.toLowerCase()} mental clarity.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <TrendingUp className="h-5 w-5 text-purple-500" />
-                  Fate Line
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Badge className={getLineStrengthColor(scan.fate_line_strength)}>
-                  {scan.fate_line_strength}
-                </Badge>
-                <p className="text-sm text-muted-foreground">
-                  Indicates destiny, life's path, and external influences. Your fate line shows {scan.fate_line_strength?.toLowerCase()} destiny connection.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+          {/* Removed individual palm line cards - all details are in the main reading */}
 
           {/* Character Traits */}
           {scan.traits && (
