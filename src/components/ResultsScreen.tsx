@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,20 +15,27 @@ interface ResultsScreenProps {
 const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
   const { saveScan } = useScans();
   const { user, loading } = useAuth();
+  const hasSaved = useRef(false); // Prevent duplicate saves
 
   // Always call useEffect - it's a hook and must be called in the same order every render
   useEffect(() => {
-    // Save the scan results to the database ONLY ONCE
+    // Save the scan results to the database ONLY ONCE using ref to prevent duplicates
     const saveResults = async () => {
+      // Prevent duplicate saves
+      if (hasSaved.current) {
+        console.log('Scan already saved, skipping...');
+        return;
+      }
+
       // Wait for user to be properly authenticated
       if (!user || loading || !scanData) {
         console.log('Waiting for user authentication or scan data...');
         return;
       }
 
-      console.log('=== SAVING PALM READING TO DATABASE ===');
+      console.log('=== SAVING PALM READING TO DATABASE (ONCE) ===');
       console.log('User authenticated:', user.id);
-      console.log('Saving palm reading to database with data:', scanData);
+      hasSaved.current = true; // Mark as saved to prevent duplicates
       
       // Format the data to match the database schema
       const scanDataToSave = {
@@ -50,6 +57,7 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
         console.log('✅ Palm reading saved successfully!');
       } else {
         console.error('❌ Failed to save palm reading');
+        hasSaved.current = false; // Reset if failed, allow retry
       }
     };
     
@@ -111,10 +119,10 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
 
       <div className="container mx-auto px-4 sm:px-6 py-8">
         <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8">
-          {/* Overall Insight */}
+          {/* Overall Insight - This contains all the palm line details */}
           <Card className="p-8 bg-card/80 backdrop-blur-sm border-primary/20">
             <div className="text-center space-y-4">
-              <h2 className="text-2xl font-bold text-foreground">Your Cosmic Overview</h2>
+              <h2 className="text-2xl font-bold text-foreground">Your Cosmic Palm Reading</h2>
               <div className="text-lg text-muted-foreground leading-relaxed whitespace-pre-line text-left max-w-4xl">
                 {cleanupMarkdown(palmResults.overall_insight)}
               </div>
