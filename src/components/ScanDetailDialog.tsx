@@ -15,13 +15,17 @@ interface ScanDetailDialogProps {
 }
 
 const ScanDetailDialog = ({ scan, children }: ScanDetailDialogProps) => {
-  const { deleteScan } = useScans();
+  const { deleteScan, fetchScans } = useScans();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
 
   const handleDelete = async () => {
+    console.log('Deleting scan:', scan.id);
     const success = await deleteScan(scan.id);
     if (success) {
+      console.log('Scan deleted successfully, forcing refresh...');
+      // Force an immediate refresh of the scans
+      await fetchScans();
       toast({
         title: "Reading deleted",
         description: "Your palm reading has been successfully deleted."
