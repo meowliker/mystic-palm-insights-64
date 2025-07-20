@@ -303,8 +303,8 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
               {/* Hidden canvas for image capture */}
               <canvas ref={canvasRef} className="hidden" />
               
-              {/* Palm Outline Overlay */}
-              <div className="absolute inset-0 z-20 flex items-center justify-center">
+              {/* Palm Outline Overlay - moved up */}
+              <div className="absolute inset-0 z-20 flex items-center justify-center" style={{ marginTop: '-80px' }}>
                 <div className="relative">
                   <img 
                     src={palmOutline} 
@@ -436,7 +436,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
                     </span>
                   </div>
                   <Progress 
-                    value={scanState === 'analyzing' ? undefined : undefined}
+                    value={undefined}
                     className="h-2 bg-white/20"
                   />
                 </div>
@@ -628,8 +628,8 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
                   )}
                 </>
               )}
-          </div>
-          
+            </div>
+            
             {/* Progress Bar */}
             {(scanState === 'scanning' || scanState === 'analyzing') && (
               <div className="p-3 sm:p-4">
@@ -646,7 +646,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
                 </div>
               </div>
             )}
-          
+            
             {/* Controls */}
             <div className="p-4 sm:p-6 text-center space-y-3 sm:space-y-4">
               <div className="flex items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground px-2">
