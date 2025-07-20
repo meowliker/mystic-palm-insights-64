@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useScans } from '@/hooks/useScans';
+import { useAuth } from '@/hooks/useAuth';
 import { cleanupMarkdown } from '@/utils/cleanupMarkdown';
 import { Sparkles, Star, ArrowRight, Calendar } from 'lucide-react';
 
@@ -13,6 +14,19 @@ interface ResultsScreenProps {
 
 const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
   const { saveScan } = useScans();
+  const { user, loading } = useAuth();
+
+  // Show loading if auth is still loading
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="p-8 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading your reading...</p>
+        </Card>
+      </div>
+    );
+  }
 
   // Require scan data - no fallback
   if (!scanData) {
@@ -26,12 +40,32 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
     );
   }
 
+  // Require user authentication
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="p-8 text-center">
+          <p className="text-muted-foreground mb-4">Please log in to save your reading.</p>
+          <Button onClick={onGoToDashboard}>Go to Dashboard</Button>
+        </Card>
+      </div>
+    );
+  }
+
   const palmResults = scanData;
 
   useEffect(() => {
     // Save the scan results to the database ONLY ONCE
     const saveResults = async () => {
+      // Wait for user to be properly authenticated
+      if (!user || loading) {
+        console.log('Waiting for user authentication...');
+        return;
+      }
+
       if (palmResults) {
+        console.log('=== SAVING PALM READING TO DATABASE ===');
+        console.log('User authenticated:', user.id);
         console.log('Saving palm reading to database with data:', palmResults);
         
         // Format the data to match the database schema
@@ -49,11 +83,17 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
         console.log('Formatted scan data for database:', scanDataToSave);
         const result = await saveScan(scanDataToSave);
         console.log('Save result:', result);
+        
+        if (result) {
+          console.log('✅ Palm reading saved successfully!');
+        } else {
+          console.error('❌ Failed to save palm reading');
+        }
       }
     };
     
     saveResults();
-  }, []); // Empty dependency array to run only once
+  }, [user, loading]); // Depend on user and loading state
 
   return (
     <div className="min-h-screen bg-background">
