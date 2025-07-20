@@ -32,8 +32,23 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
     // Save the scan results to the database ONLY ONCE
     const saveResults = async () => {
       if (palmResults) {
-        console.log('Saving palm reading to database...');
-        await saveScan(palmResults);
+        console.log('Saving palm reading to database with data:', palmResults);
+        
+        // Format the data to match the database schema
+        const scanDataToSave = {
+          life_line_strength: palmResults.life_line_strength || 'Unknown',
+          heart_line_strength: palmResults.heart_line_strength || 'Unknown', 
+          head_line_strength: palmResults.head_line_strength || 'Unknown',
+          fate_line_strength: palmResults.fate_line_strength || 'Unknown',
+          overall_insight: palmResults.overall_insight || '',
+          traits: palmResults.traits || {},
+          palm_image_url: palmResults.palm_image_url || null,
+          right_palm_image_url: palmResults.right_palm_image_url || null
+        };
+        
+        console.log('Formatted scan data for database:', scanDataToSave);
+        const result = await saveScan(scanDataToSave);
+        console.log('Save result:', result);
       }
     };
     
