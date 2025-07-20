@@ -24,13 +24,19 @@ export const useScans = () => {
   const { user } = useAuth();
 
   const fetchScans = async () => {
+    console.log('=== FETCHING SCANS ===');
+    console.log('User:', user?.id);
+    
     if (!user) {
+      console.log('No user, setting empty scans');
       setScans([]);
       setLoading(false);
       return;
     }
 
     try {
+      console.log('Fetching scans from database for user:', user.id);
+      
       const { data, error } = await supabase
         .from('palm_scans')
         .select('*')
@@ -39,12 +45,16 @@ export const useScans = () => {
 
       if (error) {
         console.error('Error fetching scans:', error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
         return;
       }
 
+      console.log('Fetched scans from database:', data);
+      console.log('Number of scans found:', data?.length || 0);
+      
       setScans(data || []);
     } catch (error) {
-      console.error('Error fetching scans:', error);
+      console.error('Exception while fetching scans:', error);
     } finally {
       setLoading(false);
     }
@@ -60,32 +70,52 @@ export const useScans = () => {
     palm_image_url?: string;
     right_palm_image_url?: string;
   }) => {
-    if (!user) return null;
+    if (!user) {
+      console.error('Cannot save scan: user not authenticated');
+      return null;
+    }
 
     try {
-      console.log('Attempting to save scan data:', scanData);
+      console.log('=== SAVING SCAN TO DATABASE ===');
+      console.log('User ID:', user.id);
+      console.log('Scan data to save:', scanData);
+      
+      const dataToInsert = {
+        user_id: user.id,
+        life_line_strength: scanData.life_line_strength,
+        heart_line_strength: scanData.heart_line_strength,
+        head_line_strength: scanData.head_line_strength,
+        fate_line_strength: scanData.fate_line_strength,
+        overall_insight: scanData.overall_insight,
+        traits: scanData.traits,
+        palm_image_url: scanData.palm_image_url || null,
+        right_palm_image_url: scanData.right_palm_image_url || null
+      };
+      
+      console.log('Final data for database insert:', dataToInsert);
       
       const { data, error } = await supabase
         .from('palm_scans')
-        .insert({
-          user_id: user.id,
-          ...scanData
-        })
+        .insert(dataToInsert)
         .select()
         .single();
 
       if (error) {
-        console.error('Error saving scan to database:', error);
+        console.error('Database insert error:', error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
         return null;
       }
 
       console.log('Scan saved successfully to database:', data);
       
-      // Refresh scans after saving
-      fetchScans();
+      // Force refresh scans after saving
+      console.log('Refreshing scans list...');
+      await fetchScans();
+      console.log('Scans list refreshed');
+      
       return data;
     } catch (error) {
-      console.error('Error saving scan:', error);
+      console.error('Exception while saving scan:', error);
       return null;
     }
   };
