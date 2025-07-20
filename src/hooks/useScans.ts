@@ -160,7 +160,7 @@ export const useScans = () => {
       }
 
       // Refresh scans after deletion
-      fetchScans();
+      await fetchScans();
       return true;
     } catch (error) {
       console.error('Error deleting scan:', error);
