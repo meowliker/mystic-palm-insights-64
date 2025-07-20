@@ -195,35 +195,17 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
     }, 2000);
   };
 
-  // Progress tracking effect
+  // Progress tracking effect - unlimited loop
   useEffect(() => {
     if (scanState === 'scanning') {
-      progressIntervalRef.current = setInterval(() => {
-        setProgress(prev => {
-          // Simplified progress - always progress, slightly faster when aligned
-          const progressIncrement = alignment === 'good' ? 3 : 2;
-          const newProgress = prev + progressIncrement;
-          
-          if (newProgress >= 100) {
-            clearInterval(progressIntervalRef.current!);
-            handleScanComplete();
-            return 100;
-          }
-          return newProgress;
-        });
-      }, 150);
-    } else {
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-      }
+      // Start scanning automatically after 3 seconds
+      const scanTimeout = setTimeout(() => {
+        handleScanComplete();
+      }, 3000);
+      
+      return () => clearTimeout(scanTimeout);
     }
-
-    return () => {
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-      }
-    };
-  }, [scanState, alignment]);
+  }, [scanState]);
 
   const handleScanComplete = async () => {
     setScanState('analyzing');
@@ -293,189 +275,391 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/80 flex items-center justify-center px-6">
-      <div className="w-full max-w-2xl space-y-6">
-        {/* Back Button */}
-        {onGoBack && (
-          <div className="flex justify-start">
-            <Button 
-              variant="outline" 
-              onClick={onGoBack}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Dashboard
-            </Button>
-          </div>
-        )}
-
-        {/* Header */}
-        <div className="text-center space-y-4">
-          <h1 className="text-2xl sm:text-4xl font-bold text-foreground flex items-center justify-center gap-2">
-            <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-            Palm Reading
-          </h1>
-          <p className="text-muted-foreground text-base sm:text-lg px-4">
-            {getStatusMessage()}
-          </p>
-          {scanState === 'ready' && (
-            <p className="text-xs sm:text-sm text-muted-foreground px-4">
-              Please use the flashlight for better scans in dark backgrounds
-            </p>
-          )}
-          
-          {/* Camera Privacy Controls */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 px-4">
-            <div className={`flex items-center gap-2 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm ${
-              cameraActive ? 'bg-red-500/20 text-red-600' : 'bg-green-500/20 text-green-600'
-            }`}>
-              <div className={`w-2 h-2 rounded-full ${cameraActive ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`} />
-              Camera {cameraActive ? 'Active' : 'Off'}
+    <div className="min-h-screen bg-background relative">
+      {/* Mobile: Fullscreen camera view */}
+      <div className="sm:hidden">
+        {/* Fullscreen Camera Area */}
+        <div className="fixed inset-0 bg-black z-10">
+          {cameraError ? (
+            <div className="flex flex-col items-center justify-center h-full space-y-4 text-center p-8">
+              <AlertCircle className="h-12 w-12 text-destructive" />
+              <p className="text-destructive font-semibold">{cameraError}</p>
+              <Button onClick={retryCamera} variant="outline">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Retry Camera
+              </Button>
             </div>
-            {cameraActive && scanState === 'ready' && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={stopCamera}
-                className="text-red-600 border-red-200 hover:bg-red-50 text-xs sm:text-sm"
-              >
-                Stop Camera
-              </Button>
-            )}
-            {!cameraActive && scanState === 'ready' && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={initializeCamera}
-                className="text-green-600 border-green-200 hover:bg-green-50 text-xs sm:text-sm"
-              >
-                Start Camera
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* Main Scanning Area */}
-        <Card className="relative overflow-hidden bg-card/80 backdrop-blur-sm border-primary/20 mx-2 sm:mx-0">
-          <div className="aspect-[4/3] sm:aspect-[4/3] relative flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5">
-            {cameraError ? (
-              <div className="flex flex-col items-center space-y-4 text-center p-8">
-                <AlertCircle className="h-12 w-12 text-destructive" />
-                <p className="text-destructive font-semibold">{cameraError}</p>
-                <Button onClick={retryCamera} variant="outline">
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Retry Camera
-                </Button>
-              </div>
-            ) : (
-              <>
-                {/* Camera Feed */}
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="absolute inset-0 w-full h-full object-cover rounded-lg"
-                />
-                
-                {/* Hidden canvas for image capture */}
-                <canvas ref={canvasRef} className="hidden" />
-                
-                {/* Palm Outline Overlay */}
-                <div className="relative z-10 flex items-center justify-center">
-                  <div className="relative">
-                    <img 
-                      src={palmOutline} 
-                      alt="Palm Outline" 
-                      className={`w-40 h-52 sm:w-56 sm:h-72 transition-all duration-500 ${
-                        alignment === 'good' 
-                          ? 'opacity-90 drop-shadow-[0_0_30px_rgba(168,85,247,0.9)] scale-105' 
-                          : 'opacity-60 scale-100'
-                      }`}
-                      style={{
-                        filter: alignment === 'good' ? 'brightness(1.2) contrast(1.1)' : 'none'
-                      }}
-                    />
-                    
-                    {/* Alignment Indicator */}
-                    <div className={`absolute -top-6 -right-6 p-3 rounded-full transition-all duration-300 ${
-                      alignment === 'good' ? 'bg-green-500 scale-110' : 'bg-red-500'
-                    }`}>
-                      {alignment === 'good' ? (
-                        <CheckCircle className="h-5 w-5 text-white" />
-                      ) : (
-                        <AlertCircle className="h-5 w-5 text-white" />
-                      )}
-                    </div>
-
-                    {/* Cosmic Effects for Scanning */}
-                    {scanState === 'scanning' && alignment === 'good' && (
-                      <>
-                        {/* Planetary symbols */}
-                        <div className="absolute inset-0 pointer-events-none">
-                          <div className="absolute top-1/4 left-1/4 w-8 h-8 bg-yellow-400 rounded-full animate-pulse opacity-80" />
-                          <div className="absolute top-1/3 right-1/4 w-6 h-6 bg-red-400 rounded-full animate-pulse opacity-80" />
-                          <div className="absolute bottom-1/3 left-1/3 w-7 h-7 bg-blue-400 rounded-full animate-pulse opacity-80" />
-                          <div className="absolute bottom-1/4 right-1/3 w-5 h-5 bg-purple-400 rounded-full animate-pulse opacity-80" />
-                        </div>
-                        
-                        {/* Scanning lines */}
-                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/30 to-transparent animate-pulse" />
-                      </>
-                    )}
-                    
-                    {/* Analysis Phase Effects */}
-                    {scanState === 'analyzing' && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="text-2xl font-bold text-primary animate-pulse">
-                          <Sparkles className="h-12 w-12" />
-                        </div>
-                      </div>
+          ) : (
+            <>
+              {/* Camera Feed */}
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              
+              {/* Hidden canvas for image capture */}
+              <canvas ref={canvasRef} className="hidden" />
+              
+              {/* Palm Outline Overlay */}
+              <div className="absolute inset-0 z-20 flex items-center justify-center">
+                <div className="relative">
+                  <img 
+                    src={palmOutline} 
+                    alt="Palm Outline" 
+                    className={`w-48 h-60 transition-all duration-500 ${
+                      alignment === 'good' 
+                        ? 'opacity-90 drop-shadow-[0_0_30px_rgba(168,85,247,0.9)] scale-105' 
+                        : 'opacity-60 scale-100'
+                    }`}
+                    style={{
+                      filter: alignment === 'good' ? 'brightness(1.2) contrast(1.1)' : 'none'
+                    }}
+                  />
+                  
+                  {/* Alignment Indicator */}
+                  <div className={`absolute -top-6 -right-6 p-3 rounded-full transition-all duration-300 ${
+                    alignment === 'good' ? 'bg-green-500 scale-110' : 'bg-red-500'
+                  }`}>
+                    {alignment === 'good' ? (
+                      <CheckCircle className="h-5 w-5 text-white" />
+                    ) : (
+                      <AlertCircle className="h-5 w-5 text-white" />
                     )}
                   </div>
+
+                  {/* Cosmic Effects for Scanning */}
+                  {scanState === 'scanning' && alignment === 'good' && (
+                    <>
+                      {/* Planetary symbols */}
+                      <div className="absolute inset-0 pointer-events-none">
+                        <div className="absolute top-1/4 left-1/4 w-8 h-8 bg-yellow-400 rounded-full animate-pulse opacity-80" />
+                        <div className="absolute top-1/3 right-1/4 w-6 h-6 bg-red-400 rounded-full animate-pulse opacity-80" />
+                        <div className="absolute bottom-1/3 left-1/3 w-7 h-7 bg-blue-400 rounded-full animate-pulse opacity-80" />
+                        <div className="absolute bottom-1/4 right-1/3 w-5 h-5 bg-purple-400 rounded-full animate-pulse opacity-80" />
+                      </div>
+                      
+                      {/* Scanning lines */}
+                      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/30 to-transparent animate-pulse" />
+                    </>
+                  )}
+                  
+                  {/* Analysis Phase Effects */}
+                  {scanState === 'analyzing' && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-2xl font-bold text-primary animate-pulse">
+                        <Sparkles className="h-12 w-12" />
+                      </div>
+                    </div>
+                  )}
                 </div>
-                
-                {/* Scanning Progress Overlay */}
-                {(scanState === 'scanning' || scanState === 'analyzing') && (
-                  <div className="absolute inset-0 bg-primary/10 animate-pulse z-5 rounded-lg" />
-                )}
-              </>
-            )}
-          </div>
-          
-          {/* Progress Bar */}
-          {(scanState === 'scanning' || scanState === 'analyzing') && (
-            <div className="p-3 sm:p-4">
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs sm:text-sm">
-                  <span className="text-muted-foreground">
-                    {scanState === 'scanning' ? 'Scanning Progress' : 'Analyzing...'}
-                  </span>
-                  <span className="text-primary font-medium">
-                    {scanState === 'scanning' ? `${progress}%` : '100%'}
-                  </span>
-                </div>
-                <Progress 
-                  value={scanState === 'analyzing' ? 100 : progress} 
-                  className="h-2"
-                />
               </div>
-            </div>
+              
+              {/* Scanning Progress Overlay */}
+              {(scanState === 'scanning' || scanState === 'analyzing') && (
+                <div className="absolute inset-0 bg-primary/10 animate-pulse z-15" />
+              )}
+            </>
           )}
           
-          {/* Controls */}
-          <div className="p-4 sm:p-6 text-center space-y-3 sm:space-y-4">
-            <div className="flex items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground px-2">
-              <Camera className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-              <span className="text-center">
-                {alignment === 'good' 
-                  ? 'Perfect alignment! Hold steady...' 
-                  : 'Adjust your hand position within the outline'
-                }
-              </span>
+          {/* Overlapping Controls for Mobile */}
+          <div className="absolute bottom-0 left-0 right-0 z-30 p-4 bg-gradient-to-t from-black/80 to-transparent">
+            {/* Back Button */}
+            {onGoBack && (
+              <div className="absolute top-4 left-4">
+                <Button 
+                  variant="outline" 
+                  onClick={onGoBack}
+                  size="sm"
+                  className="bg-black/50 backdrop-blur-sm border-white/20 text-white hover:bg-black/70"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+            
+            {/* Header Text */}
+            <div className="text-center mb-4">
+              <h1 className="text-xl font-bold text-white flex items-center justify-center gap-2 mb-2">
+                <Sparkles className="h-5 w-5 text-primary" />
+                Palm Reading
+              </h1>
+              <p className="text-white/80 text-sm">
+                {getStatusMessage()}
+              </p>
+              {scanState === 'ready' && (
+                <p className="text-xs text-white/60 mt-1">
+                  Please use the flashlight for better scans in dark backgrounds
+                </p>
+              )}
             </div>
             
-            {scanState === 'ready' && cameraActive && (
+            {/* Camera Privacy Controls */}
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
+                cameraActive ? 'bg-red-500/20 text-red-400 border border-red-400/20' : 'bg-green-500/20 text-green-400 border border-green-400/20'
+              }`}>
+                <div className={`w-2 h-2 rounded-full ${cameraActive ? 'bg-red-400 animate-pulse' : 'bg-green-400'}`} />
+                Camera {cameraActive ? 'Active' : 'Off'}
+              </div>
+              {cameraActive && scanState === 'ready' && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={stopCamera}
+                  className="text-red-400 border-red-400/20 hover:bg-red-400/10 bg-black/50 backdrop-blur-sm"
+                >
+                  Stop Camera
+                </Button>
+              )}
+              {!cameraActive && scanState === 'ready' && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={initializeCamera}
+                  className="text-green-400 border-green-400/20 hover:bg-green-400/10 bg-black/50 backdrop-blur-sm"
+                >
+                  Start Camera
+                </Button>
+              )}
+            </div>
+            
+            {/* Progress Bar for Mobile */}
+            {(scanState === 'scanning' || scanState === 'analyzing') && (
+              <div className="mb-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/80">
+                      {scanState === 'scanning' ? 'Scanning Progress' : 'Analyzing...'}
+                    </span>
+                  </div>
+                  <Progress 
+                    value={scanState === 'analyzing' ? undefined : undefined}
+                    className="h-2 bg-white/20"
+                  />
+                </div>
+              </div>
+            )}
+            
+            {/* Controls for Mobile */}
+            <div className="text-center space-y-3">
+              <div className="flex items-center justify-center gap-2 text-sm text-white/70">
+                <Camera className="h-4 w-4 flex-shrink-0" />
+                <span className="text-center">
+                  {alignment === 'good' 
+                    ? 'Perfect alignment! Hold steady...' 
+                    : 'Adjust your hand position within the outline'
+                  }
+                </span>
+              </div>
+              
+              {scanState === 'ready' && cameraActive && (
+                <Button 
+                  onClick={startScan}
+                  variant="glow"
+                  size="lg"
+                  className="w-full"
+                >
+                  <Hand className="h-5 w-5 mr-2" />
+                  Start Palm Scan
+                </Button>
+              )}
+              
+              {scanState === 'complete' && (
+                <div className="text-center space-y-2">
+                  <CheckCircle className="h-8 w-8 text-green-400 mx-auto" />
+                  <p className="text-white font-medium">Scan Complete!</p>
+                  <p className="text-white/70 text-sm">Preparing your cosmic insights...</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop: Original design */}
+      <div className="hidden sm:block min-h-screen bg-gradient-to-br from-background via-background to-background/80 flex items-center justify-center px-6">
+        <div className="w-full max-w-2xl space-y-6">
+          {/* Back Button */}
+          {onGoBack && (
+            <div className="flex justify-start">
+              <Button 
+                variant="outline" 
+                onClick={onGoBack}
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Dashboard
+              </Button>
+            </div>
+          )}
+
+          {/* Header */}
+          <div className="text-center space-y-4">
+            <h1 className="text-2xl sm:text-4xl font-bold text-foreground flex items-center justify-center gap-2">
+              <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+              Palm Reading
+            </h1>
+            <p className="text-muted-foreground text-base sm:text-lg px-4">
+              {getStatusMessage()}
+            </p>
+            {scanState === 'ready' && (
+              <p className="text-xs sm:text-sm text-muted-foreground px-4">
+                Please use the flashlight for better scans in dark backgrounds
+              </p>
+            )}
+            
+            {/* Camera Privacy Controls */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 px-4">
+              <div className={`flex items-center gap-2 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm ${
+                cameraActive ? 'bg-red-500/20 text-red-600' : 'bg-green-500/20 text-green-600'
+              }`}>
+                <div className={`w-2 h-2 rounded-full ${cameraActive ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`} />
+                Camera {cameraActive ? 'Active' : 'Off'}
+              </div>
+              {cameraActive && scanState === 'ready' && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={stopCamera}
+                  className="text-red-600 border-red-200 hover:bg-red-50 text-xs sm:text-sm"
+                >
+                  Stop Camera
+                </Button>
+              )}
+              {!cameraActive && scanState === 'ready' && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={initializeCamera}
+                  className="text-green-600 border-green-200 hover:bg-green-50 text-xs sm:text-sm"
+                >
+                  Start Camera
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Main Scanning Area */}
+          <Card className="relative overflow-hidden bg-card/80 backdrop-blur-sm border-primary/20 mx-2 sm:mx-0">
+            <div className="aspect-[4/3] sm:aspect-[4/3] relative flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5">
+              {cameraError ? (
+                <div className="flex flex-col items-center space-y-4 text-center p-8">
+                  <AlertCircle className="h-12 w-12 text-destructive" />
+                  <p className="text-destructive font-semibold">{cameraError}</p>
+                  <Button onClick={retryCamera} variant="outline">
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Retry Camera
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  {/* Camera Feed */}
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="absolute inset-0 w-full h-full object-cover rounded-lg"
+                  />
+                  
+                  {/* Hidden canvas for image capture */}
+                  <canvas ref={canvasRef} className="hidden" />
+                  
+                  {/* Palm Outline Overlay */}
+                  <div className="relative z-10 flex items-center justify-center">
+                    <div className="relative">
+                      <img 
+                        src={palmOutline} 
+                        alt="Palm Outline" 
+                        className={`w-40 h-52 sm:w-56 sm:h-72 transition-all duration-500 ${
+                          alignment === 'good' 
+                            ? 'opacity-90 drop-shadow-[0_0_30px_rgba(168,85,247,0.9)] scale-105' 
+                            : 'opacity-60 scale-100'
+                        }`}
+                        style={{
+                          filter: alignment === 'good' ? 'brightness(1.2) contrast(1.1)' : 'none'
+                        }}
+                      />
+                      
+                      {/* Alignment Indicator */}
+                      <div className={`absolute -top-6 -right-6 p-3 rounded-full transition-all duration-300 ${
+                        alignment === 'good' ? 'bg-green-500 scale-110' : 'bg-red-500'
+                      }`}>
+                        {alignment === 'good' ? (
+                          <CheckCircle className="h-5 w-5 text-white" />
+                        ) : (
+                          <AlertCircle className="h-5 w-5 text-white" />
+                        )}
+                      </div>
+
+                      {/* Cosmic Effects for Scanning */}
+                      {scanState === 'scanning' && alignment === 'good' && (
+                        <>
+                          {/* Planetary symbols */}
+                          <div className="absolute inset-0 pointer-events-none">
+                            <div className="absolute top-1/4 left-1/4 w-8 h-8 bg-yellow-400 rounded-full animate-pulse opacity-80" />
+                            <div className="absolute top-1/3 right-1/4 w-6 h-6 bg-red-400 rounded-full animate-pulse opacity-80" />
+                            <div className="absolute bottom-1/3 left-1/3 w-7 h-7 bg-blue-400 rounded-full animate-pulse opacity-80" />
+                            <div className="absolute bottom-1/4 right-1/3 w-5 h-5 bg-purple-400 rounded-full animate-pulse opacity-80" />
+                          </div>
+                          
+                          {/* Scanning lines */}
+                          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/30 to-transparent animate-pulse" />
+                        </>
+                      )}
+                      
+                      {/* Analysis Phase Effects */}
+                      {scanState === 'analyzing' && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="text-2xl font-bold text-primary animate-pulse">
+                            <Sparkles className="h-12 w-12" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Scanning Progress Overlay */}
+                  {(scanState === 'scanning' || scanState === 'analyzing') && (
+                    <div className="absolute inset-0 bg-primary/10 animate-pulse z-5 rounded-lg" />
+                  )}
+                </>
+              )}
+          </div>
+          
+            {/* Progress Bar */}
+            {(scanState === 'scanning' || scanState === 'analyzing') && (
+              <div className="p-3 sm:p-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs sm:text-sm">
+                    <span className="text-muted-foreground">
+                      {scanState === 'scanning' ? 'Scanning Progress' : 'Analyzing...'}
+                    </span>
+                  </div>
+                  <Progress 
+                    value={undefined}
+                    className="h-2"
+                  />
+                </div>
+              </div>
+            )}
+          
+            {/* Controls */}
+            <div className="p-4 sm:p-6 text-center space-y-3 sm:space-y-4">
+              <div className="flex items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground px-2">
+                <Camera className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                <span className="text-center">
+                  {alignment === 'good' 
+                    ? 'Perfect alignment! Hold steady...' 
+                    : 'Adjust your hand position within the outline'
+                  }
+                </span>
+              </div>
+              
+              {scanState === 'ready' && cameraActive && (
               <Button 
                 onClick={startScan}
                 className="w-full bg-primary hover:bg-primary/90"
@@ -510,7 +694,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
             )}
           </div>
         </Card>
-        
+        </div>
       </div>
     </div>
   );
