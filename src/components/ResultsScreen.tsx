@@ -16,6 +16,46 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
   const { saveScan } = useScans();
   const { user, loading } = useAuth();
 
+  // Always call useEffect - it's a hook and must be called in the same order every render
+  useEffect(() => {
+    // Save the scan results to the database ONLY ONCE
+    const saveResults = async () => {
+      // Wait for user to be properly authenticated
+      if (!user || loading || !scanData) {
+        console.log('Waiting for user authentication or scan data...');
+        return;
+      }
+
+      console.log('=== SAVING PALM READING TO DATABASE ===');
+      console.log('User authenticated:', user.id);
+      console.log('Saving palm reading to database with data:', scanData);
+      
+      // Format the data to match the database schema
+      const scanDataToSave = {
+        life_line_strength: scanData.life_line_strength || 'Unknown',
+        heart_line_strength: scanData.heart_line_strength || 'Unknown', 
+        head_line_strength: scanData.head_line_strength || 'Unknown',
+        fate_line_strength: scanData.fate_line_strength || 'Unknown',
+        overall_insight: scanData.overall_insight || '',
+        traits: scanData.traits || {},
+        palm_image_url: scanData.palm_image_url || null,
+        right_palm_image_url: scanData.right_palm_image_url || null
+      };
+      
+      console.log('Formatted scan data for database:', scanDataToSave);
+      const result = await saveScan(scanDataToSave);
+      console.log('Save result:', result);
+      
+      if (result) {
+        console.log('✅ Palm reading saved successfully!');
+      } else {
+        console.error('❌ Failed to save palm reading');
+      }
+    };
+    
+    saveResults();
+  }, [user, loading, scanData, saveScan]); // Include all dependencies
+
   // Show loading if auth is still loading
   if (loading) {
     return (
@@ -53,47 +93,6 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
   }
 
   const palmResults = scanData;
-
-  useEffect(() => {
-    // Save the scan results to the database ONLY ONCE
-    const saveResults = async () => {
-      // Wait for user to be properly authenticated
-      if (!user || loading) {
-        console.log('Waiting for user authentication...');
-        return;
-      }
-
-      if (palmResults) {
-        console.log('=== SAVING PALM READING TO DATABASE ===');
-        console.log('User authenticated:', user.id);
-        console.log('Saving palm reading to database with data:', palmResults);
-        
-        // Format the data to match the database schema
-        const scanDataToSave = {
-          life_line_strength: palmResults.life_line_strength || 'Unknown',
-          heart_line_strength: palmResults.heart_line_strength || 'Unknown', 
-          head_line_strength: palmResults.head_line_strength || 'Unknown',
-          fate_line_strength: palmResults.fate_line_strength || 'Unknown',
-          overall_insight: palmResults.overall_insight || '',
-          traits: palmResults.traits || {},
-          palm_image_url: palmResults.palm_image_url || null,
-          right_palm_image_url: palmResults.right_palm_image_url || null
-        };
-        
-        console.log('Formatted scan data for database:', scanDataToSave);
-        const result = await saveScan(scanDataToSave);
-        console.log('Save result:', result);
-        
-        if (result) {
-          console.log('✅ Palm reading saved successfully!');
-        } else {
-          console.error('❌ Failed to save palm reading');
-        }
-      }
-    };
-    
-    saveResults();
-  }, [user, loading]); // Depend on user and loading state
 
   return (
     <div className="min-h-screen bg-background">
