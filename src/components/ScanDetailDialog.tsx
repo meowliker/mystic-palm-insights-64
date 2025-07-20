@@ -12,9 +12,10 @@ import { cleanupMarkdown } from '@/utils/cleanupMarkdown';
 interface ScanDetailDialogProps {
   scan: any;
   children: React.ReactNode;
+  onScanDeleted?: () => void;
 }
 
-const ScanDetailDialog = ({ scan, children }: ScanDetailDialogProps) => {
+const ScanDetailDialog = ({ scan, children, onScanDeleted }: ScanDetailDialogProps) => {
   const { deleteScan, fetchScans } = useScans();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -26,6 +27,10 @@ const ScanDetailDialog = ({ scan, children }: ScanDetailDialogProps) => {
       console.log('Scan deleted successfully, forcing refresh...');
       // Force an immediate refresh of the scans
       await fetchScans();
+      // Call the parent callback if provided
+      if (onScanDeleted) {
+        onScanDeleted();
+      }
       toast({
         title: "Reading deleted",
         description: "Your palm reading has been successfully deleted."

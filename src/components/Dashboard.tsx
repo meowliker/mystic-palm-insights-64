@@ -109,7 +109,7 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
   const [blogsLoading, setBlogsLoading] = useState(false);
   const [horoscope, setHoroscope] = useState<any>(null);
   const [showHoroscopeDialog, setShowHoroscopeDialog] = useState(false);
-  const { scans, clearAllScans } = useScans();
+  const { scans, clearAllScans, fetchScans } = useScans();
   const { user } = useAuth();
   const { fetchUserBlogs, publishDraft, deleteBlog } = useBlogs();
   const { toast } = useToast();
@@ -406,12 +406,12 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
                             <Share className="h-4 w-4 mr-2" />
                             Share
                           </Button>
-                          <ScanDetailDialog scan={scan}>
-                            <Button variant="outline" size="sm">
-                              <Eye className="h-4 w-4 mr-2" />
-                              View Details
-                            </Button>
-                          </ScanDetailDialog>
+                           <ScanDetailDialog scan={scan} onScanDeleted={fetchScans}>
+                             <Button variant="outline" size="sm">
+                               <Eye className="h-4 w-4 mr-2" />
+                               View Details
+                             </Button>
+                           </ScanDetailDialog>
                         </div>
                       </div>
                       
