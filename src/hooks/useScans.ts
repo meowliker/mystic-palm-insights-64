@@ -216,6 +216,32 @@ export const useScans = () => {
     fetchScans();
   }, [user]);
 
+  // Listen for real-time changes to palm_scans table
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('palm-scans-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'palm_scans',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          console.log('Real-time change detected in palm_scans, refreshing...');
+          fetchScans();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
   return {
     scans,
     loading,
