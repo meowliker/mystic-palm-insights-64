@@ -58,11 +58,7 @@ export const HoroscopeResultDialog = ({ open, onOpenChange, horoscope }: Horosco
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-3 gap-6">
-                    <div className="text-center">
-                      <p className="text-sm text-muted-foreground mb-1">Dates</p>
-                      <p className="font-semibold text-foreground">{horoscope.dates}</p>
-                    </div>
+                  <div className="grid grid-cols-2 gap-6">
                     <div className="text-center">
                       <p className="text-sm text-muted-foreground mb-1">Element</p>
                       <Badge variant="outline" className="font-semibold">{horoscope.element}</Badge>
@@ -120,11 +116,7 @@ export const HoroscopeResultDialog = ({ open, onOpenChange, horoscope }: Horosco
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-3 gap-6">
-                      <div className="text-center">
-                        <p className="text-sm text-muted-foreground mb-1">Dates</p>
-                        <p className="font-semibold text-foreground">{horoscope.signInfo.dates}</p>
-                      </div>
+                    <div className="grid grid-cols-2 gap-6">
                       <div className="text-center">
                         <p className="text-sm text-muted-foreground mb-1">Element</p>
                         <Badge variant="outline" className="font-semibold">{horoscope.signInfo.element}</Badge>
