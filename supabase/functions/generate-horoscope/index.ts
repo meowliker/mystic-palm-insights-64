@@ -317,7 +317,7 @@ serve(async (req) => {
       console.log('Request body received');
       
       // Parse request body
-      const { zodiacSign, name, birthDate, birthTime, birthPlace, method, palmImageUrl, rightPalmImageUrl, analysisType } = JSON.parse(body);
+      const { zodiacSign, name, birthDate, birthTime, birthPlace, method, palmImageUrl, rightPalmImageUrl, analysisType, requestType } = JSON.parse(body);
       
       // Check if this is a palm reading request
       if (palmImageUrl) {
@@ -397,7 +397,85 @@ serve(async (req) => {
 
       const signInfo = zodiacSigns[finalZodiacSign as keyof typeof zodiacSigns];
 
-      // Generate horoscope with predefined content
+      // Check if this is a detailed daily horoscope request
+      if (requestType === 'detailed_daily_horoscope') {
+        console.log('Generating detailed daily horoscope with AI...');
+        
+        if (!openaiApiKey) {
+          throw new Error('OpenAI API key not configured for detailed horoscope generation');
+        }
+
+        try {
+          const detailedPrompt = `Generate a detailed horoscope for the zodiac sign ${finalZodiacSign.toUpperCase()} for today. Cover the following aspects with 2–3 sentences each:
+
+General Overview – Energies or planetary alignments influencing the day
+
+Emotional & Relationship Energy – Mood, love life, social interactions
+
+Career & Work – Motivation, teamwork, creativity, challenges
+
+Finance & Wealth – Spending, saving, risk, opportunity
+
+Health & Wellness – Physical and mental well-being, energy level
+
+Spiritual Insight or Personal Growth – Inner wisdom, alignment, lessons
+
+Lucky Color, Number & Crystal for the Day
+
+Affirmation or Advice – A short motivational or reflective quote to guide the day
+
+Tone should be insightful, cosmic, and supportive, yet grounded in real-life context.`;
+
+          const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${openaiApiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: 'gpt-4.1-2025-04-14',
+              messages: [
+                {
+                  role: 'system',
+                  content: 'You are a master astrologer with deep knowledge of cosmic energies and their influence on daily life. Provide insightful, supportive, and practical horoscope readings.'
+                },
+                {
+                  role: 'user',
+                  content: detailedPrompt
+                }
+              ],
+              max_tokens: 1200,
+              temperature: 0.7
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`OpenAI API error: ${response.status}`);
+          }
+
+          const data = await response.json();
+          const detailedHoroscope = data.choices?.[0]?.message?.content || '';
+
+          // Return detailed AI-generated horoscope
+          return new Response(JSON.stringify({
+            sign: finalZodiacSign,
+            dates: signInfo.dates,
+            element: signInfo.element,
+            planet: signInfo.planet,
+            detailed_reading: detailedHoroscope,
+            calculated: method === 'calculate',
+            type: 'detailed_daily'
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+
+        } catch (aiError) {
+          console.error('AI horoscope generation failed:', aiError);
+          // Fall back to basic horoscope if AI fails
+        }
+      }
+
+      // Generate basic horoscope with predefined content (fallback)
       const predictions = [
         `Today brings exciting opportunities for ${finalZodiacSign}s to shine. Your ${signInfo.element} energy is particularly strong, making this an ideal time for new beginnings.`,
         `The cosmic alignment favors ${finalZodiacSign}s today. With ${signInfo.planet} as your guide, trust your intuition and embrace the changes coming your way.`,

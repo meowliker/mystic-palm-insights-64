@@ -40,102 +40,144 @@ export const HoroscopeResultDialog = ({ open, onOpenChange, horoscope }: Horosco
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Sign Information */}
-          {horoscope.signInfo && (
-            <Card className="p-4 bg-primary/10 border-none">
-              <div className="flex items-center gap-2 mb-2">
-                <Info className="h-4 w-4 text-primary" />
-                <h4 className="font-semibold text-foreground">Your Sign</h4>
+          {/* Check if this is a detailed horoscope */}
+          {horoscope.type === 'detailed_daily' && horoscope.detailed_reading ? (
+            <>
+              {/* Sign Information for detailed reading */}
+              <Card className="p-4 bg-primary/10 border-none">
+                <div className="flex items-center gap-2 mb-2">
+                  <Info className="h-4 w-4 text-primary" />
+                  <h4 className="font-semibold text-foreground">Your Sign</h4>
+                </div>
+                <div className="grid grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Dates:</span>
+                    <p className="font-medium">{horoscope.dates}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Element:</span>
+                    <p className="font-medium">{horoscope.element}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Planet:</span>
+                    <p className="font-medium">{horoscope.planet}</p>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Detailed AI-generated reading */}
+              <Card className="p-6 bg-gradient-to-br from-primary/5 to-secondary/5 border-none">
+                <div className="flex items-center gap-2 mb-4">
+                  <Stars className="h-5 w-5 text-primary" />
+                  <h4 className="font-semibold text-foreground">Today's Detailed Horoscope</h4>
+                </div>
+                <div className="prose prose-sm max-w-none">
+                  <div className="whitespace-pre-line text-foreground leading-relaxed">
+                    {horoscope.detailed_reading}
+                  </div>
+                </div>
+              </Card>
+            </>
+          ) : (
+            <>
+              {/* Sign Information */}
+              {horoscope.signInfo && (
+                <Card className="p-4 bg-primary/10 border-none">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Info className="h-4 w-4 text-primary" />
+                    <h4 className="font-semibold text-foreground">Your Sign</h4>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Dates:</span>
+                      <p className="font-medium">{horoscope.signInfo.dates}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Element:</span>
+                      <p className="font-medium">{horoscope.signInfo.element}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Planet:</span>
+                      <p className="font-medium">{horoscope.signInfo.planet}</p>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {/* Daily Prediction */}
+              <Card className="p-6 bg-gradient-to-br from-primary/5 to-secondary/5 border-none">
+                <div className="flex items-center gap-2 mb-4">
+                  <Stars className="h-5 w-5 text-primary" />
+                  <h4 className="font-semibold text-foreground">Today's Cosmic Message</h4>
+                </div>
+                <p className="text-foreground leading-relaxed text-lg">
+                  {horoscope.prediction}
+                </p>
+              </Card>
+
+              {/* Energy and Focus */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card className="p-4 text-center bg-card/80 backdrop-blur-sm">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <Zap className="h-5 w-5 text-primary" />
+                    <h4 className="font-semibold">Energy Level</h4>
+                  </div>
+                  <div className="text-3xl font-bold text-primary mb-1">
+                    {horoscope.energy}%
+                  </div>
+                  <div className="w-full bg-secondary/20 rounded-full h-2">
+                    <div 
+                      className="bg-gradient-to-r from-primary to-secondary rounded-full h-2 transition-all duration-500"
+                      style={{ width: `${horoscope.energy}%` }}
+                    ></div>
+                  </div>
+                </Card>
+
+                <Card className="p-4 text-center bg-card/80 backdrop-blur-sm">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <Target className="h-5 w-5 text-secondary" />
+                    <h4 className="font-semibold">Focus Areas</h4>
+                  </div>
+                  <div className="space-y-2">
+                    {horoscope.focus && horoscope.focus.split(',').map((area: string, index: number) => (
+                      <Badge key={index} variant="outline" className="mx-1">
+                        {area.trim()}
+                      </Badge>
+                    ))}
+                  </div>
+                </Card>
               </div>
-              <div className="grid grid-cols-3 gap-4 text-sm">
-                <div>
-                  <span className="text-muted-foreground">Dates:</span>
-                  <p className="font-medium">{horoscope.signInfo.dates}</p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Element:</span>
-                  <p className="font-medium">{horoscope.signInfo.element}</p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Planet:</span>
-                  <p className="font-medium">{horoscope.signInfo.planet}</p>
-                </div>
+
+              {/* Lucky Color and Advice */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card className="p-4 bg-card/80 backdrop-blur-sm">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Palette className="h-5 w-5 text-accent" />
+                    <h4 className="font-semibold">Lucky Color</h4>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div 
+                      className="w-8 h-8 rounded-full border-2 border-border"
+                      style={{ backgroundColor: horoscope.luckyColor?.toLowerCase() }}
+                    ></div>
+                    <span className="font-medium text-foreground">
+                      {horoscope.luckyColor}
+                    </span>
+                  </div>
+                </Card>
+
+                <Card className="p-4 bg-card/80 backdrop-blur-sm">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Lightbulb className="h-5 w-5 text-secondary" />
+                    <h4 className="font-semibold">Cosmic Advice</h4>
+                  </div>
+                  <p className="text-foreground italic">
+                    "{horoscope.advice}"
+                  </p>
+                </Card>
               </div>
-            </Card>
+            </>
           )}
-
-          {/* Daily Prediction */}
-          <Card className="p-6 bg-gradient-to-br from-primary/5 to-secondary/5 border-none">
-            <div className="flex items-center gap-2 mb-4">
-              <Stars className="h-5 w-5 text-primary" />
-              <h4 className="font-semibold text-foreground">Today's Cosmic Message</h4>
-            </div>
-            <p className="text-foreground leading-relaxed text-lg">
-              {horoscope.prediction}
-            </p>
-          </Card>
-
-          {/* Energy and Focus */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="p-4 text-center bg-card/80 backdrop-blur-sm">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <Zap className="h-5 w-5 text-primary" />
-                <h4 className="font-semibold">Energy Level</h4>
-              </div>
-              <div className="text-3xl font-bold text-primary mb-1">
-                {horoscope.energy}%
-              </div>
-              <div className="w-full bg-secondary/20 rounded-full h-2">
-                <div 
-                  className="bg-gradient-to-r from-primary to-secondary rounded-full h-2 transition-all duration-500"
-                  style={{ width: `${horoscope.energy}%` }}
-                ></div>
-              </div>
-            </Card>
-
-            <Card className="p-4 text-center bg-card/80 backdrop-blur-sm">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <Target className="h-5 w-5 text-secondary" />
-                <h4 className="font-semibold">Focus Areas</h4>
-              </div>
-              <div className="space-y-2">
-                {horoscope.focus.split(',').map((area: string, index: number) => (
-                  <Badge key={index} variant="outline" className="mx-1">
-                    {area.trim()}
-                  </Badge>
-                ))}
-              </div>
-            </Card>
-          </div>
-
-          {/* Lucky Color and Advice */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="p-4 bg-card/80 backdrop-blur-sm">
-              <div className="flex items-center gap-2 mb-3">
-                <Palette className="h-5 w-5 text-accent" />
-                <h4 className="font-semibold">Lucky Color</h4>
-              </div>
-              <div className="flex items-center gap-3">
-                <div 
-                  className="w-8 h-8 rounded-full border-2 border-border"
-                  style={{ backgroundColor: horoscope.luckyColor.toLowerCase() }}
-                ></div>
-                <span className="font-medium text-foreground">
-                  {horoscope.luckyColor}
-                </span>
-              </div>
-            </Card>
-
-            <Card className="p-4 bg-card/80 backdrop-blur-sm">
-              <div className="flex items-center gap-2 mb-3">
-                <Lightbulb className="h-5 w-5 text-secondary" />
-                <h4 className="font-semibold">Cosmic Advice</h4>
-              </div>
-              <p className="text-foreground italic">
-                "{horoscope.advice}"
-              </p>
-            </Card>
-          </div>
         </div>
       </DialogContent>
     </Dialog>

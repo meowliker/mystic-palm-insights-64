@@ -58,7 +58,8 @@ const HoroscopeForm = ({ onHoroscopeGenerated }: HoroscopeFormProps) => {
           birthDate: method === 'calculate' ? birthDate : null,
           birthTime: method === 'calculate' ? birthTime : null,
           birthPlace: method === 'calculate' ? birthPlace : null,
-          method
+          method,
+          requestType: 'detailed_daily_horoscope' // Flag for detailed daily horoscope
         }
       });
 
