@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Stars, Zap, Target, Palette, Lightbulb, Info, Heart, Sparkles } from 'lucide-react';
+import { Stars, Zap, Target, Palette, Lightbulb, Info, Heart, Sparkles, Quote } from 'lucide-react';
 
 interface HoroscopeResultDialogProps {
   open: boolean;
@@ -91,6 +91,22 @@ export const HoroscopeResultDialog = ({ open, onOpenChange, horoscope }: Horosco
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Daily Quote Footer */}
+              {horoscope.daily_quote && (
+                <Card className="bg-gradient-to-r from-amber-500/5 via-yellow-500/5 to-orange-500/5 border-amber-500/20 shadow-lg">
+                  <CardContent className="p-6 text-center">
+                    <div className="flex items-center justify-center gap-2 mb-4">
+                      <Quote className="h-5 w-5 text-amber-500" />
+                      <h3 className="text-lg font-semibold text-foreground">Quote of the Day</h3>
+                      <Quote className="h-5 w-5 text-amber-500 scale-x-[-1]" />
+                    </div>
+                    <blockquote className="text-lg italic text-foreground leading-relaxed">
+                      "{horoscope.daily_quote}"
+                    </blockquote>
+                  </CardContent>
+                </Card>
+              )}
             </>
           ) : (
             <>
@@ -212,6 +228,29 @@ export const HoroscopeResultDialog = ({ open, onOpenChange, horoscope }: Horosco
                   </CardContent>
                 </Card>
               </div>
+
+              {/* Add quotes for basic horoscope too - generate one randomly */}
+              <Card className="bg-gradient-to-r from-amber-500/5 via-yellow-500/5 to-orange-500/5 border-amber-500/20 shadow-lg">
+                <CardContent className="p-6 text-center">
+                  <div className="flex items-center justify-center gap-2 mb-4">
+                    <Quote className="h-5 w-5 text-amber-500" />
+                    <h3 className="text-lg font-semibold text-foreground">Quote of the Day</h3>
+                    <Quote className="h-5 w-5 text-amber-500 scale-x-[-1]" />
+                  </div>
+                  <blockquote className="text-lg italic text-foreground leading-relaxed">
+                    "{[
+                      "The universe is not only stranger than we imagine, it is stranger than we can imagine. Embrace the mystery.",
+                      "Your potential is endless. Go do what you were created to do.",
+                      "Stars can't shine without darkness. Your challenges are creating your strength.",
+                      "Trust the timing of your life. Everything happens for a reason and leads you where you need to be.",
+                      "You are exactly where you need to be. Trust your journey and embrace your path.",
+                      "The energy you put out into the universe will come back to you. Choose positivity.",
+                      "Every moment is a fresh beginning. Today is your chance to create magic.",
+                      "Believe in yourself and all that you are. Know that there is something inside you that is greater than any obstacle."
+                    ][Math.floor(Math.random() * 8)]}"
+                  </blockquote>
+                </CardContent>
+              </Card>
             </>
           )}
         </div>

@@ -456,13 +456,43 @@ Tone should be insightful, cosmic, and supportive, yet grounded in real-life con
           const data = await response.json();
           const detailedHoroscope = data.choices?.[0]?.message?.content || '';
 
+          // Clean up the horoscope text by removing * and # characters
+          const cleanedHoroscope = detailedHoroscope.replace(/[*#]/g, '');
+
+          // Generate a random motivating quote
+          const motivatingQuotes = [
+            "The universe is not only stranger than we imagine, it is stranger than we can imagine. Embrace the mystery.",
+            "Your potential is endless. Go do what you were created to do.",
+            "Stars can't shine without darkness. Your challenges are creating your strength.",
+            "The cosmos is within us. We are made of star-stuff. We are a way for the universe to know itself.",
+            "Trust the timing of your life. Everything happens for a reason and leads you where you need to be.",
+            "You are exactly where you need to be. Trust your journey and embrace your path.",
+            "The energy you put out into the universe will come back to you. Choose positivity.",
+            "Every moment is a fresh beginning. Today is your chance to create magic.",
+            "You have within you right now, everything you need to deal with whatever the world can throw at you.",
+            "Believe in yourself and all that you are. Know that there is something inside you that is greater than any obstacle.",
+            "Your life is your message to the world. Make it inspiring.",
+            "The greatest revolution of our generation is the discovery that human beings can alter their lives by altering their attitudes.",
+            "What lies behind us and what lies before us are tiny matters compared to what lies within us.",
+            "You are braver than you believe, stronger than you seem, and smarter than you think.",
+            "The future belongs to those who believe in the beauty of their dreams.",
+            "Life is 10% what happens to you and 90% how you react to it.",
+            "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+            "In the middle of difficulty lies opportunity.",
+            "The only way to do great work is to love what you do.",
+            "Be yourself; everyone else is already taken."
+          ];
+
+          const randomQuote = motivatingQuotes[Math.floor(Math.random() * motivatingQuotes.length)];
+
           // Return detailed AI-generated horoscope
           return new Response(JSON.stringify({
             sign: finalZodiacSign,
             dates: signInfo.dates,
             element: signInfo.element,
             planet: signInfo.planet,
-            detailed_reading: detailedHoroscope,
+            detailed_reading: cleanedHoroscope,
+            daily_quote: randomQuote,
             calculated: method === 'calculate',
             type: 'detailed_daily'
           }), {
