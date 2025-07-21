@@ -57,6 +57,78 @@ function calculateZodiacSign(day: number, month: number): string {
   return 'capricorn'; // fallback
 }
 
+async function calculateMoonSign(birthDate: string, birthTime: string, birthPlace: string): Promise<string> {
+  console.log('Calculating moon sign for:', { birthDate, birthTime, birthPlace });
+  
+  if (!openaiApiKey) {
+    throw new Error('OpenAI API key not configured for moon sign calculation');
+  }
+
+  const prompt = `You are an expert astrologer. Calculate the moon sign for someone born on ${birthDate} at ${birthTime} in ${birthPlace}.
+
+Consider the following factors:
+- Birth date: ${birthDate}
+- Birth time: ${birthTime}
+- Birth location: ${birthPlace}
+
+Based on these birth details, determine the moon sign. The moon moves through all 12 zodiac signs approximately every 28 days, spending about 2.5 days in each sign.
+
+Please respond with ONLY the moon sign name in lowercase (e.g., "aries", "taurus", "gemini", etc.). Do not include any other text or explanation.`;
+
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openaiApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4.1-2025-04-14',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an expert astrologer specializing in accurate moon sign calculations based on birth details.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        max_tokens: 50,
+        temperature: 0.1
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const moonSign = data.choices?.[0]?.message?.content?.trim().toLowerCase() || '';
+    
+    console.log('Calculated moon sign:', moonSign);
+    
+    // Validate that we got a valid zodiac sign
+    const validSigns = ['aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo', 
+                       'libra', 'scorpio', 'sagittarius', 'capricorn', 'aquarius', 'pisces'];
+    
+    if (validSigns.includes(moonSign)) {
+      return moonSign;
+    } else {
+      // Fallback to sun sign calculation if moon sign calculation fails
+      console.warn('Invalid moon sign returned, falling back to sun sign calculation');
+      const date = new Date(birthDate);
+      return calculateZodiacSign(date.getDate(), date.getMonth() + 1);
+    }
+    
+  } catch (error) {
+    console.error('Error calculating moon sign:', error);
+    // Fallback to sun sign calculation
+    const date = new Date(birthDate);
+    return calculateZodiacSign(date.getDate(), date.getMonth() + 1);
+  }
+}
+
 const analyzePalmImage = async (imageUrl: string, rightImageUrl?: string) => {
   console.log('Starting palm image analysis for URL:', imageUrl);
   if (rightImageUrl) {
@@ -317,7 +389,7 @@ serve(async (req) => {
       console.log('Request body received');
       
       // Parse request body
-      const { zodiacSign, name, birthDate, birthTime, birthPlace, method, palmImageUrl, rightPalmImageUrl, analysisType, requestType } = JSON.parse(body);
+      const { zodiacSign, birthDate, birthTime, birthPlace, method, palmImageUrl, rightPalmImageUrl, analysisType, requestType, signType } = JSON.parse(body);
       
       // Check if this is a palm reading request
       if (palmImageUrl) {
@@ -383,12 +455,17 @@ serve(async (req) => {
       // Handle horoscope generation (existing functionality)
       let finalZodiacSign = zodiacSign;
       
-      // Calculate zodiac sign from birth details if method is 'calculate'
-      if (method === 'calculate' && birthDate) {
-        const date = new Date(birthDate);
-        const day = date.getDate();
-        const month = date.getMonth() + 1;
-        finalZodiacSign = calculateZodiacSign(day, month);
+      // Calculate zodiac or moon sign from birth details if method is 'calculate'
+      if (method === 'calculate' && birthDate && birthTime && birthPlace) {
+        if (signType === 'moon') {
+          // For moon sign calculation, we'll use AI to calculate it based on birth details
+          finalZodiacSign = await calculateMoonSign(birthDate, birthTime, birthPlace);
+        } else {
+          const date = new Date(birthDate);
+          const day = date.getDate();
+          const month = date.getMonth() + 1;
+          finalZodiacSign = calculateZodiacSign(day, month);
+        }
       }
 
       if (!finalZodiacSign) {

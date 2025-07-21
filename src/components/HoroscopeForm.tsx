@@ -27,7 +27,6 @@ const HoroscopeForm = ({ onHoroscopeGenerated }: HoroscopeFormProps) => {
   const [selectedSign, setSelectedSign] = useState('');
   
   // Calculate method
-  const [name, setName] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [birthTime, setBirthTime] = useState('');
   const [birthPlace, setBirthPlace] = useState('');
@@ -41,9 +40,10 @@ const HoroscopeForm = ({ onHoroscopeGenerated }: HoroscopeFormProps) => {
       return;
     }
 
-    if (method === 'calculate' && !birthDate) {
+    if (method === 'calculate' && (!birthDate || !birthTime || !birthPlace)) {
       toast({
-        title: "Please enter your birth date",
+        title: "Please fill in all required fields",
+        description: "Birth date, time, and place are all required for moon sign calculation",
         variant: "destructive"
       });
       return;
@@ -54,11 +54,11 @@ const HoroscopeForm = ({ onHoroscopeGenerated }: HoroscopeFormProps) => {
       const { data, error } = await supabase.functions.invoke('generate-horoscope', {
         body: {
           zodiacSign: method === 'direct' ? selectedSign.toLowerCase() : null,
-          name: method === 'calculate' ? name : null,
           birthDate: method === 'calculate' ? birthDate : null,
           birthTime: method === 'calculate' ? birthTime : null,
           birthPlace: method === 'calculate' ? birthPlace : null,
           method,
+          signType: method === 'calculate' ? 'moon' : 'sun', // Flag for moon sign calculation
           requestType: 'detailed_daily_horoscope' // Flag for detailed daily horoscope
         }
       });
@@ -99,7 +99,7 @@ const HoroscopeForm = ({ onHoroscopeGenerated }: HoroscopeFormProps) => {
             </TabsTrigger>
             <TabsTrigger value="calculate" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
-              Calculate Sign
+              Calculate Moon Sign
             </TabsTrigger>
           </TabsList>
 
@@ -125,20 +125,7 @@ const HoroscopeForm = ({ onHoroscopeGenerated }: HoroscopeFormProps) => {
           </TabsContent>
 
           <TabsContent value="calculate" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name" className="flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  Name (Optional)
-                </Label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter your name"
-                />
-              </div>
-
+            <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="birth-date" className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
@@ -156,7 +143,7 @@ const HoroscopeForm = ({ onHoroscopeGenerated }: HoroscopeFormProps) => {
               <div className="space-y-2">
                 <Label htmlFor="birth-time" className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
-                  Birth Time (Optional)
+                  Birth Time *
                 </Label>
                 <Input
                   id="birth-time"
@@ -164,19 +151,21 @@ const HoroscopeForm = ({ onHoroscopeGenerated }: HoroscopeFormProps) => {
                   value={birthTime}
                   onChange={(e) => setBirthTime(e.target.value)}
                   placeholder="HH:MM"
+                  required
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="birth-place" className="flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
-                  Birth Place (Optional)
+                  Birth Place *
                 </Label>
                 <Input
                   id="birth-place"
                   value={birthPlace}
                   onChange={(e) => setBirthPlace(e.target.value)}
-                  placeholder="City, State"
+                  placeholder="City, State, Country"
+                  required
                 />
               </div>
             </div>
