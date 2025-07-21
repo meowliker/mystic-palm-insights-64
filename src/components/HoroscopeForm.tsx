@@ -95,11 +95,11 @@ const HoroscopeForm = ({ onHoroscopeGenerated }: HoroscopeFormProps) => {
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="direct" className="flex items-center gap-2">
               <Sparkles className="h-4 w-4" />
-              Know Your Sign
+              Sign
             </TabsTrigger>
             <TabsTrigger value="calculate" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
-              Calculate Moon Sign
+              Know Your Sign
             </TabsTrigger>
           </TabsList>
 
