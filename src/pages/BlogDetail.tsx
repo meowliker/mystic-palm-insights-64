@@ -112,37 +112,45 @@ export const BlogDetail = () => {
     if (!blog) return;
     
     const url = `${window.location.origin}/blog/${blog.id}`;
+    const shareData = {
+      title: blog.title,
+      text: `Check out this astrology blog: ${blog.title}`,
+      url: url
+    };
     
-    // Check if Web Share API is available and supported
-    if (navigator.share && navigator.canShare && navigator.canShare({ 
-      title: blog.title, 
-      text: `Check out this astrology blog: ${blog.title}`, 
-      url: url 
-    })) {
+    // Try native share first - use simpler check
+    if (navigator.share) {
       try {
-        await navigator.share({
-          title: blog.title,
-          text: `Check out this astrology blog: ${blog.title}`,
-          url: url
-        });
-        return; // Successfully shared, exit function
+        await navigator.share(shareData);
+        return; // Successfully shared
       } catch (err) {
         console.error('Native share failed:', err);
-        // If user cancels, the error name is 'AbortError'
+        // If user cancels, don't show fallback message
         if (err.name === 'AbortError') {
-          return; // User cancelled, don't show fallback
+          return;
         }
         // For other errors, fall through to clipboard
       }
     }
     
-    // Fallback to clipboard for browsers without share API or on error
+    // Fallback to clipboard
     try {
       await navigator.clipboard.writeText(url);
       toast.success("Link copied to clipboard!");
     } catch (err) {
       console.error('Clipboard failed:', err);
-      toast.error("Failed to copy link to clipboard");
+      // Final fallback - create a temporary input element
+      const textArea = document.createElement('textarea');
+      textArea.value = url;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        toast.success("Link copied to clipboard!");
+      } catch (copyErr) {
+        toast.error("Failed to copy link");
+      }
+      document.body.removeChild(textArea);
     }
   };
 
@@ -239,7 +247,13 @@ export const BlogDetail = () => {
       {/* Back button */}
       <Button
         variant="ghost"
-        onClick={() => navigate(-1)}
+        onClick={() => {
+          if (window.history.length > 1) {
+            navigate(-1);
+          } else {
+            navigate('/blogs');
+          }
+        }}
         className="mb-6 flex items-center gap-2"
       >
         <ArrowLeft className="w-4 h-4" />
