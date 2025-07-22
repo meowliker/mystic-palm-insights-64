@@ -35,6 +35,7 @@ export const BlogDetail = () => {
         
         if (!foundBlog) {
           // If not found, fetch directly from database
+          console.log('Fetching blog directly for ID:', id);
           const { data: blogData, error: blogError } = await supabase
             .from('blogs')
             .select('*')
@@ -42,17 +43,21 @@ export const BlogDetail = () => {
             .eq('published', true)
             .single();
 
+          console.log('Blog query result:', { blogData, blogError });
           if (blogError) throw blogError;
           if (!blogData) return;
 
           // Get author profile
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
-            .select('id, full_name, email')
+            .select('id, full_name, email, profile_picture_url')
             .eq('id', blogData.user_id)
             .single();
 
-          if (profileError) throw profileError;
+          if (profileError) {
+            console.error('Profile fetch error:', profileError);
+            // Continue without profile data rather than throwing
+          }
 
           // Get likes for this blog
           const { data: likesData, error: likesError } = await supabase
@@ -67,6 +72,7 @@ export const BlogDetail = () => {
             ...blogData,
             author_name: profileData?.full_name || 'Unknown',
             author_email: profileData?.email || '',
+            author_profile_picture: profileData?.profile_picture_url || '',
             likes_count: likesData?.length || 0,
             comments_count: 0,
             isLikedByUser: user ? likesData?.some(like => like.user_id === user.id) || false : false
@@ -205,9 +211,17 @@ export const BlogDetail = () => {
         <CardHeader>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold">
-                {blog.author_name.charAt(0).toUpperCase()}
-              </div>
+              {blog.author_profile_picture ? (
+                <img
+                  src={blog.author_profile_picture}
+                  alt={blog.author_name}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold">
+                  {blog.author_name.charAt(0).toUpperCase()}
+                </div>
+              )}
               <div>
                 <p className="font-semibold">{blog.author_name}</p>
                 <p className="text-sm text-muted-foreground">

@@ -13,6 +13,7 @@ export interface Blog {
   published: boolean;
   author_name: string;
   author_email: string;
+  author_profile_picture?: string;
   likes_count: number;
   comments_count: number;
   isLikedByUser: boolean;
@@ -60,7 +61,7 @@ export const useBlogs = () => {
       const userIds = blogsData.map(blog => blog.user_id);
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, full_name, email')
+        .select('id, full_name, email, profile_picture_url')
         .in('id', userIds);
 
       if (profilesError) {
@@ -89,6 +90,7 @@ export const useBlogs = () => {
           ...blog,
           author_name: profile?.full_name || 'Unknown',
           author_email: profile?.email || '',
+          author_profile_picture: profile?.profile_picture_url || '',
           likes_count: blogLikes.length,
           comments_count: 0, // Will be populated separately if needed
           isLikedByUser: user ? blogLikes.some(like => like.user_id === user.id) : false
@@ -402,11 +404,14 @@ export const useBlogs = () => {
       // Get user profile
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('id, full_name, email')
+        .select('id, full_name, email, profile_picture_url')
         .eq('id', user.id)
         .single();
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Profile error in fetchUserBlogs:', profileError);
+        // Continue without throwing to allow partial functionality
+      }
 
       // Get likes for the blogs
       const blogIds = blogsData?.map(blog => blog.id) || [];
@@ -425,6 +430,7 @@ export const useBlogs = () => {
           ...blog,
           author_name: profileData?.full_name || 'Unknown',
           author_email: profileData?.email || '',
+          author_profile_picture: profileData?.profile_picture_url || '',
           likes_count: blogLikes.length,
           comments_count: 0,
           isLikedByUser: blogLikes.some(like => like.user_id === user.id)

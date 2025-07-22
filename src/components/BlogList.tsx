@@ -55,9 +55,17 @@ export const BlogList = ({ blogs, onLike }: BlogListProps) => {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-sm font-semibold">
-                  {blog.author_name.charAt(0).toUpperCase()}
-                </div>
+                {blog.author_profile_picture ? (
+                  <img
+                    src={blog.author_profile_picture}
+                    alt={blog.author_name}
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-sm font-semibold">
+                    {blog.author_name.charAt(0).toUpperCase()}
+                  </div>
+                )}
                 <div>
                   <p className="font-semibold text-sm">{blog.author_name}</p>
                   <p className="text-xs text-muted-foreground">
