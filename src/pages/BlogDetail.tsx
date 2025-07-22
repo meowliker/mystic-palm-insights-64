@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { BlogCommentComponent } from "@/components/BlogComment";
 import { useBlogs, type Blog, type BlogComment } from "@/hooks/useBlogs";
 import { useAuth } from "@/hooks/useAuth";
@@ -120,12 +121,25 @@ export const BlogDetail = () => {
           url: url
         });
       } catch (err) {
-        // User cancelled sharing
+        console.error('Share failed:', err);
+        // Fallback to clipboard on error
+        try {
+          await navigator.clipboard.writeText(url);
+          toast.success("Link copied to clipboard!");
+        } catch (clipboardErr) {
+          console.error('Clipboard failed:', clipboardErr);
+          toast.error("Failed to share or copy link");
+        }
       }
     } else {
       // Fallback to clipboard
-      await navigator.clipboard.writeText(url);
-      toast.success("Link copied to clipboard!");
+      try {
+        await navigator.clipboard.writeText(url);
+        toast.success("Link copied to clipboard!");
+      } catch (err) {
+        console.error('Clipboard failed:', err);
+        toast.error("Failed to copy link to clipboard");
+      }
     }
   };
 
@@ -234,17 +248,15 @@ export const BlogDetail = () => {
         <CardHeader>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              {blog.author_profile_picture ? (
-                <img
-                  src={blog.author_profile_picture}
+              <Avatar className="w-10 h-10">
+                <AvatarImage 
+                  src={blog.author_profile_picture} 
                   alt={blog.author_name}
-                  className="w-10 h-10 rounded-full object-cover"
                 />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold">
+                <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white">
                   {blog.author_name.charAt(0).toUpperCase()}
-                </div>
-              )}
+                </AvatarFallback>
+              </Avatar>
               <div>
                 <p className="font-semibold">{blog.author_name}</p>
                 <p className="text-sm text-muted-foreground">
@@ -262,19 +274,39 @@ export const BlogDetail = () => {
               variant="ghost"
               size="sm"
               onClick={async () => {
-                await likeBlog(blog.id);
-                // Refresh blog data to update like count and status
-                if (id && user) {
-                  const { data: likesData } = await supabase
-                    .from('blog_likes')
-                    .select('user_id')
-                    .eq('blog_id', id);
+                if (!user) return;
+                
+                // Optimistic update
+                setBlog(prev => prev ? {
+                  ...prev,
+                  isLikedByUser: !prev.isLikedByUser,
+                  likes_count: prev.isLikedByUser ? prev.likes_count - 1 : prev.likes_count + 1
+                } : null);
+                
+                try {
+                  await likeBlog(blog.id);
                   
+                  // Refresh blog data to ensure consistency
+                  if (id) {
+                    const { data: likesData } = await supabase
+                      .from('blog_likes')
+                      .select('user_id')
+                      .eq('blog_id', id);
+                    
+                    setBlog(prev => prev ? {
+                      ...prev,
+                      likes_count: likesData?.length || 0,
+                      isLikedByUser: likesData?.some(like => like.user_id === user.id) || false
+                    } : null);
+                  }
+                } catch (error) {
+                  // Revert optimistic update on error
                   setBlog(prev => prev ? {
                     ...prev,
-                    likes_count: likesData?.length || 0,
-                    isLikedByUser: likesData?.some(like => like.user_id === user.id) || false
+                    isLikedByUser: !prev.isLikedByUser,
+                    likes_count: prev.isLikedByUser ? prev.likes_count + 1 : prev.likes_count - 1
                   } : null);
+                  toast.error("Failed to update like");
                 }
               }}
               className={`flex items-center gap-2 ${
@@ -339,9 +371,11 @@ export const BlogDetail = () => {
           {user ? (
             <div className="mb-6">
               <div className="flex gap-3">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
-                  {user.user_metadata?.full_name?.charAt(0).toUpperCase() || 'U'}
-                </div>
+                <Avatar className="w-8 h-8 flex-shrink-0">
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white text-sm">
+                    {user.user_metadata?.full_name?.charAt(0).toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
                 <div className="flex-1">
                   <Textarea
                     value={newComment}

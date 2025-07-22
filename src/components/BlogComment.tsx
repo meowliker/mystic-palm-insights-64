@@ -3,6 +3,7 @@ import { Heart, Reply, Crown, MoreHorizontal, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { type BlogComment } from "@/hooks/useBlogs";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -64,17 +65,15 @@ export const BlogCommentComponent = ({
   return (
     <div className={`${depth > 0 ? 'ml-6 pl-4 border-l-2 border-muted' : ''}`}>
       <div className="flex gap-3 mb-4">
-        {comment.author_profile_picture ? (
-          <img
-            src={comment.author_profile_picture}
+        <Avatar className="w-8 h-8 flex-shrink-0">
+          <AvatarImage 
+            src={comment.author_profile_picture} 
             alt={comment.author_name}
-            className="w-8 h-8 rounded-full object-cover flex-shrink-0"
           />
-        ) : (
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
+          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white text-sm">
             {comment.author_name.charAt(0).toUpperCase()}
-          </div>
-        )}
+          </AvatarFallback>
+        </Avatar>
         
         <div className="flex-1">
           <div className="flex items-center justify-between mb-1">
