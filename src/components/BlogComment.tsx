@@ -1,24 +1,34 @@
 import { useState } from "react";
-import { Heart, Reply, Crown } from "lucide-react";
+import { Heart, Reply, Crown, MoreHorizontal, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { type BlogComment } from "@/hooks/useBlogs";
 import { useAuth } from "@/hooks/useAuth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface BlogCommentProps {
   comment: BlogComment;
   blogAuthorId: string;
+  currentUserId?: string;
   onLike: (commentId: string) => void;
   onReply: (commentId: string, content: string) => void;
+  onDelete: (commentId: string) => void;
   depth?: number;
 }
 
 export const BlogCommentComponent = ({ 
   comment, 
   blogAuthorId, 
+  currentUserId,
   onLike, 
   onReply, 
+  onDelete,
   depth = 0 
 }: BlogCommentProps) => {
   const { user } = useAuth();
@@ -59,17 +69,39 @@ export const BlogCommentComponent = ({
         </div>
         
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="font-semibold text-sm">{comment.author_name}</span>
-            {isAuthor && (
-              <Badge variant="outline" className="text-xs flex items-center gap-1">
-                <Crown className="w-3 h-3" />
-                Author
-              </Badge>
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-sm">{comment.author_name}</span>
+              {isAuthor && (
+                <Badge variant="outline" className="text-xs flex items-center gap-1">
+                  <Crown className="w-3 h-3" />
+                  Author
+                </Badge>
+              )}
+              <span className="text-xs text-muted-foreground">
+                {formatDate(comment.created_at)}
+              </span>
+            </div>
+            
+            {/* Delete menu - show if user is comment author or blog author */}
+            {user && (user.id === comment.user_id || user.id === blogAuthorId) && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                    <MoreHorizontal className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => onDelete(comment.id)}
+                    className="text-red-600 focus:text-red-600"
+                  >
+                    <Trash2 className="h-3 w-3 mr-2" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
-            <span className="text-xs text-muted-foreground">
-              {formatDate(comment.created_at)}
-            </span>
           </div>
           
           <p className="text-sm mb-3 leading-relaxed">{comment.content}</p>
@@ -145,8 +177,10 @@ export const BlogCommentComponent = ({
               key={reply.id}
               comment={reply}
               blogAuthorId={blogAuthorId}
+              currentUserId={currentUserId}
               onLike={onLike}
               onReply={onReply}
+              onDelete={onDelete}
               depth={depth + 1}
             />
           ))}

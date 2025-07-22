@@ -15,7 +15,7 @@ import { toast } from "sonner";
 export const BlogDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { blogs, likeBlog, fetchBlogComments, addComment, likeComment } = useBlogs();
+  const { blogs, likeBlog, fetchBlogComments, addComment, likeComment, deleteComment } = useBlogs();
   const { user } = useAuth();
   
   const [blog, setBlog] = useState<Blog | null>(null);
@@ -29,64 +29,76 @@ export const BlogDetail = () => {
       if (!id) return;
       
       setIsLoading(true);
+      console.log('Starting blog fetch for ID:', id);
+      
       try {
-        // First try to find in the existing blogs array
-        let foundBlog = blogs.find(b => b.id === id);
+        // Always fetch directly from database to ensure fresh data
+        console.log('Fetching blog directly for ID:', id);
+        const { data: blogData, error: blogError } = await supabase
+          .from('blogs')
+          .select('*')
+          .eq('id', id)
+          .eq('published', true)
+          .single();
+
+        console.log('Blog query result:', { blogData, blogError });
         
-        if (!foundBlog) {
-          // If not found, fetch directly from database
-          console.log('Fetching blog directly for ID:', id);
-          const { data: blogData, error: blogError } = await supabase
-            .from('blogs')
-            .select('*')
-            .eq('id', id)
-            .eq('published', true)
-            .single();
-
-          console.log('Blog query result:', { blogData, blogError });
-          if (blogError) throw blogError;
-          if (!blogData) return;
-
-          // Get author profile
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('id, full_name, email, profile_picture_url')
-            .eq('id', blogData.user_id)
-            .single();
-
-          if (profileError) {
-            console.error('Profile fetch error:', profileError);
-            // Continue without profile data rather than throwing
-          }
-
-          // Get likes for this blog
-          const { data: likesData, error: likesError } = await supabase
-            .from('blog_likes')
-            .select('user_id')
-            .eq('blog_id', id);
-
-          if (likesError) throw likesError;
-
-          // Transform the data
-          foundBlog = {
-            ...blogData,
-            author_name: profileData?.full_name || 'Unknown',
-            author_email: profileData?.email || '',
-            author_profile_picture: profileData?.profile_picture_url || '',
-            likes_count: likesData?.length || 0,
-            comments_count: 0,
-            isLikedByUser: user ? likesData?.some(like => like.user_id === user.id) || false : false
-          };
+        if (blogError) {
+          console.error('Blog fetch error:', blogError);
+          throw blogError;
         }
         
-        if (foundBlog) {
-          setBlog(foundBlog);
-          // Fetch comments separately
-          const blogComments = await fetchBlogComments(id);
-          setComments(blogComments);
+        if (!blogData) {
+          console.log('No blog data found');
+          return;
         }
+
+        // Get author profile
+        console.log('Fetching profile for user:', blogData.user_id);
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, full_name, email, profile_picture_url')
+          .eq('id', blogData.user_id)
+          .single();
+
+        console.log('Profile query result:', { profileData, profileError });
+
+        if (profileError) {
+          console.error('Profile fetch error:', profileError);
+          // Continue without profile data rather than throwing
+        }
+
+        // Get likes for this blog
+        const { data: likesData, error: likesError } = await supabase
+          .from('blog_likes')
+          .select('user_id')
+          .eq('blog_id', id);
+
+        if (likesError) {
+          console.error('Likes fetch error:', likesError);
+        }
+
+        // Transform the data
+        const transformedBlog = {
+          ...blogData,
+          author_name: profileData?.full_name || 'Unknown User',
+          author_email: profileData?.email || '',
+          author_profile_picture: profileData?.profile_picture_url || '',
+          likes_count: likesData?.length || 0,
+          comments_count: 0,
+          isLikedByUser: user ? likesData?.some(like => like.user_id === user.id) || false : false
+        };
+
+        console.log('Transformed blog:', transformedBlog);
+        setBlog(transformedBlog);
+        
+        // Fetch comments separately
+        const blogComments = await fetchBlogComments(id);
+        setComments(blogComments);
+        
       } catch (error) {
         console.error('Error fetching blog data:', error);
+        setBlog(null); // Explicitly set to null on error
       } finally {
         setIsLoading(false);
       }
@@ -153,6 +165,17 @@ export const BlogDetail = () => {
       // Refresh comments to show new reply
       const updatedComments = await fetchBlogComments(blog.id);
       setComments(updatedComments);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    const success = await deleteComment(commentId);
+    if (success) {
+      // Refresh comments to show updated list
+      if (blog) {
+        const updatedComments = await fetchBlogComments(blog.id);
+        setComments(updatedComments);
+      }
     }
   };
 
@@ -238,7 +261,22 @@ export const BlogDetail = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => likeBlog(blog.id)}
+              onClick={async () => {
+                await likeBlog(blog.id);
+                // Refresh blog data to update like count and status
+                if (id && user) {
+                  const { data: likesData } = await supabase
+                    .from('blog_likes')
+                    .select('user_id')
+                    .eq('blog_id', id);
+                  
+                  setBlog(prev => prev ? {
+                    ...prev,
+                    likes_count: likesData?.length || 0,
+                    isLikedByUser: likesData?.some(like => like.user_id === user.id) || false
+                  } : null);
+                }
+              }}
               className={`flex items-center gap-2 ${
                 blog.isLikedByUser 
                   ? 'text-red-500 hover:text-red-600' 
@@ -343,8 +381,10 @@ export const BlogDetail = () => {
                 key={comment.id}
                 comment={comment}
                 blogAuthorId={blog.user_id}
+                currentUserId={user?.id}
                 onLike={handleLikeComment}
                 onReply={handleReply}
+                onDelete={handleDeleteComment}
               />
             ))}
           </div>

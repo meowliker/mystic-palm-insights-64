@@ -388,6 +388,41 @@ export const useBlogs = () => {
     }
   };
 
+  const deleteComment = async (commentId: string) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to delete a comment",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('blog_comments')
+        .delete()
+        .eq('id', commentId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Comment deleted successfully!"
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete comment",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
   const fetchUserBlogs = async () => {
     if (!user) return [];
 
@@ -591,6 +626,7 @@ export const useBlogs = () => {
     fetchBlogComments,
     addComment,
     likeComment,
+    deleteComment,
     fetchUserBlogs,
     saveDraft,
     publishDraft,
