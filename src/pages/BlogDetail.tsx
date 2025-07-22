@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { BlogCommentComponent } from "@/components/BlogComment";
 import { useBlogs, type Blog, type BlogComment } from "@/hooks/useBlogs";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export const BlogDetail = () => {
@@ -29,7 +30,49 @@ export const BlogDetail = () => {
       
       setIsLoading(true);
       try {
-        const foundBlog = blogs.find(b => b.id === id);
+        // First try to find in the existing blogs array
+        let foundBlog = blogs.find(b => b.id === id);
+        
+        if (!foundBlog) {
+          // If not found, fetch directly from database
+          const { data: blogData, error: blogError } = await supabase
+            .from('blogs')
+            .select('*')
+            .eq('id', id)
+            .eq('published', true)
+            .single();
+
+          if (blogError) throw blogError;
+          if (!blogData) return;
+
+          // Get author profile
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('id, full_name, email')
+            .eq('id', blogData.user_id)
+            .single();
+
+          if (profileError) throw profileError;
+
+          // Get likes for this blog
+          const { data: likesData, error: likesError } = await supabase
+            .from('blog_likes')
+            .select('user_id')
+            .eq('blog_id', id);
+
+          if (likesError) throw likesError;
+
+          // Transform the data
+          foundBlog = {
+            ...blogData,
+            author_name: profileData?.full_name || 'Unknown',
+            author_email: profileData?.email || '',
+            likes_count: likesData?.length || 0,
+            comments_count: 0,
+            isLikedByUser: user ? likesData?.some(like => like.user_id === user.id) || false : false
+          };
+        }
+        
         if (foundBlog) {
           setBlog(foundBlog);
           const blogComments = await fetchBlogComments(id);
@@ -43,7 +86,7 @@ export const BlogDetail = () => {
     };
 
     fetchBlogData();
-  }, [id, blogs, fetchBlogComments]);
+  }, [id, blogs, fetchBlogComments, user]);
 
   const handleShare = async () => {
     if (!blog) return;
