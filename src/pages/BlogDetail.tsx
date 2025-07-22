@@ -386,7 +386,15 @@ export const BlogDetail = () => {
                   <Textarea
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Write a comment..."
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.altKey) {
+                        e.preventDefault();
+                        if (newComment.trim()) {
+                          handleAddComment();
+                        }
+                      }
+                    }}
+                    placeholder="Write a comment... (Press Enter to post, Alt+Enter for new line)"
                     className="min-h-[100px] resize-none mb-2"
                   />
                   <Button

@@ -82,10 +82,22 @@ export const useBlogs = () => {
         // Continue without likes data
       }
 
+      // Get comments count for each blog
+      const { data: commentsData, error: commentsError } = await supabase
+        .from('blog_comments')
+        .select('blog_id')
+        .in('blog_id', blogIds);
+
+      if (commentsError) {
+        console.error('Error fetching comments count:', commentsError);
+        // Continue without comments data
+      }
+
       // Transform the data
       const transformedBlogs = blogsData.map(blog => {
         const profile = profilesData?.find(p => p.id === blog.user_id);
         const blogLikes = likesData?.filter(like => like.blog_id === blog.id) || [];
+        const blogComments = commentsData?.filter(comment => comment.blog_id === blog.id) || [];
         
         return {
           ...blog,
@@ -93,7 +105,7 @@ export const useBlogs = () => {
           author_email: profile?.email || '',
           author_profile_picture: profile?.profile_picture_url || '',
           likes_count: blogLikes.length,
-          comments_count: 0, // Will be populated separately if needed
+          comments_count: blogComments.length,
           isLikedByUser: user ? blogLikes.some(like => like.user_id === user.id) : false
         };
       });
