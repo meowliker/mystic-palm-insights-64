@@ -149,20 +149,6 @@ export const Blogs = () => {
         </Select>
       </div>
 
-      {/* Daily Insight */}
-      <Card className="p-6 bg-card/80 backdrop-blur-sm mb-8">
-        <h3 className="font-semibold text-foreground mb-4">Daily Insight</h3>
-        <div 
-          className="p-4 rounded-lg bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20"
-        >
-          <p className="text-sm text-foreground/90 italic">
-            "The stars align to reveal new possibilities. Trust your intuition as it guides you toward meaningful connections today."
-          </p>
-          <p className="text-xs text-muted-foreground mt-2">
-            ✨ Cosmic Guidance for {new Date().toLocaleDateString()}
-          </p>
-        </div>
-      </Card>
 
       {/* Blog List */}
       {filteredAndSortedBlogs.length === 0 ? (
