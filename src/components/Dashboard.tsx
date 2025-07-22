@@ -251,53 +251,45 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
                         </div>
                       </Card>
 
-                       {/* Mobile Cosmic Profile */}
-                      <Card 
-                        className="p-6 bg-card/80 backdrop-blur-sm relative overflow-hidden"
-                        style={{
-                          backgroundImage: `url(${constellationPattern})`,
-                          backgroundSize: 'cover',
-                          backgroundPosition: 'center'
-                        }}
-                      >
-                        <div className="absolute inset-0 bg-background/80"></div>
-                        <div className="relative z-10">
-                          <h3 className="font-semibold text-foreground mb-4">Your Cosmic Profile</h3>
-                          {scans.length > 0 ? (
-                            <div className="space-y-3">
-                              <div className="flex items-center gap-3">
-                                <Heart className="h-5 w-5 text-accent" />
-                                <div>
-                                  <div className="text-sm font-medium text-foreground">Heart Line</div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {scans[0].heart_line_strength || "Not analyzed"}
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-3">
-                                <Brain className="h-5 w-5 text-primary" />
-                                <div>
-                                  <div className="text-sm font-medium text-foreground">Head Line</div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {scans[0].head_line_strength || "Not analyzed"}
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-3">
-                                <Zap className="h-5 w-5 text-secondary" />
-                                <div>
-                                  <div className="text-sm font-medium text-foreground">Life Line</div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {scans[0].life_line_strength || "Not analyzed"}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="text-center py-4">
-                              <p className="text-sm text-muted-foreground">Get your first palm reading to see your cosmic profile!</p>
-                            </div>
+                       {/* Mobile Quick Actions */}
+                      <Card className="p-6 bg-card/80 backdrop-blur-sm">
+                        <h3 className="font-semibold text-foreground mb-4">Quick Actions</h3>
+                        <div className="space-y-3">
+                          <Button 
+                            variant="outline" 
+                            className="w-full justify-start gap-3"
+                            onClick={onStartScan}
+                          >
+                            <Scan className="h-4 w-4" />
+                            New Palm Reading
+                          </Button>
+                          {onStartUpload && (
+                            <Button 
+                              variant="outline" 
+                              className="w-full justify-start gap-3"
+                              onClick={onStartUpload}
+                            >
+                              <Upload className="h-4 w-4" />
+                              Upload Palm Images
+                            </Button>
                           )}
+                          <Button 
+                            variant="outline" 
+                            className="w-full justify-start gap-3"
+                            onClick={() => setActiveTab('horoscope')}
+                          >
+                            <Star className="h-4 w-4" />
+                            Get Horoscope
+                          </Button>
+                          <Link to="/blogs">
+                            <Button 
+                              variant="outline" 
+                              className="w-full justify-start gap-3"
+                            >
+                              <BookOpen className="h-4 w-4" />
+                              Explore Blogs
+                            </Button>
+                          </Link>
                         </div>
                       </Card>
                     </div>
@@ -604,53 +596,54 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
               </div>
             </Card>
 
-            {/* Quick Insights */}
-            <Card 
-              className="p-6 bg-card/80 backdrop-blur-sm relative overflow-hidden"
-              style={{
-                backgroundImage: `url(${constellationPattern})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center'
-              }}
-            >
-              <div className="absolute inset-0 bg-background/80"></div>
-              <div className="relative z-10">
-                <h3 className="font-semibold text-foreground mb-4">Your Cosmic Profile</h3>
-                {scans.length > 0 ? (
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <Heart className="h-5 w-5 text-accent" />
-                      <div>
-                        <div className="text-sm font-medium text-foreground">Heart Line</div>
-                        <div className="text-xs text-muted-foreground">
-                          {scans[0].heart_line_strength || "Not analyzed"}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Brain className="h-5 w-5 text-primary" />
-                      <div>
-                        <div className="text-sm font-medium text-foreground">Head Line</div>
-                        <div className="text-xs text-muted-foreground">
-                          {scans[0].head_line_strength || "Not analyzed"}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Zap className="h-5 w-5 text-secondary" />
-                      <div>
-                        <div className="text-sm font-medium text-foreground">Life Line</div>
-                        <div className="text-xs text-muted-foreground">
-                          {scans[0].life_line_strength || "Not analyzed"}
-                        </div>
-                      </div>
-                    </div>
+            {/* Daily Insight & Quick Actions */}
+            <Card className="p-6 bg-card/80 backdrop-blur-sm">
+              <h3 className="font-semibold text-foreground mb-4">Daily Insight</h3>
+              <div className="space-y-4">
+                <div 
+                  className="p-4 rounded-lg bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20"
+                >
+                  <p className="text-sm text-foreground/90 italic">
+                    "The stars align to reveal new possibilities. Trust your intuition as it guides you toward meaningful connections today."
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    ✨ Cosmic Guidance for {new Date().toLocaleDateString()}
+                  </p>
+                </div>
+                
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-foreground">Quick Actions</h4>
+                  <div className="space-y-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="w-full justify-start gap-2"
+                      onClick={onStartScan}
+                    >
+                      <Scan className="h-4 w-4" />
+                      New Reading
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="w-full justify-start gap-2"
+                      onClick={() => setActiveTab('horoscope')}
+                    >
+                      <Star className="h-4 w-4" />
+                      Get Horoscope
+                    </Button>
+                    <Link to="/blogs">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="w-full justify-start gap-2"
+                      >
+                        <BookOpen className="h-4 w-4" />
+                        Explore Blogs
+                      </Button>
+                    </Link>
                   </div>
-                ) : (
-                  <div className="text-center py-4">
-                    <p className="text-sm text-muted-foreground">Get your first palm reading to see your cosmic profile!</p>
-                  </div>
-                )}
+                </div>
               </div>
             </Card>
           </div>
