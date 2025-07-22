@@ -75,6 +75,7 @@ export const BlogDetail = () => {
         
         if (foundBlog) {
           setBlog(foundBlog);
+          // Fetch comments separately
           const blogComments = await fetchBlogComments(id);
           setComments(blogComments);
         }
@@ -86,7 +87,7 @@ export const BlogDetail = () => {
     };
 
     fetchBlogData();
-  }, [id, blogs, fetchBlogComments, user]);
+  }, [id, user]); // Removed blogs and fetchBlogComments from dependencies
 
   const handleShare = async () => {
     if (!blog) return;
