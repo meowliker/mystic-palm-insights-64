@@ -28,6 +28,7 @@ export interface BlogComment {
   parent_comment_id?: string;
   author_name: string;
   author_email: string;
+  author_profile_picture?: string;
   likes_count: number;
   isLikedByUser: boolean;
   replies?: BlogComment[];
@@ -266,10 +267,13 @@ export const useBlogs = () => {
         const profile = profilesData?.find(p => p.id === comment.user_id);
         const commentLikes = likesData?.filter(like => like.comment_id === comment.id) || [];
         
+        console.log(`Comment ${comment.id} profile:`, profile);
+        
         return {
           ...comment,
-          author_name: profile?.full_name || 'Unknown',
+          author_name: profile?.full_name || 'Unknown User',
           author_email: profile?.email || '',
+          author_profile_picture: profile?.profile_picture_url || '',
           likes_count: commentLikes.length,
           isLikedByUser: user ? commentLikes.some(like => like.user_id === user.id) : false
         };

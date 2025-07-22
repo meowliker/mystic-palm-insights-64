@@ -64,9 +64,17 @@ export const BlogCommentComponent = ({
   return (
     <div className={`${depth > 0 ? 'ml-6 pl-4 border-l-2 border-muted' : ''}`}>
       <div className="flex gap-3 mb-4">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
-          {comment.author_name.charAt(0).toUpperCase()}
-        </div>
+        {comment.author_profile_picture ? (
+          <img
+            src={comment.author_profile_picture}
+            alt={comment.author_name}
+            className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+          />
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
+            {comment.author_name.charAt(0).toUpperCase()}
+          </div>
+        )}
         
         <div className="flex-1">
           <div className="flex items-center justify-between mb-1">
