@@ -51,26 +51,37 @@ export const useBlogs = () => {
 
       if (blogsError) throw blogsError;
 
+      if (!blogsData || blogsData.length === 0) {
+        setBlogs([]);
+        return;
+      }
+
       // Get user profiles for the blogs
-      const userIds = blogsData?.map(blog => blog.user_id) || [];
+      const userIds = blogsData.map(blog => blog.user_id);
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('id, full_name, email')
         .in('id', userIds);
 
-      if (profilesError) throw profilesError;
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        // Continue with blogs but without author names
+      }
 
       // Get likes for the blogs
-      const blogIds = blogsData?.map(blog => blog.id) || [];
+      const blogIds = blogsData.map(blog => blog.id);
       const { data: likesData, error: likesError } = await supabase
         .from('blog_likes')
         .select('blog_id, user_id')
         .in('blog_id', blogIds);
 
-      if (likesError) throw likesError;
+      if (likesError) {
+        console.error('Error fetching likes:', likesError);
+        // Continue without likes data
+      }
 
       // Transform the data
-      const transformedBlogs = blogsData?.map(blog => {
+      const transformedBlogs = blogsData.map(blog => {
         const profile = profilesData?.find(p => p.id === blog.user_id);
         const blogLikes = likesData?.filter(like => like.blog_id === blog.id) || [];
         
@@ -82,8 +93,9 @@ export const useBlogs = () => {
           comments_count: 0, // Will be populated separately if needed
           isLikedByUser: user ? blogLikes.some(like => like.user_id === user.id) : false
         };
-      }) || [];
+      });
 
+      console.log('Transformed blogs:', transformedBlogs);
       setBlogs(transformedBlogs);
     } catch (error) {
       console.error('Error fetching blogs:', error);
