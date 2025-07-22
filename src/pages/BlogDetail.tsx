@@ -394,7 +394,7 @@ export const BlogDetail = () => {
                         }
                       }
                     }}
-                    placeholder="Write a comment... (Press Enter to post, Alt+Enter for new line)"
+                    placeholder="Write a comment..."
                     className="min-h-[100px] resize-none mb-2"
                   />
                   <Button
