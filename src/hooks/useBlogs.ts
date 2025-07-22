@@ -234,12 +234,23 @@ export const useBlogs = () => {
 
       // Get user profiles for the comments
       const userIds = commentsData?.map(comment => comment.user_id) || [];
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, full_name, email')
-        .in('id', userIds);
+      console.log('Fetching profiles for user IDs:', userIds);
+      
+      let profilesData = [];
+      if (userIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, full_name, email, profile_picture_url')
+          .in('id', userIds);
 
-      if (profilesError) throw profilesError;
+        if (profilesError) {
+          console.error('Error fetching comment profiles:', profilesError);
+        } else {
+          profilesData = profiles || [];
+        }
+      }
+      
+      console.log('Fetched profiles:', profilesData);
 
       // Get likes for the comments
       const commentIds = commentsData?.map(comment => comment.id) || [];
