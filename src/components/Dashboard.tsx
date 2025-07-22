@@ -251,47 +251,6 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
                         </div>
                       </Card>
 
-                       {/* Mobile Quick Actions */}
-                      <Card className="p-6 bg-card/80 backdrop-blur-sm">
-                        <h3 className="font-semibold text-foreground mb-4">Quick Actions</h3>
-                        <div className="space-y-3">
-                          <Button 
-                            variant="outline" 
-                            className="w-full justify-start gap-3"
-                            onClick={onStartScan}
-                          >
-                            <Scan className="h-4 w-4" />
-                            New Palm Reading
-                          </Button>
-                          {onStartUpload && (
-                            <Button 
-                              variant="outline" 
-                              className="w-full justify-start gap-3"
-                              onClick={onStartUpload}
-                            >
-                              <Upload className="h-4 w-4" />
-                              Upload Palm Images
-                            </Button>
-                          )}
-                          <Button 
-                            variant="outline" 
-                            className="w-full justify-start gap-3"
-                            onClick={() => setActiveTab('horoscope')}
-                          >
-                            <Star className="h-4 w-4" />
-                            Get Horoscope
-                          </Button>
-                          <Link to="/blogs">
-                            <Button 
-                              variant="outline" 
-                              className="w-full justify-start gap-3"
-                            >
-                              <BookOpen className="h-4 w-4" />
-                              Explore Blogs
-                            </Button>
-                          </Link>
-                        </div>
-                      </Card>
                     </div>
                   </SheetContent>
                 </Sheet>
@@ -596,56 +555,6 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
               </div>
             </Card>
 
-            {/* Daily Insight & Quick Actions */}
-            <Card className="p-6 bg-card/80 backdrop-blur-sm">
-              <h3 className="font-semibold text-foreground mb-4">Daily Insight</h3>
-              <div className="space-y-4">
-                <div 
-                  className="p-4 rounded-lg bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20"
-                >
-                  <p className="text-sm text-foreground/90 italic">
-                    "The stars align to reveal new possibilities. Trust your intuition as it guides you toward meaningful connections today."
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    ✨ Cosmic Guidance for {new Date().toLocaleDateString()}
-                  </p>
-                </div>
-                
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-foreground">Quick Actions</h4>
-                  <div className="space-y-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className="w-full justify-start gap-2"
-                      onClick={onStartScan}
-                    >
-                      <Scan className="h-4 w-4" />
-                      New Reading
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className="w-full justify-start gap-2"
-                      onClick={() => setActiveTab('horoscope')}
-                    >
-                      <Star className="h-4 w-4" />
-                      Get Horoscope
-                    </Button>
-                    <Link to="/blogs">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        className="w-full justify-start gap-2"
-                      >
-                        <BookOpen className="h-4 w-4" />
-                        Explore Blogs
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </Card>
           </div>
         </div>
       </div>
