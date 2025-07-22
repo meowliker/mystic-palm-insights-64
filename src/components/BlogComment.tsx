@@ -92,7 +92,16 @@ export const BlogCommentComponent = ({
             </div>
             
             {/* Delete menu - show if user is comment author or blog author */}
-            {user && (user.id === comment.user_id || user.id === blogAuthorId) && (
+            {(() => {
+              const canDelete = user && (user.id === comment.user_id || user.id === blogAuthorId);
+              console.log('Delete button visibility:', {
+                userId: user?.id,
+                commentUserId: comment.user_id,
+                blogAuthorId,
+                canDelete
+              });
+              return canDelete;
+            })() && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
