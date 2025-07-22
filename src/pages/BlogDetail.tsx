@@ -118,35 +118,27 @@ export const BlogDetail = () => {
       url: url
     };
     
-    console.log('Share button clicked');
-    console.log('navigator.share available:', !!navigator.share);
-    console.log('User agent:', navigator.userAgent);
-    
-    // Try native share first
+    // Try native share first, but handle permission errors
     if (navigator.share) {
-      console.log('Attempting native share...');
       try {
         await navigator.share(shareData);
-        console.log('Native share successful');
         return; // Successfully shared
       } catch (err) {
-        console.error('Native share failed:', err);
-        console.log('Error name:', err.name);
-        console.log('Error message:', err.message);
-        
-        // If user cancels, don't show fallback message
+        // Handle specific permission errors and user cancellation
         if (err.name === 'AbortError') {
-          console.log('User cancelled share');
-          return;
+          return; // User cancelled, don't show fallback
         }
-        // For other errors, fall through to clipboard
+        if (err.name === 'NotAllowedError') {
+          // Permission denied - fall through to clipboard
+          console.log('Share permission denied, using clipboard fallback');
+        } else {
+          console.error('Share failed:', err);
+        }
+        // For any error other than AbortError, fall through to clipboard
       }
-    } else {
-      console.log('navigator.share not available, using clipboard fallback');
     }
     
-    // Fallback to clipboard
-    console.log('Using clipboard fallback');
+    // Clipboard fallback
     try {
       await navigator.clipboard.writeText(url);
       toast.success("Link copied to clipboard!");
