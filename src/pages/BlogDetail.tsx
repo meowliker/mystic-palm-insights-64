@@ -113,33 +113,36 @@ export const BlogDetail = () => {
     
     const url = `${window.location.origin}/blog/${blog.id}`;
     
-    if (navigator.share) {
+    // Check if Web Share API is available and supported
+    if (navigator.share && navigator.canShare && navigator.canShare({ 
+      title: blog.title, 
+      text: `Check out this astrology blog: ${blog.title}`, 
+      url: url 
+    })) {
       try {
         await navigator.share({
           title: blog.title,
           text: `Check out this astrology blog: ${blog.title}`,
           url: url
         });
+        return; // Successfully shared, exit function
       } catch (err) {
-        console.error('Share failed:', err);
-        // Fallback to clipboard on error
-        try {
-          await navigator.clipboard.writeText(url);
-          toast.success("Link copied to clipboard!");
-        } catch (clipboardErr) {
-          console.error('Clipboard failed:', clipboardErr);
-          toast.error("Failed to share or copy link");
+        console.error('Native share failed:', err);
+        // If user cancels, the error name is 'AbortError'
+        if (err.name === 'AbortError') {
+          return; // User cancelled, don't show fallback
         }
+        // For other errors, fall through to clipboard
       }
-    } else {
-      // Fallback to clipboard
-      try {
-        await navigator.clipboard.writeText(url);
-        toast.success("Link copied to clipboard!");
-      } catch (err) {
-        console.error('Clipboard failed:', err);
-        toast.error("Failed to copy link to clipboard");
-      }
+    }
+    
+    // Fallback to clipboard for browsers without share API or on error
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copied to clipboard!");
+    } catch (err) {
+      console.error('Clipboard failed:', err);
+      toast.error("Failed to copy link to clipboard");
     }
   };
 
