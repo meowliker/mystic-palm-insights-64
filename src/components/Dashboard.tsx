@@ -37,6 +37,7 @@ import { supabase } from '@/integrations/supabase/client';
 import HoroscopeForm from '@/components/HoroscopeForm';
 import { HoroscopeResultDialog } from '@/components/HoroscopeResultDialog';
 import ScanDetailDialog from '@/components/ScanDetailDialog';
+import { useUserStats } from '@/hooks/useUserStats';
 
 const ProfilePicture = ({ userId, onUpdate }: { userId?: string; onUpdate?: () => void }) => {
   const [profilePictureUrl, setProfilePictureUrl] = useState<string>('');
@@ -113,6 +114,7 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
   const { user } = useAuth();
   const { fetchUserBlogs, publishDraft, deleteBlog } = useBlogs();
   const { toast } = useToast();
+  const { stats } = useUserStats();
 
   // Load user's blogs when blog tab is active
   useEffect(() => {
@@ -249,7 +251,7 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
                         </div>
                       </Card>
 
-                      {/* Mobile Cosmic Profile */}
+                       {/* Mobile Cosmic Profile */}
                       <Card 
                         className="p-6 bg-card/80 backdrop-blur-sm relative overflow-hidden"
                         style={{
@@ -261,29 +263,41 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
                         <div className="absolute inset-0 bg-background/80"></div>
                         <div className="relative z-10">
                           <h3 className="font-semibold text-foreground mb-4">Your Cosmic Profile</h3>
-                          <div className="space-y-3">
-                            <div className="flex items-center gap-3">
-                              <Heart className="h-5 w-5 text-accent" />
-                              <div>
-                                <div className="text-sm font-medium text-foreground">Heart Line</div>
-                                <div className="text-xs text-muted-foreground">Strong emotional connections</div>
+                          {scans.length > 0 ? (
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-3">
+                                <Heart className="h-5 w-5 text-accent" />
+                                <div>
+                                  <div className="text-sm font-medium text-foreground">Heart Line</div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {scans[0].heart_line_strength || "Not analyzed"}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <Brain className="h-5 w-5 text-primary" />
+                                <div>
+                                  <div className="text-sm font-medium text-foreground">Head Line</div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {scans[0].head_line_strength || "Not analyzed"}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <Zap className="h-5 w-5 text-secondary" />
+                                <div>
+                                  <div className="text-sm font-medium text-foreground">Life Line</div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {scans[0].life_line_strength || "Not analyzed"}
+                                  </div>
+                                </div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-3">
-                              <Brain className="h-5 w-5 text-primary" />
-                              <div>
-                                <div className="text-sm font-medium text-foreground">Head Line</div>
-                                <div className="text-xs text-muted-foreground">Analytical and creative</div>
-                              </div>
+                          ) : (
+                            <div className="text-center py-4">
+                              <p className="text-sm text-muted-foreground">Get your first palm reading to see your cosmic profile!</p>
                             </div>
-                            <div className="flex items-center gap-3">
-                              <Zap className="h-5 w-5 text-secondary" />
-                              <div>
-                                <div className="text-sm font-medium text-foreground">Life Line</div>
-                                <div className="text-xs text-muted-foreground">Vibrant life energy</div>
-                              </div>
-                            </div>
-                          </div>
+                          )}
                         </div>
                       </Card>
                     </div>
@@ -303,22 +317,30 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <Card className="p-4 text-center bg-card/80 backdrop-blur-sm">
                 <History className="h-6 w-6 text-primary mx-auto mb-2" />
-                <div className="text-2xl font-bold text-foreground">{scans.length}</div>
+                <div className="text-2xl font-bold text-foreground">
+                  {stats.loading ? "..." : stats.totalReadings}
+                </div>
                 <div className="text-xs text-muted-foreground">Total Readings</div>
               </Card>
               <Card className="p-4 text-center bg-card/80 backdrop-blur-sm">
                 <Calendar className="h-6 w-6 text-accent mx-auto mb-2" />
-                <div className="text-2xl font-bold text-foreground">28</div>
+                <div className="text-2xl font-bold text-foreground">
+                  {stats.loading ? "..." : stats.daysStreak}
+                </div>
                 <div className="text-xs text-muted-foreground">Days Streak</div>
               </Card>
               <Card className="p-4 text-center bg-card/80 backdrop-blur-sm">
                 <Star className="h-6 w-6 text-secondary mx-auto mb-2" />
-                <div className="text-2xl font-bold text-foreground">8.5</div>
+                <div className="text-2xl font-bold text-foreground">
+                  {stats.loading ? "..." : stats.accuracy}
+                </div>
                 <div className="text-xs text-muted-foreground">Accuracy</div>
               </Card>
               <Card className="p-4 text-center bg-card/80 backdrop-blur-sm">
                 <Zap className="h-6 w-6 text-primary-glow mx-auto mb-2" />
-                <div className="text-2xl font-bold text-foreground">95%</div>
+                <div className="text-2xl font-bold text-foreground">
+                  {stats.loading ? "..." : `${stats.cosmicSync}%`}
+                </div>
                 <div className="text-xs text-muted-foreground">Cosmic Sync</div>
               </Card>
             </div>
@@ -594,29 +616,41 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
               <div className="absolute inset-0 bg-background/80"></div>
               <div className="relative z-10">
                 <h3 className="font-semibold text-foreground mb-4">Your Cosmic Profile</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <Heart className="h-5 w-5 text-accent" />
-                    <div>
-                      <div className="text-sm font-medium text-foreground">Heart Line</div>
-                      <div className="text-xs text-muted-foreground">Strong emotional connections</div>
+                {scans.length > 0 ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <Heart className="h-5 w-5 text-accent" />
+                      <div>
+                        <div className="text-sm font-medium text-foreground">Heart Line</div>
+                        <div className="text-xs text-muted-foreground">
+                          {scans[0].heart_line_strength || "Not analyzed"}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Brain className="h-5 w-5 text-primary" />
+                      <div>
+                        <div className="text-sm font-medium text-foreground">Head Line</div>
+                        <div className="text-xs text-muted-foreground">
+                          {scans[0].head_line_strength || "Not analyzed"}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Zap className="h-5 w-5 text-secondary" />
+                      <div>
+                        <div className="text-sm font-medium text-foreground">Life Line</div>
+                        <div className="text-xs text-muted-foreground">
+                          {scans[0].life_line_strength || "Not analyzed"}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Brain className="h-5 w-5 text-primary" />
-                    <div>
-                      <div className="text-sm font-medium text-foreground">Head Line</div>
-                      <div className="text-xs text-muted-foreground">Analytical and creative</div>
-                    </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-sm text-muted-foreground">Get your first palm reading to see your cosmic profile!</p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Zap className="h-5 w-5 text-secondary" />
-                    <div>
-                      <div className="text-sm font-medium text-foreground">Life Line</div>
-                      <div className="text-xs text-muted-foreground">Vibrant life energy</div>
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
             </Card>
           </div>
