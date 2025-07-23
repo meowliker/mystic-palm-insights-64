@@ -120,22 +120,44 @@ serve(async (req) => {
 
     // Add image if provided
     if (imageUrl) {
-      messages[messages.length - 1] = {
-        role: "user",
-        content: [
-          {
-            type: "text",
-            text: message || "Please analyze my palm and provide a detailed reading."
-          },
-          {
-            type: "image_url",
-            image_url: {
-              url: imageUrl,
-              detail: "high"
+      try {
+        console.log('Fetching image for base64 conversion:', imageUrl);
+        
+        // Fetch the image and convert to base64
+        const imageResponse = await fetch(imageUrl);
+        if (!imageResponse.ok) {
+          throw new Error(`Failed to fetch image: ${imageResponse.status}`);
+        }
+        
+        const imageBuffer = await imageResponse.arrayBuffer();
+        const imageBase64 = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
+        const mimeType = imageResponse.headers.get('content-type') || 'image/jpeg';
+        
+        console.log('Image converted to base64, size:', imageBase64.length);
+        
+        messages[messages.length - 1] = {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: message || "Please analyze my palm and provide a detailed reading."
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: `data:${mimeType};base64,${imageBase64}`
+              }
             }
-          }
-        ]
-      };
+          ]
+        };
+      } catch (imageError) {
+        console.error('Failed to process image:', imageError);
+        // Continue without image if processing fails
+        messages[messages.length - 1] = {
+          role: "user",
+          content: message || "Please provide a palm reading. I tried to upload an image but it couldn't be processed."
+        };
+      }
     }
 
     console.log('Sending request to OpenAI...', { 
