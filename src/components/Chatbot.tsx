@@ -5,9 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Upload, Send, Sparkles, Camera, Image } from 'lucide-react';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Upload, Send, Sparkles, Camera, Image, HelpCircle, Book } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import { PalmGuide } from '@/components/PalmGuide';
 
 interface Message {
   id: string;
@@ -303,11 +305,28 @@ export const Chatbot: React.FC = () => {
                   className="hidden"
                 />
                 
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      disabled={isLoading}
+                      title="Palm Photo Guide"
+                    >
+                      <HelpCircle className="h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <PalmGuide />
+                  </DialogContent>
+                </Dialog>
+                
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isLoading}
+                  title="Upload Palm Image"
                 >
                   <Camera className="h-4 w-4" />
                 </Button>
@@ -316,6 +335,7 @@ export const Chatbot: React.FC = () => {
                   onClick={sendMessage}
                   disabled={isLoading || (!inputMessage.trim() && !selectedImage)}
                   size="icon"
+                  title="Send Message"
                 >
                   <Send className="h-4 w-4" />
                 </Button>
