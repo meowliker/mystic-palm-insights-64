@@ -147,14 +147,14 @@ serve(async (req) => {
       console.error('OpenAI API error:', response.status, errorText);
       throw new Error(`OpenAI API error: ${response.status}: ${errorText}`);
     }
-
+    
     const data = await response.json();
     console.log('OpenAI response received successfully');
 
     let botResponse = data.choices[0].message.content;
 
     // Only add brief suggestions, not long explanations
-    if (imageUrl) {
+    if (imageUrl && imageUrl.trim() !== '') {
       // For image responses, no additional text needed - let the reading speak for itself
     } else if (message.toLowerCase().includes('marriage') || message.toLowerCase().includes('relationship')) {
       botResponse += "\n\n📷 Click the (?) button for photo tips!";
@@ -171,15 +171,17 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in astrobot-chat function:', error);
-    console.error('Error details:', {
-      message: error.message,
-      stack: error.stack,
-      hasImageUrl: !!imageUrl,
-      requestData: { message, imageUrl: imageUrl ? 'provided' : 'none' }
-    });
     
-    // More helpful fallback response
-    const fallbackResponse = `I'm having trouble processing your request right now. ${imageUrl ? 'Try uploading your palm image again' : 'Please upload a clear palm photo'} and ask your question. ✨`;
+    // More helpful fallback response based on whether an image was provided
+    let hasImage = false;
+    try {
+      const requestData = await req.json();
+      hasImage = !!requestData.imageUrl;
+    } catch (e) {
+      // If we can't parse the request, default to no image
+    }
+    
+    const fallbackResponse = `I'm having trouble processing your request right now. ${hasImage ? 'Try uploading your palm image again' : 'Please upload a clear palm photo'} and ask your question. ✨`;
     
     return new Response(
       JSON.stringify({ response: fallbackResponse }),
