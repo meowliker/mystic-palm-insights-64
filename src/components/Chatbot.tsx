@@ -148,9 +148,6 @@ export const Chatbot: React.FC = () => {
 
       if (error) throw error;
 
-      // Clear the uploaded image after successful send
-      removeImage();
-
       // Remove typing indicator and add response
       setMessages(prev => prev.filter(msg => msg.id !== 'typing'));
       

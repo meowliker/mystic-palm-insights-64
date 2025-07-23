@@ -59,6 +59,13 @@ serve(async (req) => {
 
   try {
     const { message, imageUrl, conversationHistory } = await req.json();
+    
+    console.log('Request received:', { 
+      hasMessage: !!message, 
+      hasImageUrl: !!imageUrl, 
+      imageUrlStart: imageUrl ? imageUrl.substring(0, 50) + '...' : 'none',
+      hasHistory: !!conversationHistory 
+    });
 
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAIApiKey) {
@@ -131,7 +138,11 @@ serve(async (req) => {
       };
     }
 
-    console.log('Sending request to OpenAI...', { hasImage: !!imageUrl, messageLength: message?.length });
+    console.log('Sending request to OpenAI...', { 
+      hasImage: !!imageUrl, 
+      messageLength: message?.length || 0,
+      imageUrl: imageUrl ? imageUrl.substring(0, 100) + '...' : 'none'
+    });
     
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
