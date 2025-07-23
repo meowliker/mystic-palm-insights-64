@@ -186,32 +186,34 @@ export const Chatbot: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-[80vh] max-w-4xl mx-auto">
-      <Card className="flex-1 flex flex-col">
-        <CardHeader className="pb-4">
+    <div className="h-[80vh] max-w-4xl mx-auto flex flex-col">
+      <Card className="flex-1 flex flex-col overflow-hidden">
+        <CardHeader className="pb-4 border-b">
           <CardTitle className="flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-primary" />
             Astrobot - Your AI Palmistry Guide
           </CardTitle>
         </CardHeader>
         
-        <CardContent className="flex-1 flex flex-col gap-4">
+        <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
           {/* Pre-built questions */}
-          <div className="flex flex-wrap gap-2">
-            {prebuiltQuestions.slice(0, 4).map((question, index) => (
-              <Badge
-                key={index}
-                variant="outline"
-                className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
-                onClick={() => handleQuestionClick(question)}
-              >
-                {question}
-              </Badge>
-            ))}
+          <div className="p-4 border-b bg-muted/20">
+            <div className="flex flex-wrap gap-2">
+              {prebuiltQuestions.slice(0, 4).map((question, index) => (
+                <Badge
+                  key={index}
+                  variant="outline"
+                  className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+                  onClick={() => handleQuestionClick(question)}
+                >
+                  {question}
+                </Badge>
+              ))}
+            </div>
           </div>
 
           {/* Chat messages */}
-          <ScrollArea className="flex-1 pr-4" ref={scrollAreaRef}>
+          <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
             <div className="space-y-4">
               {messages.map((message) => (
                 <div
@@ -260,68 +262,71 @@ export const Chatbot: React.FC = () => {
             </div>
           </ScrollArea>
 
-          {/* Image preview */}
-          {imagePreview && (
-            <div className="relative w-fit">
-              <img
-                src={imagePreview}
-                alt="Preview"
-                className="w-32 h-32 object-cover rounded-lg border"
-              />
-              <Button
-                size="sm"
-                variant="destructive"
-                className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
-                onClick={removeImage}
-              >
-                ×
-              </Button>
-            </div>
-          )}
+          {/* Fixed input area at bottom */}
+          <div className="border-t bg-background p-4 space-y-4">
+            {/* Image preview */}
+            {imagePreview && (
+              <div className="relative w-fit">
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-32 h-32 object-cover rounded-lg border"
+                />
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
+                  onClick={removeImage}
+                >
+                  ×
+                </Button>
+              </div>
+            )}
 
-          {/* Input area */}
-          <div className="flex gap-2">
-            <div className="flex-1 flex gap-2">
-              <Input
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Ask about your palm lines or upload an image..."
-                disabled={isLoading}
-                className="flex-1"
-              />
-              
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                ref={fileInputRef}
-                className="hidden"
-              />
-              
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isLoading}
-              >
-                <Camera className="h-4 w-4" />
-              </Button>
-              
-              <Button
-                onClick={sendMessage}
-                disabled={isLoading || (!inputMessage.trim() && !selectedImage)}
-                size="icon"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
+            {/* Input area */}
+            <div className="flex gap-2">
+              <div className="flex-1 flex gap-2">
+                <Input
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Ask about your palm lines or upload an image..."
+                  disabled={isLoading}
+                  className="flex-1"
+                />
+                
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  ref={fileInputRef}
+                  className="hidden"
+                />
+                
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isLoading}
+                >
+                  <Camera className="h-4 w-4" />
+                </Button>
+                
+                <Button
+                  onClick={sendMessage}
+                  disabled={isLoading || (!inputMessage.trim() && !selectedImage)}
+                  size="icon"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
-          </div>
 
-          {/* Palm guidance */}
-          <div className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3">
-            <p className="font-medium mb-1">📷 Palm Photo Tips:</p>
-            <p>• Ensure good lighting • Keep palm flat • Focus on line clarity • Take from directly above</p>
+            {/* Palm guidance */}
+            <div className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3">
+              <p className="font-medium mb-1">📷 Palm Photo Tips:</p>
+              <p>• Ensure good lighting • Keep palm flat • Focus on line clarity • Take from directly above</p>
+            </div>
           </div>
         </CardContent>
       </Card>
