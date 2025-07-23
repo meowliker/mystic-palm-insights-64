@@ -24,7 +24,8 @@ import {
   PlusCircle,
   Share,
   AlertTriangle,
-  Upload
+  Upload,
+  MessageCircle
 } from 'lucide-react';
 import constellationPattern from '@/assets/constellation-pattern.jpg';
 import { useScans } from '@/hooks/useScans';
@@ -207,6 +208,16 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
               <p className="text-muted-foreground hidden sm:block">Ready to explore your cosmic destiny?</p>
             </div>
             <div className="flex items-center gap-2">
+              <Link to="/chatbot">
+                <Button 
+                  variant="outline" 
+                  className="gap-2"
+                  size="sm"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  <span className="hidden sm:inline">Astrobot</span>
+                </Button>
+              </Link>
               <Button 
                 variant="glow" 
                 onClick={onStartScan}
