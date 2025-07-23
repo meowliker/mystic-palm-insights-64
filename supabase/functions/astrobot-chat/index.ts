@@ -85,7 +85,7 @@ serve(async (req) => {
 
     // If there's an image, analyze it for detailed predictions
     if (imageUrl) {
-      systemPrompt += `\n\nThe user has uploaded a palm image. Now you can provide detailed, mystical predictions! Analyze the image carefully and give specific insights about timing, relationships, career, wealth, and destiny based on what you can actually see in their palm lines, mounts, and markings.`;
+      systemPrompt += `\n\nThe user has uploaded a palm image. Answer their specific question directly based on what you see in their palm. If they ask "When will I get married" - look at their heart line and marriage lines to give a specific timeframe. Be direct and answer their exact question in 2-3 lines max.`;
     } else {
       systemPrompt += `\n\nNo palm image provided. Be helpful but honest - explain that you need to see their actual palm to give specific predictions. Request a photo and provide guidance on taking good palm images. You can share general palmistry knowledge but avoid specific predictions without visual data.`;
     }
