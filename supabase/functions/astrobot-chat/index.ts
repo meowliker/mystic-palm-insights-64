@@ -85,7 +85,15 @@ serve(async (req) => {
 
     // If there's an image, analyze it for detailed predictions
     if (imageUrl) {
-      systemPrompt += `\n\nThe user has uploaded a palm image. Answer their specific question directly based on what you see in their palm. If they ask "When will I get married" - look at their heart line and marriage lines to give a specific timeframe. Be direct and answer their exact question in 2-3 lines max.`;
+      systemPrompt += `\n\nIMPORTANT: The user has uploaded a palm image. You MUST answer their EXACT question directly. 
+      
+      If they ask "When will I get married?" - Look at their marriage lines (small horizontal lines on the side of their palm under the pinky) and heart line to predict WHEN they will get married. Give a specific timeframe like "within 2-3 years" or "around age 28-30".
+      
+      If they ask "Will I be poor or rich?" - Look at their fate line and money lines to predict their financial future.
+      
+      If they ask "When will I get a job?" - Look at their career/fate line to predict job timing.
+      
+      Answer in 2-3 lines MAX with the specific prediction they asked for. Don't give general readings.`;
     } else {
       systemPrompt += `\n\nNo palm image provided. Be helpful but honest - explain that you need to see their actual palm to give specific predictions. Request a photo and provide guidance on taking good palm images. You can share general palmistry knowledge but avoid specific predictions without visual data.`;
     }
