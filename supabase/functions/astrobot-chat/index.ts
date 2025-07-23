@@ -85,17 +85,16 @@ serve(async (req) => {
 
     // If there's an image, analyze it for detailed predictions
     if (imageUrl) {
-      systemPrompt += `\n\nIMPORTANT: The user has uploaded a palm image. You MUST answer their EXACT question directly. 
+      systemPrompt += `\n\nCRITICAL: The user has uploaded a palm image. You MUST answer their EXACT question directly - do NOT give general palm readings.
       
-      If they ask "When will I get married?" - Look at their marriage lines (small horizontal lines on the side of their palm under the pinky) and heart line to predict WHEN they will get married. Give a specific timeframe like "within 2-3 years" or "around age 28-30".
+      Look at their conversation history to see their specific question:
+      - If they asked "When will I get married?" - Give a specific marriage timing prediction like "I see marriage in your near future, likely within 2-3 years" or "Your palm suggests marriage around age 28-30"
+      - If they asked "Will I be poor or rich?" - Predict their financial future specifically
+      - If they asked "When will I get a job?" - Predict job timing specifically
       
-      If they ask "Will I be poor or rich?" - Look at their fate line and money lines to predict their financial future.
-      
-      If they ask "When will I get a job?" - Look at their career/fate line to predict job timing.
-      
-      Answer in 2-3 lines MAX with the specific prediction they asked for. Don't give general readings.`;
+      ONLY answer their specific question in 1-2 sentences. Do NOT provide general palm line descriptions.`;
     } else {
-      systemPrompt += `\n\nNo palm image provided. Be helpful but honest - explain that you need to see their actual palm to give specific predictions. Request a photo and provide guidance on taking good palm images. You can share general palmistry knowledge but avoid specific predictions without visual data.`;
+      systemPrompt += `\n\nNo palm image provided. Request a palm photo to answer their specific question.`;
     }
 
     const messages = [
