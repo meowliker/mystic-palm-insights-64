@@ -139,27 +139,6 @@ const WelcomeScreen = ({ onStartScan, onGoToDashboard }: WelcomeScreenProps) => 
                   <Gem className="mr-2 h-5 w-5" />
                   Go to Dashboard
                 </Button>
-                <div className="flex gap-4 justify-center">
-                  <Link to="/chatbot">
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      className="text-white border-white/20 hover:bg-white/10"
-                    >
-                      <MessageCircle className="mr-2 h-5 w-5" />
-                      Chat with Astrobot
-                    </Button>
-                  </Link>
-                  <Link to="/blogs">
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      className="text-white border-white/20 hover:bg-white/10"
-                    >
-                      Community
-                    </Button>
-                  </Link>
-                </div>
                 <div className="text-center">
                   <Button
                     variant="ghost"
@@ -184,27 +163,6 @@ const WelcomeScreen = ({ onStartScan, onGoToDashboard }: WelcomeScreenProps) => 
                   <Gem className="mr-2 h-5 w-5" />
                   Begin Your Journey
                 </Button>
-                <div className="flex gap-4 justify-center">
-                  <Link to="/chatbot">
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      className="text-white border-white/20 hover:bg-white/10"
-                    >
-                      <MessageCircle className="mr-2 h-5 w-5" />
-                      Try Astrobot
-                    </Button>
-                  </Link>
-                  <Link to="/blogs">
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      className="text-white border-white/20 hover:bg-white/10"
-                    >
-                      Community
-                    </Button>
-                  </Link>
-                </div>
                 <div className="text-center">
                   <Button
                     variant="ghost"
