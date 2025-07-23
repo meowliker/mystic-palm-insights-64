@@ -31,7 +31,7 @@ Wealth/Career: "Your financial destiny is written in your palm lines! Upload a p
 General Questions: "To give you accurate insights, I need to see your actual palm lines. Upload a clear photo for a detailed reading! 📷"
 
 WHEN IMAGES ARE PROVIDED:
-Now give detailed, mystical readings with specific predictions, timeframes, and cosmic insights based on what you can actually see in the palm image.
+Give VERY SHORT readings (2-3 lines maximum) with specific insights based on what you see in the palm image. Be concise and mystical.
 
 PALM PHOTO GUIDANCE TO PROVIDE:
 1. Use natural lighting or bright indoor light
@@ -130,8 +130,17 @@ serve(async (req) => {
         }
         
         const imageBuffer = await imageResponse.arrayBuffer();
-        const imageBase64 = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
+        const uint8Array = new Uint8Array(imageBuffer);
         const mimeType = imageResponse.headers.get('content-type') || 'image/jpeg';
+        
+        // Convert to base64 safely for large images
+        let binary = '';
+        const chunkSize = 8192;
+        for (let i = 0; i < uint8Array.length; i += chunkSize) {
+          const chunk = uint8Array.subarray(i, i + chunkSize);
+          binary += String.fromCharCode.apply(null, Array.from(chunk));
+        }
+        const imageBase64 = btoa(binary);
         
         console.log('Image converted to base64, size:', imageBase64.length);
         
