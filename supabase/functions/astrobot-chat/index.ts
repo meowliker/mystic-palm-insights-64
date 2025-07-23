@@ -24,11 +24,11 @@ RESPONSE STYLE FOR QUESTIONS WITHOUT IMAGES:
 
 SAMPLE RESPONSES WITHOUT IMAGES:
 
-Marriage Timing: "I'd love to help you discover when love will bloom in your life! To provide an accurate reading about your marriage timeline, I need to analyze your actual heart line and other palm features. Please upload a clear, well-lit photo of your dominant hand's palm, and I'll read the cosmic messages written in your lines. ✨📷"
+Marriage Timing: "I need to see your palm to read your marriage timeline! Upload a clear photo of your dominant hand and I'll reveal when love will bloom. 📷✨"
 
-Wealth/Career: "Your financial destiny is written in your palm lines! To give you specific insights about wealth and career timing, I need to examine your fate line, head line, and the mounts on your palm. Upload a photo and I'll reveal what the universe has planned for your prosperity! 💰✨"
+Wealth/Career: "Your financial destiny is written in your palm lines! Upload a photo and I'll read your wealth timeline from your fate line. 💰📷"
 
-General Questions: "That's a wonderful question! Palm reading is most accurate when I can see your actual palm lines. Please share a clear photo of your palm, and I'll provide detailed insights based on what I observe in your unique hand patterns."
+General Questions: "To give you accurate insights, I need to see your actual palm lines. Upload a clear photo for a detailed reading! 📷"
 
 WHEN IMAGES ARE PROVIDED:
 Now give detailed, mystical readings with specific predictions, timeframes, and cosmic insights based on what you can actually see in the palm image.
@@ -131,7 +131,7 @@ serve(async (req) => {
       };
     }
 
-    console.log('Sending request to OpenAI...');
+    console.log('Sending request to OpenAI...', { hasImage: !!imageUrl, messageLength: message?.length });
     
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -145,23 +145,23 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('OpenAI API error:', response.status, errorText);
-      throw new Error(`OpenAI API error: ${response.status}`);
+      throw new Error(`OpenAI API error: ${response.status}: ${errorText}`);
     }
 
     const data = await response.json();
-    console.log('OpenAI response received');
+    console.log('OpenAI response received successfully');
 
     let botResponse = data.choices[0].message.content;
 
-    // Enhance response with actionable suggestions
+    // Only add brief suggestions, not long explanations
     if (imageUrl) {
-      botResponse += "\n\n✨ *Would you like me to focus on any specific aspect of your palm? I can provide more detailed insights about your relationships, career, health, or spiritual path.*";
+      // For image responses, no additional text needed - let the reading speak for itself
     } else if (message.toLowerCase().includes('marriage') || message.toLowerCase().includes('relationship')) {
-      botResponse += "\n\n📷 *For a precise reading about your love destiny, click the help button (?) next to the camera icon to see how to take the perfect palm photo. I'll read the exact timing and details from your heart line.*";
+      botResponse += "\n\n📷 Click the (?) button for photo tips!";
     } else if (message.toLowerCase().includes('career') || message.toLowerCase().includes('job') || message.toLowerCase().includes('money') || message.toLowerCase().includes('rich')) {
-      botResponse += "\n\n📷 *To reveal your complete financial and career destiny, upload a clear palm photo. Click the help button (?) for photography guidance, then I'll read your exact timeline from your fate and head lines.*";
+      botResponse += "\n\n📷 Upload palm photo for precise timing!";
     } else {
-      botResponse += "\n\n📷 *For the most accurate reading, please upload a clear photo of your palm. Click the help button (?) next to the camera icon for detailed photography guidance.*";
+      botResponse += "\n\n📷 Upload your palm for accurate reading!";
     }
 
     return new Response(
@@ -171,14 +171,20 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in astrobot-chat function:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      hasImageUrl: !!imageUrl,
+      requestData: { message, imageUrl: imageUrl ? 'provided' : 'none' }
+    });
     
-    // Fallback response with mystical fortune-telling style
-    const fallbackResponse = "The cosmic energies are momentarily clouded, but I sense great potential in your destiny! Please try asking your question again, and I'll channel my mystical powers to reveal what your palm holds for your future. ✨🔮";
+    // More helpful fallback response
+    const fallbackResponse = `I'm having trouble processing your request right now. ${imageUrl ? 'Try uploading your palm image again' : 'Please upload a clear palm photo'} and ask your question. ✨`;
     
     return new Response(
       JSON.stringify({ response: fallbackResponse }),
       { 
-        status: 200, // Return 200 to avoid breaking the chat flow
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );
