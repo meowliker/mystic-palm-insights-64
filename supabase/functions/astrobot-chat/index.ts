@@ -85,16 +85,16 @@ serve(async (req) => {
 
     // If there's an image, analyze it for detailed predictions
     if (imageUrl) {
-      systemPrompt += `\n\nIMPORTANT: User uploaded palm image. Answer their CURRENT/LATEST question directly.
+      systemPrompt += `\n\nCRITICAL INSTRUCTION: User uploaded palm image. You MUST answer their EXACT question with a specific prediction.
 
-      Look at their most recent message to see what they're asking NOW:
-      - If they ask "When will I get married?" → Give specific timing like "within 2-3 years"
-      - If they ask "Will I have love marriage or arranged?" → Answer "love marriage" or "arranged marriage" based on palm
-      - If they ask about wealth/career → Give specific predictions
+      FORBIDDEN: Do NOT give general palm readings, personality traits, or descriptions.
       
-      CRITICAL: Answer only their CURRENT question, not previous questions.
-      Format: Give a direct 1-2 sentence answer to whatever they just asked.
-      Do NOT repeat previous answers or give general palm readings.`;
+      REQUIRED: Look at their latest message and answer ONLY that specific question:
+      - "When will I get married?" → "You will get married in [specific time]"
+      - "Will I have love marriage or arranged?" → "You will have a love marriage" OR "You will have an arranged marriage" 
+      - "Will I be rich or poor?" → "You will be wealthy" OR "You will face financial challenges"
+      
+      STRICT FORMAT: Give a direct 1-sentence prediction answering their exact question. No explanations, no general readings.`;
     } else {
       systemPrompt += `\n\nNo palm image provided. Request a palm photo to answer their specific question.`;
     }
