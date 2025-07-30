@@ -10,6 +10,7 @@ import { Upload, Send, Sparkles, Camera, Image, HelpCircle, Book } from 'lucide-
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { PalmGuide } from '@/components/PalmGuide';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Message {
   id: string;
@@ -43,18 +44,14 @@ const palmGuidanceInstructions = {
 };
 
 export const Chatbot: React.FC = () => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      content: "Hello! I'm Astrobot, your AI palmistry guide. I can help you understand your palm lines and what they reveal about your life, relationships, and future. Feel free to ask me any questions or upload a palm image for analysis!",
-      sender: 'astrobot',
-      timestamp: new Date()
-    }
-  ]);
+  const { user } = useAuth();
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -68,9 +65,131 @@ export const Chatbot: React.FC = () => {
     }
   };
 
+  // Load chat history on component mount
+  useEffect(() => {
+    if (user) {
+      loadChatHistory();
+    } else {
+      // If not authenticated, show welcome message
+      setMessages([{
+        id: '1',
+        content: "Hello! I'm Astrobot, your AI palmistry guide. I can help you understand your palm lines and what they reveal about your life, relationships, and future. Feel free to ask me any questions or upload a palm image for analysis!",
+        sender: 'astrobot',
+        timestamp: new Date()
+      }]);
+      setIsLoadingHistory(false);
+    }
+  }, [user]);
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const loadChatHistory = async () => {
+    if (!user) return;
+
+    try {
+      setIsLoadingHistory(true);
+      
+      // First, get or create a chat session
+      let { data: sessions, error: sessionError } = await supabase
+        .from('chat_sessions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false })
+        .limit(1);
+
+      if (sessionError) throw sessionError;
+
+      let currentSessionId: string;
+      
+      if (sessions && sessions.length > 0) {
+        currentSessionId = sessions[0].id;
+      } else {
+        // Create a new session
+        const { data: newSession, error: createError } = await supabase
+          .from('chat_sessions')
+          .insert({
+            user_id: user.id,
+            session_name: 'Astrobot Chat'
+          })
+          .select()
+          .single();
+
+        if (createError) throw createError;
+        currentSessionId = newSession.id;
+      }
+
+      setSessionId(currentSessionId);
+
+      // Load messages for this session
+      const { data: chatMessages, error: messagesError } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .eq('session_id', currentSessionId)
+        .order('created_at', { ascending: true });
+
+      if (messagesError) throw messagesError;
+
+      if (chatMessages && chatMessages.length > 0) {
+        const loadedMessages: Message[] = chatMessages.map(msg => ({
+          id: msg.id,
+          content: msg.content,
+          sender: msg.sender as 'user' | 'astrobot',
+          timestamp: new Date(msg.created_at),
+          imageUrl: msg.image_url || undefined
+        }));
+        setMessages(loadedMessages);
+      } else {
+        // If no messages, add welcome message
+        const welcomeMessage = {
+          id: '1',
+          content: "Hello! I'm Astrobot, your AI palmistry guide. I can help you understand your palm lines and what they reveal about your life, relationships, and future. Feel free to ask me any questions or upload a palm image for analysis!",
+          sender: 'astrobot' as const,
+          timestamp: new Date()
+        };
+        
+        setMessages([welcomeMessage]);
+        
+        // Save welcome message to database
+        await saveMessageToHistory(welcomeMessage);
+      }
+
+    } catch (error) {
+      console.error('Error loading chat history:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load chat history.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
+
+  const saveMessageToHistory = async (message: Message) => {
+    if (!sessionId || !user) return;
+
+    try {
+      await supabase
+        .from('chat_messages')
+        .insert({
+          session_id: sessionId,
+          content: message.content,
+          sender: message.sender,
+          image_url: message.imageUrl || null
+        });
+
+      // Update session timestamp
+      await supabase
+        .from('chat_sessions')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', sessionId);
+
+    } catch (error) {
+      console.error('Error saving message to history:', error);
+    }
+  };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -105,6 +224,11 @@ export const Chatbot: React.FC = () => {
 
     setMessages(prev => [...prev, userMessage]);
     setInputMessage('');
+
+    // Save user message to history
+    if (user) {
+      await saveMessageToHistory(userMessage);
+    }
 
     // Add typing indicator
     const typingMessage: Message = {
@@ -159,6 +283,11 @@ export const Chatbot: React.FC = () => {
       };
 
       setMessages(prev => [...prev, botResponse]);
+
+      // Save bot response to history
+      if (user) {
+        await saveMessageToHistory(botResponse);
+      }
 
     } catch (error) {
       console.error('Error sending message:', error);
@@ -216,8 +345,13 @@ export const Chatbot: React.FC = () => {
 
           {/* Chat messages */}
           <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
-            <div className="space-y-4">
-              {messages.map((message) => (
+            {isLoadingHistory ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="animate-pulse">Loading chat history...</div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {messages.map((message) => (
                 <div
                   key={message.id}
                   className={`flex gap-3 ${
@@ -259,9 +393,10 @@ export const Chatbot: React.FC = () => {
                       <AvatarFallback>U</AvatarFallback>
                     </Avatar>
                   )}
-                </div>
-              ))}
-            </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </ScrollArea>
 
           {/* Fixed input area at bottom */}
