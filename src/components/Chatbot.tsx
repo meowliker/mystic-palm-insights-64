@@ -91,10 +91,19 @@ export const Chatbot: React.FC = () => {
     try {
       setIsLoadingHistory(true);
       
-      // First, get or create a chat session
+      // Get or create session and load messages in one optimized query
       let { data: sessions, error: sessionError } = await supabase
         .from('chat_sessions')
-        .select('*')
+        .select(`
+          id,
+          chat_messages (
+            id,
+            content,
+            sender,
+            created_at,
+            image_url
+          )
+        `)
         .eq('user_id', user.id)
         .order('updated_at', { ascending: false })
         .limit(1);
@@ -102,11 +111,13 @@ export const Chatbot: React.FC = () => {
       if (sessionError) throw sessionError;
 
       let currentSessionId: string;
+      let existingMessages: any[] = [];
       
       if (sessions && sessions.length > 0) {
         currentSessionId = sessions[0].id;
+        existingMessages = sessions[0].chat_messages || [];
       } else {
-        // Create a new session
+        // Create a new session only if none exists
         const { data: newSession, error: createError } = await supabase
           .from('chat_sessions')
           .insert({
@@ -122,17 +133,13 @@ export const Chatbot: React.FC = () => {
 
       setSessionId(currentSessionId);
 
-      // Load messages for this session
-      const { data: chatMessages, error: messagesError } = await supabase
-        .from('chat_messages')
-        .select('*')
-        .eq('session_id', currentSessionId)
-        .order('created_at', { ascending: true });
-
-      if (messagesError) throw messagesError;
-
-      if (chatMessages && chatMessages.length > 0) {
-        const loadedMessages: Message[] = chatMessages.map(msg => ({
+      if (existingMessages.length > 0) {
+        // Sort messages by creation time
+        const sortedMessages = existingMessages.sort((a, b) => 
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+        
+        const loadedMessages: Message[] = sortedMessages.map(msg => ({
           id: msg.id,
           content: msg.content,
           sender: msg.sender as 'user' | 'astrobot',
@@ -141,27 +148,27 @@ export const Chatbot: React.FC = () => {
         }));
         setMessages(loadedMessages);
       } else {
-        // If no messages, add welcome message
+        // If no messages, just add welcome message locally (don't save immediately)
         const welcomeMessage = {
-          id: '1',
+          id: 'welcome-' + Date.now(),
           content: "Hello! I'm Astrobot, your AI palmistry guide. I can help you understand your palm lines and what they reveal about your life, relationships, and future. Feel free to ask me any questions or upload a palm image for analysis!",
           sender: 'astrobot' as const,
           timestamp: new Date()
         };
         
         setMessages([welcomeMessage]);
-        
-        // Save welcome message to database
-        await saveMessageToHistory(welcomeMessage);
       }
 
     } catch (error) {
       console.error('Error loading chat history:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load chat history.",
-        variant: "destructive"
-      });
+      // Show welcome message on error
+      const welcomeMessage = {
+        id: 'welcome-error-' + Date.now(),
+        content: "Hello! I'm Astrobot, your AI palmistry guide. I can help you understand your palm lines and what they reveal about your life, relationships, and future. Feel free to ask me any questions or upload a palm image for analysis!",
+        sender: 'astrobot' as const,
+        timestamp: new Date()
+      };
+      setMessages([welcomeMessage]);
     } finally {
       setIsLoadingHistory(false);
     }
