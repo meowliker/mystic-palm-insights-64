@@ -64,6 +64,19 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
+    // Check for previous image in conversation history if no current image
+    let finalImageUrl = imageUrl;
+    if (!imageUrl && conversationHistory && conversationHistory.length > 0) {
+      // Look for the most recent image in conversation history
+      for (let i = conversationHistory.length - 1; i >= 0; i--) {
+        if (conversationHistory[i].imageUrl && conversationHistory[i].sender === 'user') {
+          finalImageUrl = conversationHistory[i].imageUrl;
+          console.log('Found previous image in conversation history:', finalImageUrl.substring(0, 50) + '...');
+          break;
+        }
+      }
+    }
+
     // Build conversation context
     let conversationContext = "";
     if (conversationHistory && conversationHistory.length > 0) {
@@ -75,8 +88,8 @@ serve(async (req) => {
 
     let systemPrompt = palmistryKnowledge;
 
-    // If there's an image, analyze it for detailed predictions
-    if (imageUrl) {
+    // If there's an image (current or from history), analyze it for detailed predictions
+    if (finalImageUrl) {
       systemPrompt = `You are a mystical palmistry oracle providing entertainment-based palm readings. The user has uploaded their palm photo and asked a specific question.
 
 CRITICAL INSTRUCTIONS:
@@ -124,13 +137,13 @@ Always give hopeful, positive mystical predictions for entertainment. Never refu
       temperature: 0.7
     };
 
-    // Add image if provided
-    if (imageUrl) {
+    // Add image if provided (current or from history)
+    if (finalImageUrl) {
       try {
-        console.log('Fetching image for base64 conversion:', imageUrl);
+        console.log('Fetching image for base64 conversion:', finalImageUrl);
         
         // Fetch the image and convert to base64
-        const imageResponse = await fetch(imageUrl);
+        const imageResponse = await fetch(finalImageUrl);
         if (!imageResponse.ok) {
           throw new Error(`Failed to fetch image: ${imageResponse.status}`);
         }
@@ -176,9 +189,9 @@ Always give hopeful, positive mystical predictions for entertainment. Never refu
     }
 
     console.log('Sending request to OpenAI...', { 
-      hasImage: !!imageUrl, 
+      hasImage: !!finalImageUrl, 
       messageLength: message?.length || 0,
-      imageUrl: imageUrl ? imageUrl.substring(0, 100) + '...' : 'none'
+      finalImageUrl: finalImageUrl ? finalImageUrl.substring(0, 100) + '...' : 'none'
     });
     
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -202,7 +215,7 @@ Always give hopeful, positive mystical predictions for entertainment. Never refu
     let botResponse = data.choices[0].message.content;
 
     // Only add brief suggestions, not long explanations
-    if (imageUrl && imageUrl.trim() !== '') {
+    if (finalImageUrl && finalImageUrl.trim() !== '') {
       // For image responses, no additional text needed - let the reading speak for itself
     } else if (message.toLowerCase().includes('marriage') || message.toLowerCase().includes('relationship')) {
       botResponse += "\n\n📷 Click the (?) button for photo tips!";
