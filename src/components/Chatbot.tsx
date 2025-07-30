@@ -254,19 +254,30 @@ export const Chatbot: React.FC = () => {
       
       // Upload image if selected
       if (selectedImage) {
+        console.log('Uploading image:', selectedImage.name);
         const fileName = `chat-${Date.now()}-${selectedImage.name}`;
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('palm-images')
           .upload(fileName, selectedImage);
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error('Image upload error:', uploadError);
+          throw uploadError;
+        }
 
         const { data: { publicUrl } } = supabase.storage
           .from('palm-images')
           .getPublicUrl(uploadData.path);
         
         imageUrl = publicUrl;
+        console.log('Image uploaded successfully:', imageUrl);
       }
+
+      console.log('Sending message to astrobot-chat:', { 
+        message: inputMessage, 
+        hasImage: !!imageUrl,
+        imageUrl: imageUrl?.substring(0, 50)
+      });
 
       // Send to chatbot API
       const { data, error } = await supabase.functions.invoke('astrobot-chat', {
@@ -277,7 +288,12 @@ export const Chatbot: React.FC = () => {
         }
       });
 
-      if (error) throw error;
+      console.log('Astrobot response:', { data, error });
+
+      if (error) {
+        console.error('Astrobot function error:', error);
+        throw error;
+      }
 
       // Remove typing indicator and add response
       setMessages(prev => prev.filter(msg => msg.id !== 'typing'));
