@@ -68,12 +68,18 @@ serve(async (req) => {
     let finalImageUrl = imageUrl;
     if (!imageUrl && conversationHistory && conversationHistory.length > 0) {
       // Look for the most recent image in conversation history
+      console.log('Looking for previous image in conversation history with', conversationHistory.length, 'messages');
       for (let i = conversationHistory.length - 1; i >= 0; i--) {
-        if (conversationHistory[i].imageUrl && conversationHistory[i].sender === 'user') {
-          finalImageUrl = conversationHistory[i].imageUrl;
+        const msg = conversationHistory[i];
+        console.log(`Checking message ${i}: sender=${msg.sender}, hasImageUrl=${!!msg.imageUrl}`);
+        if (msg.imageUrl && msg.sender === 'user') {
+          finalImageUrl = msg.imageUrl;
           console.log('Found previous image in conversation history:', finalImageUrl.substring(0, 50) + '...');
           break;
         }
+      }
+      if (!finalImageUrl) {
+        console.log('No previous image found in conversation history');
       }
     }
 
@@ -131,7 +137,7 @@ Always give hopeful, positive mystical predictions for entertainment. Never refu
 
     // Prepare the request body
     const requestBody: any = {
-      model: "gpt-4o",
+      model: "gpt-4.1-2025-04-14",
       messages: messages,
       max_tokens: 1000,
       temperature: 0.7
