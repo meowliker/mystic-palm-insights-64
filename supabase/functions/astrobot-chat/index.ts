@@ -233,6 +233,14 @@ Give short, punchy, interactive predictions that feel like chatting with a mysti
 
     let botResponse = data.choices[0].message.content;
 
+    // Clean up the response to remove asterisks and markdown formatting
+    botResponse = botResponse
+      .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold markdown
+      .replace(/\*(.*?)\*/g, '$1')     // Remove italic markdown
+      .replace(/\*/g, '')              // Remove any remaining asterisks
+      .replace(/#{1,6}\s*/g, '')       // Remove headers
+      .trim();
+
     // Only add brief suggestions, not long explanations
     if (finalImageUrl && finalImageUrl.trim() !== '') {
       // For image responses, no additional text needed - let the reading speak for itself
