@@ -340,8 +340,8 @@ export const Chatbot: React.FC = () => {
   };
 
   return (
-    <div className="h-full max-w-4xl mx-auto flex flex-col">
-      <Card className="h-full flex flex-col overflow-hidden">
+    <div className="h-full w-full flex flex-col">
+      <Card className="h-full flex flex-col overflow-hidden shadow-lg">
         <CardHeader className="pb-4 border-b">
           <CardTitle className="flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-primary" />
