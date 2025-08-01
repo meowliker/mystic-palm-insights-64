@@ -125,7 +125,7 @@ Based on your palm lines, I see [specific prediction] ✨
 
 What aspect would you like me to explore deeper? 🔮
 
-Give short, punchy, interactive predictions that feel like chatting with a mystic friend, not reading a textbook.
+Give short, punchy, interactive predictions that feel like chatting with a mystic friend, not reading a textbook.`;
     }
 
     const messages = [
