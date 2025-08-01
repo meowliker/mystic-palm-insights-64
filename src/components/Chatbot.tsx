@@ -403,9 +403,79 @@ export const Chatbot: React.FC = () => {
                         className="w-full max-w-[200px] rounded-lg mb-2"
                       />
                     )}
-                    <p className={`text-sm ${message.isTyping ? 'italic animate-pulse' : ''}`}>
-                      {message.content}
-                    </p>
+                    <div className={`text-sm ${message.isTyping ? 'italic animate-pulse' : ''}`}>
+                      {message.content.split('\n').map((line, index) => {
+                        // Handle headers (lines starting with ##)
+                        if (line.startsWith('## ')) {
+                          return (
+                            <h3 key={index} className="font-semibold text-base mt-3 mb-2 text-primary">
+                              {line.replace('## ', '')}
+                            </h3>
+                          );
+                        }
+                        
+                        // Handle subheaders (lines starting with #)
+                        if (line.startsWith('# ')) {
+                          return (
+                            <h4 key={index} className="font-medium text-sm mt-2 mb-1 text-cosmic-purple">
+                              {line.replace('# ', '')}
+                            </h4>
+                          );
+                        }
+                        
+                        // Handle bullet points
+                        if (line.trim().startsWith('• ') || line.trim().startsWith('- ')) {
+                          return (
+                            <div key={index} className="ml-4 mb-1 flex items-start gap-2">
+                              <span className="text-cosmic-blue text-xs mt-1">•</span>
+                              <span>{line.replace(/^[•\-]\s*/, '')}</span>
+                            </div>
+                          );
+                        }
+                        
+                        // Handle numbered lists
+                        if (line.trim().match(/^\d+\.\s/)) {
+                          return (
+                            <div key={index} className="ml-4 mb-1 flex items-start gap-2">
+                              <span className="text-cosmic-purple font-medium text-xs mt-1">
+                                {line.match(/^\d+/)?.[0]}.
+                              </span>
+                              <span>{line.replace(/^\d+\.\s*/, '')}</span>
+                            </div>
+                          );
+                        }
+                        
+                        // Handle bold text (**text**)
+                        if (line.includes('**')) {
+                          const parts = line.split(/(\*\*.*?\*\*)/g);
+                          return (
+                            <p key={index} className={line.trim() === '' ? 'mb-2' : 'mb-1'}>
+                              {parts.map((part, partIndex) => {
+                                if (part.startsWith('**') && part.endsWith('**')) {
+                                  return (
+                                    <strong key={partIndex} className="font-semibold text-cosmic-purple">
+                                      {part.slice(2, -2)}
+                                    </strong>
+                                  );
+                                }
+                                return part;
+                              })}
+                            </p>
+                          );
+                        }
+                        
+                        // Regular paragraphs
+                        if (line.trim() === '') {
+                          return <div key={index} className="mb-2" />;
+                        }
+                        
+                        return (
+                          <p key={index} className="mb-1 leading-relaxed">
+                            {line}
+                          </p>
+                        );
+                      })}
+                    </div>
                     <span className="text-xs opacity-70 mt-1 block">
                       {message.timestamp.toLocaleTimeString()}
                     </span>
