@@ -14,7 +14,7 @@ const ChatbotPage: React.FC = () => {
   return (
     <div className="h-screen bg-gradient-to-br from-cosmic-purple/20 to-cosmic-blue/20 flex flex-col overflow-hidden">
       <div className="flex-shrink-0 p-4 border-b border-border/20">
-        <div className="flex items-center justify-between max-w-6xl mx-auto">
+        <div className="flex items-center justify-between w-full px-4">
           <Button 
             variant="ghost" 
             onClick={handleBackToDashboard}
@@ -33,7 +33,7 @@ const ChatbotPage: React.FC = () => {
       </div>
       
       <div className="flex-1 min-h-0 p-4">
-        <div className="max-w-6xl mx-auto h-full">
+        <div className="w-full h-full">
           <Chatbot />
         </div>
       </div>
