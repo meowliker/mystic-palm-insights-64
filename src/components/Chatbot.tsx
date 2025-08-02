@@ -343,20 +343,10 @@ export const Chatbot: React.FC = () => {
     <div className="h-full w-full flex flex-col">
       <Card className="h-full flex flex-col overflow-hidden shadow-lg">
         <CardHeader className="pb-4 border-b">
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Sparkles className="h-6 w-6 text-primary" />
-              Astrobot - Your AI Palmistry Guide
-            </CardTitle>
-            <div className="text-sm text-muted-foreground">
-              {new Date().toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}
-            </div>
-          </div>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles className="h-6 w-6 text-primary" />
+            Astrobot - Your AI Palmistry Guide
+          </CardTitle>
         </CardHeader>
         
         <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
@@ -384,124 +374,143 @@ export const Chatbot: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex gap-3 ${
-                    message.sender === 'user' ? 'justify-end' : 'justify-start'
-                  }`}
-                >
-                  {message.sender === 'astrobot' && (
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback className="bg-primary text-primary-foreground">
-                        <Sparkles className="h-4 w-4" />
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
+                {messages.map((message, index) => {
+                  // Check if we need to show a date separator
+                  const showDateSeparator = index === 0 || 
+                    message.timestamp.toDateString() !== messages[index - 1].timestamp.toDateString();
                   
-                  <div
-                    className={`max-w-[70%] rounded-lg p-3 ${
-                      message.sender === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted'
-                    }`}
-                  >
-                    {message.imageUrl && (
-                      <img
-                        src={message.imageUrl}
-                        alt="Palm image"
-                        className="w-full max-w-[200px] rounded-lg mb-2"
-                      />
-                    )}
-                    <div className={`text-sm ${message.isTyping ? 'italic animate-pulse' : ''}`}>
-                      {message.content.split('\n').map((line, index) => {
-                        // Handle headers (lines starting with ##)
-                        if (line.startsWith('## ')) {
-                          return (
-                            <h3 key={index} className="font-semibold text-base mt-3 mb-2 text-primary">
-                              {line.replace('## ', '')}
-                            </h3>
-                          );
-                        }
+                  return (
+                    <div key={message.id}>
+                      {showDateSeparator && (
+                        <div className="flex justify-center my-4">
+                          <div className="bg-muted/80 px-3 py-1 rounded-full text-xs text-muted-foreground">
+                            {message.timestamp.toLocaleDateString('en-GB', { 
+                              day: 'numeric', 
+                              month: 'short', 
+                              year: 'numeric' 
+                            })}
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div
+                        className={`flex gap-3 ${
+                          message.sender === 'user' ? 'justify-end' : 'justify-start'
+                        }`}
+                      >
+                        {message.sender === 'astrobot' && (
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback className="bg-primary text-primary-foreground">
+                              <Sparkles className="h-4 w-4" />
+                            </AvatarFallback>
+                          </Avatar>
+                        )}
                         
-                        // Handle subheaders (lines starting with #)
-                        if (line.startsWith('# ')) {
-                          return (
-                            <h4 key={index} className="font-medium text-sm mt-2 mb-1 text-cosmic-purple">
-                              {line.replace('# ', '')}
-                            </h4>
-                          );
-                        }
+                        <div
+                          className={`max-w-[70%] rounded-lg p-3 ${
+                            message.sender === 'user'
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted'
+                          }`}
+                        >
+                          {message.imageUrl && (
+                            <img
+                              src={message.imageUrl}
+                              alt="Palm image"
+                              className="w-full max-w-[200px] rounded-lg mb-2"
+                            />
+                          )}
+                          <div className={`text-sm ${message.isTyping ? 'italic animate-pulse' : ''}`}>
+                            {message.content.split('\n').map((line, index) => {
+                              // Handle headers (lines starting with ##)
+                              if (line.startsWith('## ')) {
+                                return (
+                                  <h3 key={index} className="font-semibold text-base mt-3 mb-2 text-primary">
+                                    {line.replace('## ', '')}
+                                  </h3>
+                                );
+                              }
+                              
+                              // Handle subheaders (lines starting with #)
+                              if (line.startsWith('# ')) {
+                                return (
+                                  <h4 key={index} className="font-medium text-sm mt-2 mb-1 text-cosmic-purple">
+                                    {line.replace('# ', '')}
+                                  </h4>
+                                );
+                              }
+                              
+                              // Handle bullet points
+                              if (line.trim().startsWith('• ') || line.trim().startsWith('- ')) {
+                                return (
+                                  <div key={index} className="ml-4 mb-1 flex items-start gap-2">
+                                    <span className="text-cosmic-blue text-xs mt-1">•</span>
+                                    <span>{line.replace(/^[•\-]\s*/, '')}</span>
+                                  </div>
+                                );
+                              }
+                              
+                              // Handle numbered lists
+                              if (line.trim().match(/^\d+\.\s/)) {
+                                return (
+                                  <div key={index} className="ml-4 mb-1 flex items-start gap-2">
+                                    <span className="text-cosmic-purple font-medium text-xs mt-1">
+                                      {line.match(/^\d+/)?.[0]}.
+                                    </span>
+                                    <span>{line.replace(/^\d+\.\s*/, '')}</span>
+                                  </div>
+                                );
+                              }
+                              
+                              // Handle bold text (**text**)
+                              if (line.includes('**')) {
+                                const parts = line.split(/(\*\*.*?\*\*)/g);
+                                return (
+                                  <p key={index} className={line.trim() === '' ? 'mb-2' : 'mb-1'}>
+                                    {parts.map((part, partIndex) => {
+                                      if (part.startsWith('**') && part.endsWith('**')) {
+                                        return (
+                                          <strong key={partIndex} className="font-semibold text-cosmic-purple">
+                                            {part.slice(2, -2)}
+                                          </strong>
+                                        );
+                                      }
+                                      return part;
+                                    })}
+                                  </p>
+                                );
+                              }
+                              
+                              // Regular paragraphs
+                              if (line.trim() === '') {
+                                return <div key={index} className="mb-2" />;
+                              }
+                              
+                              return (
+                                <p key={index} className="mb-1 leading-relaxed">
+                                  {line}
+                                </p>
+                              );
+                            })}
+                          </div>
+                          <span className="text-xs opacity-70 mt-1 block">
+                            {message.timestamp.toLocaleTimeString('en-US', { 
+                              hour: '2-digit', 
+                              minute: '2-digit',
+                              hour12: true 
+                            })}
+                          </span>
+                        </div>
                         
-                        // Handle bullet points
-                        if (line.trim().startsWith('• ') || line.trim().startsWith('- ')) {
-                          return (
-                            <div key={index} className="ml-4 mb-1 flex items-start gap-2">
-                              <span className="text-cosmic-blue text-xs mt-1">•</span>
-                              <span>{line.replace(/^[•\-]\s*/, '')}</span>
-                            </div>
-                          );
-                        }
-                        
-                        // Handle numbered lists
-                        if (line.trim().match(/^\d+\.\s/)) {
-                          return (
-                            <div key={index} className="ml-4 mb-1 flex items-start gap-2">
-                              <span className="text-cosmic-purple font-medium text-xs mt-1">
-                                {line.match(/^\d+/)?.[0]}.
-                              </span>
-                              <span>{line.replace(/^\d+\.\s*/, '')}</span>
-                            </div>
-                          );
-                        }
-                        
-                        // Handle bold text (**text**)
-                        if (line.includes('**')) {
-                          const parts = line.split(/(\*\*.*?\*\*)/g);
-                          return (
-                            <p key={index} className={line.trim() === '' ? 'mb-2' : 'mb-1'}>
-                              {parts.map((part, partIndex) => {
-                                if (part.startsWith('**') && part.endsWith('**')) {
-                                  return (
-                                    <strong key={partIndex} className="font-semibold text-cosmic-purple">
-                                      {part.slice(2, -2)}
-                                    </strong>
-                                  );
-                                }
-                                return part;
-                              })}
-                            </p>
-                          );
-                        }
-                        
-                        // Regular paragraphs
-                        if (line.trim() === '') {
-                          return <div key={index} className="mb-2" />;
-                        }
-                        
-                        return (
-                          <p key={index} className="mb-1 leading-relaxed">
-                            {line}
-                          </p>
-                        );
-                      })}
+                        {message.sender === 'user' && (
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback>U</AvatarFallback>
+                          </Avatar>
+                        )}
+                      </div>
                     </div>
-                    <span className="text-xs opacity-70 mt-1 block">
-                      {message.timestamp.toLocaleTimeString('en-US', { 
-                        hour: '2-digit', 
-                        minute: '2-digit',
-                        hour12: true 
-                      })}
-                    </span>
-                  </div>
-                  
-                  {message.sender === 'user' && (
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback>U</AvatarFallback>
-                    </Avatar>
-                  )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </ScrollArea>
