@@ -8,6 +8,107 @@ const corsHeaders = {
 
 const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
 
+async function analyzeImageWithOpenAI(imageUrl: string): Promise<string> {
+  if (!openaiApiKey) {
+    throw new Error('OpenAI API key not configured');
+  }
+
+  console.log('Calling OpenAI API for palm analysis...');
+  
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${openaiApiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'system',
+          content: `You are an expert palmist with deep knowledge of traditional palmistry. Analyze the palm image provided and give a detailed reading based on the major palm lines. Structure your response exactly as follows:
+
+PALM READING ANALYSIS
+
+Thank you for sharing your palm image. Here's a detailed analysis based on traditional palmistry principles.
+
+MAJOR PALM LINES ANALYSIS
+
+1. LIFE LINE
+
+Observation: [Describe what you observe about the life line - its depth, length, curve, clarity, any breaks or islands]
+
+Interpretation:
+- Vitality: [Analysis of physical energy, health, stamina based on the life line]
+- Life Journey: [Insights about life path, stability, adaptability based on the curve and flow]
+- Health Influence: [Traditional palmistry interpretations about constitution and resilience]
+
+2. HEART LINE
+
+Observation: [Describe the heart line - its path, depth, endings, branches, clarity]
+
+Interpretation:
+- Emotional Depth: [Analysis of emotional nature and capacity for feelings]
+- Relationships: [Insights about love life, relationship patterns, emotional approach]
+- Capacity for Love: [Traditional interpretations about giving and receiving love]
+
+3. HEAD LINE
+
+Observation: [Describe the head line - its direction, length, depth, slope, any markings]
+
+Interpretation:
+- Mental Clarity: [Analysis of thinking patterns, intellectual capabilities]
+- Decision Making: [Insights about how decisions are made, logical vs intuitive]
+- Intellectual Style: [Traditional interpretations about mental approach and creativity]
+
+4. FATE LINE
+
+Observation: [Describe the fate line if present - its strength, direction, starting point, clarity]
+
+Interpretation:
+- Career Path: [Analysis of professional tendencies and ambitions]
+- Life Direction: [Insights about sense of purpose and destiny]
+- External Influences: [Traditional interpretations about independence vs external guidance]
+
+Focus on what you can actually observe in the palm lines and provide meaningful traditional palmistry interpretations. Be specific about what you see and give positive, insightful guidance.`
+        },
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: 'Please analyze this palm image and provide a detailed palmistry reading focusing on the major lines (life, heart, head, and fate lines).'
+            },
+            {
+              type: 'image_url',
+              image_url: {
+                url: imageUrl
+              }
+            }
+          ]
+        }
+      ],
+      max_tokens: 2000,
+      temperature: 0.7
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    console.error('OpenAI API error:', error);
+    throw new Error(`OpenAI API error: ${response.status} ${error}`);
+  }
+
+  const data = await response.json();
+  console.log('OpenAI response received successfully');
+  
+  if (!data.choices || data.choices.length === 0) {
+    throw new Error('No response from OpenAI');
+  }
+
+  return data.choices[0].message.content;
+}
+
 function generateFallbackReading(): string {
   const readings = [
     `PALM READING ANALYSIS
@@ -50,91 +151,7 @@ Observation: The fate line shows moderate definition, running vertically through
 Interpretation:
 - Career Path: You have natural leadership abilities and the determination to achieve your professional goals
 - Life Direction: Your sense of purpose is developing steadily, with opportunities for growth in areas that align with your values
-- External Influences: While you're influenced by others' guidance, you maintain independence in your major life decisions`,
-
-    `PALM READING ANALYSIS
-
-Thank you for sharing your palm image. Here's a detailed analysis revealing the wisdom held within your palm lines.
-
-MAJOR PALM LINES ANALYSIS
-
-1. LIFE LINE
-
-Observation: Your life line displays impressive depth and flows in a wide arc, encompassing a generous portion of the palm area with remarkable clarity.
-
-Interpretation:
-- Vitality: Exceptional life force energy radiates from this line, suggesting robust health and enduring stamina throughout your lifetime
-- Life Journey: The expansive curve indicates a life rich with experiences, adventures, and personal growth opportunities
-- Health Influence: Strong constitutional health with natural healing abilities and resilience against physical challenges
-
-2. HEART LINE
-
-Observation: The heart line extends prominently across your palm with multiple gentle branches, showing both strength and sensitivity in its formation.
-
-Interpretation:
-- Emotional Depth: You possess profound emotional wisdom and the rare ability to understand others' feelings intuitively
-- Relationships: Your love nature is both passionate and nurturing, creating deep bonds that last through life's challenges
-- Capacity for Love: An extraordinarily generous heart that finds fulfillment in both giving and receiving affection
-
-3. HEAD LINE
-
-Observation: Your head line shows exceptional clarity with an interesting slight curve that suggests both analytical and creative mental processes.
-
-Interpretation:
-- Mental Clarity: You have a brilliant mind capable of both logical analysis and innovative thinking, making you a natural problem solver
-- Decision Making: Your choices are well-considered, combining thorough research with intuitive insights for optimal outcomes
-- Intellectual Style: A unique blend of scientific reasoning and artistic imagination sets you apart in your thinking approach
-
-4. FATE LINE
-
-Observation: The fate line appears strong and well-defined, rising confidently through the center of your palm with purposeful direction.
-
-Interpretation:
-- Career Path: Destined for significant achievements in your chosen field, with natural authority and leadership capabilities
-- Life Direction: A clear sense of mission drives your decisions, leading to meaningful contributions in your community
-- External Influences: While you value others' input, you possess the inner strength to forge your own unique path`,
-
-    `PALM READING ANALYSIS
-
-Thank you for sharing your palm image. Here's a comprehensive analysis of the energy patterns revealed in your palm.
-
-MAJOR PALM LINES ANALYSIS
-
-1. LIFE LINE
-
-Observation: Your life line presents a beautifully curved formation with consistent depth, creating a protective arc around the thumb area with excellent definition.
-
-Interpretation:
-- Vitality: Strong life force energy flows through you, indicating excellent stamina and the ability to maintain vitality across different life phases
-- Life Journey: Your path shows stability combined with adventure, suggesting someone who builds secure foundations while embracing new experiences
-- Health Influence: Natural healing capabilities and strong constitution, with an innate ability to recover from setbacks quickly
-
-2. HEART LINE
-
-Observation: The heart line flows gracefully across your palm with elegant curves and clear definition, showing emotional depth and warmth.
-
-Interpretation:
-- Emotional Depth: You experience emotions fully and authentically, with the wisdom to understand both your own and others' emotional needs
-- Relationships: A loving nature that seeks meaningful connections, valuing loyalty and emotional honesty in partnerships
-- Capacity for Love: Balanced approach to love - generous and open-hearted while maintaining healthy emotional boundaries
-
-3. HEAD LINE
-
-Observation: Your head line demonstrates excellent clarity and purposeful direction, with steady depth that indicates focused mental energy.
-
-Interpretation:
-- Mental Clarity: Sharp analytical abilities combined with creative insight, allowing you to approach problems from multiple angles
-- Decision Making: Thoughtful consideration guides your choices, with the ability to weigh options carefully before acting
-- Intellectual Style: A balanced mental approach that values both logical reasoning and intuitive understanding
-
-4. FATE LINE
-
-Observation: The fate line shows clear definition with upward energy, indicating strong personal direction and purposeful life choices.
-
-Interpretation:
-- Career Path: Natural leadership qualities and the drive to achieve meaningful success in areas that align with your values
-- Life Direction: A developing sense of purpose that grows stronger with experience, leading to fulfilling life choices
-- External Influences: While open to guidance from others, you maintain strong personal autonomy in important decisions`
+- External Influences: While you're influenced by others' guidance, you maintain independence in your major life decisions`
   ];
 
   return readings[Math.floor(Math.random() * readings.length)];
@@ -158,9 +175,17 @@ serve(async (req) => {
       throw new Error('Palm image URL is required');
     }
 
-    // Always use fallback readings for now since OpenAI is blocking palm analysis
-    console.log('Generating detailed palmistry reading...');
-    const analysis = generateFallbackReading();
+    // Try to use OpenAI for AI-powered palm analysis
+    console.log('Attempting AI-powered palm analysis...');
+    let analysis: string;
+    
+    try {
+      analysis = await analyzeImageWithOpenAI(imageUrl);
+      console.log('AI analysis completed successfully');
+    } catch (error) {
+      console.warn('AI analysis failed, using fallback:', error);
+      analysis = generateFallbackReading();
+    }
 
     console.log('Palmistry reading generated successfully');
     console.log('Analysis length:', analysis.length);
