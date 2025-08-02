@@ -19,6 +19,9 @@ interface Message {
   timestamp: Date;
   imageUrl?: string;
   isTyping?: boolean;
+  illustrationUrl?: string;
+  palmArea?: string;
+  isGeneratingIllustration?: boolean;
 }
 
 const prebuiltQuestions = [
@@ -41,6 +44,41 @@ const palmGuidanceInstructions = {
   lifeLine: "Focus on the curved line that wraps around the base of your thumb.",
   mounts: "Take a clear photo showing the raised areas under each finger and on your palm.",
   fullPalm: "Take a clear, well-lit photo of your entire palm from directly above."
+};
+
+// Keywords to detect palm areas for illustration generation
+const palmAreaKeywords = {
+  'heart line': 'heart line',
+  'love line': 'heart line',
+  'emotion line': 'heart line',
+  'fate line': 'fate line',
+  'destiny line': 'fate line',
+  'career line': 'fate line',
+  'head line': 'head line',
+  'wisdom line': 'head line',
+  'intelligence line': 'head line',
+  'life line': 'life line',
+  'vitality line': 'life line',
+  'mount of venus': 'mount of Venus',
+  'venus mount': 'mount of Venus',
+  'mount of jupiter': 'mount of Jupiter',
+  'jupiter mount': 'mount of Jupiter',
+  'mount of saturn': 'mount of Saturn',
+  'saturn mount': 'mount of Saturn',
+  'mount of apollo': 'mount of Apollo',
+  'apollo mount': 'mount of Apollo',
+  'mount of mercury': 'mount of Mercury',
+  'mercury mount': 'mount of Mercury',
+  'mount of mars': 'mount of Mars',
+  'mars mount': 'mount of Mars',
+  'mount of moon': 'mount of Moon',
+  'moon mount': 'mount of Moon',
+  'marriage line': 'marriage line',
+  'relationship line': 'marriage line',
+  'children line': 'children lines',
+  'travel line': 'travel lines',
+  'health line': 'health line',
+  'sun line': 'sun line'
 };
 
 export const Chatbot: React.FC = () => {
@@ -307,6 +345,15 @@ export const Chatbot: React.FC = () => {
 
       setMessages(prev => [...prev, botResponse]);
 
+      // Check if response mentions palm areas and generate illustration
+      const detectedPalmArea = detectPalmArea(data.response);
+      if (detectedPalmArea) {
+        // Generate illustration after a small delay to let the message appear first
+        setTimeout(() => {
+          generatePalmIllustration(detectedPalmArea, botResponse.id, data.response);
+        }, 500);
+      }
+
       // Save bot response to history
       if (user) {
         await saveMessageToHistory(botResponse);
@@ -330,6 +377,68 @@ export const Chatbot: React.FC = () => {
 
   const handleQuestionClick = (question: string) => {
     setInputMessage(question);
+  };
+
+  // Function to detect palm areas in bot response
+  const detectPalmArea = (content: string): string | null => {
+    const lowercaseContent = content.toLowerCase();
+    for (const [keyword, palmArea] of Object.entries(palmAreaKeywords)) {
+      if (lowercaseContent.includes(keyword)) {
+        return palmArea;
+      }
+    }
+    return null;
+  };
+
+  // Function to generate palm illustration
+  const generatePalmIllustration = async (palmArea: string, messageId: string, description?: string) => {
+    try {
+      console.log('Generating illustration for:', palmArea);
+      
+      // Show generation indicator
+      setMessages(prev => prev.map(msg => 
+        msg.id === messageId 
+          ? { ...msg, isGeneratingIllustration: true, palmArea }
+          : msg
+      ));
+
+      const { data, error } = await supabase.functions.invoke('generate-palm-illustration', {
+        body: { palmArea, description }
+      });
+
+      if (error) {
+        console.error('Error generating illustration:', error);
+        toast({
+          title: "Illustration Error",
+          description: "Failed to generate palm illustration.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (data.imageUrl) {
+        // Update message with illustration
+        setMessages(prev => prev.map(msg => 
+          msg.id === messageId 
+            ? { 
+                ...msg, 
+                illustrationUrl: data.imageUrl, 
+                palmArea: data.palmArea,
+                isGeneratingIllustration: false 
+              }
+            : msg
+        ));
+        
+        console.log('Illustration generated successfully for:', palmArea);
+      }
+    } catch (error) {
+      console.error('Error generating palm illustration:', error);
+      setMessages(prev => prev.map(msg => 
+        msg.id === messageId 
+          ? { ...msg, isGeneratingIllustration: false }
+          : msg
+      ));
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -402,9 +511,34 @@ export const Chatbot: React.FC = () => {
                         alt="Palm image"
                         className="w-full max-w-[200px] rounded-lg mb-2"
                       />
-                    )}
-                    <div className={`text-sm ${message.isTyping ? 'italic animate-pulse' : ''}`}>
-                      {message.content.split('\n').map((line, index) => {
+                     )}
+
+                     {/* Palm illustration */}
+                     {message.isGeneratingIllustration && (
+                       <div className="w-full max-w-[300px] rounded-lg mb-2 p-4 bg-cosmic-purple/10 border border-cosmic-purple/20">
+                         <div className="flex items-center gap-2 mb-2">
+                           <Sparkles className="h-4 w-4 text-cosmic-purple animate-pulse" />
+                           <span className="text-sm text-cosmic-purple">Generating illustration for {message.palmArea}...</span>
+                         </div>
+                         <div className="w-full h-32 bg-muted/50 rounded animate-pulse"></div>
+                       </div>
+                     )}
+
+                     {message.illustrationUrl && !message.isGeneratingIllustration && (
+                       <div className="w-full max-w-[300px] rounded-lg mb-2 overflow-hidden border border-cosmic-purple/30 bg-cosmic-purple/5">
+                         <img
+                           src={message.illustrationUrl}
+                           alt={`Palm illustration: ${message.palmArea}`}
+                           className="w-full h-auto rounded-t-lg"
+                         />
+                         <div className="p-2 text-xs text-cosmic-purple text-center bg-cosmic-purple/10">
+                           📍 {message.palmArea}
+                         </div>
+                       </div>
+                     )}
+
+                     <div className={`text-sm ${message.isTyping ? 'italic animate-pulse' : ''}`}>
+                       {message.content.split('\n').map((line, index) => {
                         // Handle headers (lines starting with ##)
                         if (line.startsWith('## ')) {
                           return (
