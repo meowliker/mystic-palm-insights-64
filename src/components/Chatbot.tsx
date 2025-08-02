@@ -23,15 +23,15 @@ interface Message {
 
 const prebuiltQuestions = [
   "When will I get married?",
-  "Will I be poor or rich?", 
-  "When will I get a job?",
-  "Will I get divorced?",
-  "What does my heart line say about my relationships?",
-  "What does my fate line reveal about my destiny?",
-  "What does my head line suggest about my intelligence?",
-  "What can I learn about my past from my palm?",
-  "What do the mounts on my palm mean?",
-  "How long will I live based on my life line?"
+  "Will I be rich?",
+  "What's my love life going to be like?",
+  "When will I find my soulmate?",
+  "What does my career future look like?",
+  "How is my health according to my palm?",
+  "What does my life line say?",
+  "Do I have children in my future?",
+  "What challenges will I face?",
+  "What are my hidden talents?"
 ];
 
 const palmGuidanceInstructions = {
@@ -343,10 +343,20 @@ export const Chatbot: React.FC = () => {
     <div className="h-full w-full flex flex-col">
       <Card className="h-full flex flex-col overflow-hidden shadow-lg">
         <CardHeader className="pb-4 border-b">
-          <CardTitle className="flex items-center gap-2">
-            <Sparkles className="h-6 w-6 text-primary" />
-            Astrobot - Your AI Palmistry Guide
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="h-6 w-6 text-primary" />
+              Astrobot - Your AI Palmistry Guide
+            </CardTitle>
+            <div className="text-sm text-muted-foreground">
+              {new Date().toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </div>
+          </div>
         </CardHeader>
         
         <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
@@ -477,7 +487,11 @@ export const Chatbot: React.FC = () => {
                       })}
                     </div>
                     <span className="text-xs opacity-70 mt-1 block">
-                      {message.timestamp.toLocaleTimeString()}
+                      {message.timestamp.toLocaleTimeString('en-US', { 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        hour12: true 
+                      })}
                     </span>
                   </div>
                   
