@@ -109,54 +109,6 @@ Focus on what you can actually observe in the palm lines and provide meaningful 
   return data.choices[0].message.content;
 }
 
-function generateFallbackReading(): string {
-  const readings = [
-    `PALM READING ANALYSIS
-
-Thank you for sharing your palm image. Here's a detailed analysis based on traditional palmistry principles.
-
-MAJOR PALM LINES ANALYSIS
-
-1. LIFE LINE
-
-Observation: Your life line shows a strong, well-defined curve that flows gracefully around the base of your thumb. The line appears deep and continuous, indicating robust vitality.
-
-Interpretation:
-- Vitality: Your life line suggests strong physical energy and stamina, with a natural resilience that helps you recover from challenges
-- Life Journey: The curve indicates a balanced approach to life, with stability in your core values while remaining adaptable to change
-- Health Influence: The depth and clarity suggest good constitutional health and the ability to maintain energy throughout life
-
-2. HEART LINE
-
-Observation: The heart line runs clearly across the upper portion of your palm, showing good definition and a gentle curve toward the fingers.
-
-Interpretation:
-- Emotional Depth: You possess deep emotional intelligence and the capacity for meaningful connections with others
-- Relationships: Your approach to love is both passionate and thoughtful, valuing both emotional and intellectual compatibility
-- Capacity for Love: You have a generous heart with the ability to give and receive love freely, though you maintain healthy boundaries
-
-3. HEAD LINE
-
-Observation: Your head line travels horizontally across the center of your palm with clear definition, showing a balanced length and steady direction.
-
-Interpretation:
-- Mental Clarity: You possess analytical thinking skills combined with creative insight, allowing for well-rounded decision making
-- Decision Making: You process information thoroughly before making choices, balancing logic with intuition effectively
-- Intellectual Style: Your thinking style blends practical wisdom with creative problem-solving abilities
-
-4. FATE LINE
-
-Observation: The fate line shows moderate definition, running vertically through the center of your palm with consistent strength.
-
-Interpretation:
-- Career Path: You have natural leadership abilities and the determination to achieve your professional goals
-- Life Direction: Your sense of purpose is developing steadily, with opportunities for growth in areas that align with your values
-- External Influences: While you're influenced by others' guidance, you maintain independence in your major life decisions`
-  ];
-
-  return readings[Math.floor(Math.random() * readings.length)];
-}
-
 serve(async (req) => {
   console.log('=== PALM READING FUNCTION CALLED ===');
   console.log('Method:', req.method);
@@ -175,17 +127,10 @@ serve(async (req) => {
       throw new Error('Palm image URL is required');
     }
 
-    // Try to use OpenAI for AI-powered palm analysis
-    console.log('Attempting AI-powered palm analysis...');
-    let analysis: string;
-    
-    try {
-      analysis = await analyzeImageWithOpenAI(imageUrl);
-      console.log('AI analysis completed successfully');
-    } catch (error) {
-      console.warn('AI analysis failed, using fallback:', error);
-      analysis = generateFallbackReading();
-    }
+    // Use OpenAI for AI-powered palm analysis
+    console.log('Performing AI-powered palm analysis...');
+    const analysis = await analyzeImageWithOpenAI(imageUrl);
+    console.log('AI analysis completed successfully');
 
     console.log('Palmistry reading generated successfully');
     console.log('Analysis length:', analysis.length);
@@ -236,22 +181,12 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in palm reading function:', error);
     
-    // Provide a guaranteed fallback reading even on error
-    const fallbackReading = {
-      life_line_strength: 'Strong',
-      heart_line_strength: 'Moderate',
-      head_line_strength: 'Strong', 
-      fate_line_strength: 'Moderate',
-      overall_insight: generateFallbackReading(),
-      traits: {
-        personality: 'Thoughtful and resilient',
-        strengths: 'Natural wisdom and emotional balance',
-        challenges: 'Integrating different aspects of personality'
-      }
-    };
-    
-    return new Response(JSON.stringify(fallbackReading), {
+    return new Response(JSON.stringify({ 
+      error: 'Failed to analyze palm image',
+      details: error.message 
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 500
     });
   }
 });
