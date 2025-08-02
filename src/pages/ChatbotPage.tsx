@@ -8,7 +8,7 @@ const ChatbotPage: React.FC = () => {
   const navigate = useNavigate();
 
   const handleBackToDashboard = () => {
-    navigate('/');
+    navigate('/', { state: { showDashboard: true } });
   };
 
   return (

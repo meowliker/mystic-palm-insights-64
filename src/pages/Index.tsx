@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import WelcomeScreen from '@/components/WelcomeScreen';
 import PalmScanner from '@/components/PalmScanner';
 import PalmUploadForm from '@/components/PalmUploadForm';
@@ -15,6 +16,14 @@ const Index = () => {
   const [scanData, setScanData] = useState<any>(null);
   const { user, loading } = useAuth();
   const { hasScans, loading: scansLoading } = useScans();
+  const location = useLocation();
+
+  // Check if we should show dashboard (coming from chatbot)
+  useEffect(() => {
+    if (!loading && !scansLoading && user && location.state?.showDashboard) {
+      setCurrentScreen('dashboard');
+    }
+  }, [location.state, user, loading, scansLoading]);
 
   // Only redirect unauthenticated users away from protected screens
   useEffect(() => {
