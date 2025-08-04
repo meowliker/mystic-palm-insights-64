@@ -407,7 +407,7 @@ export const Chatbot: React.FC = () => {
                         )}
                         
                         <div
-                          className={`max-w-[70%] rounded-lg p-3 ${
+                          className={`max-w-[85%] md:max-w-[80%] lg:max-w-[75%] rounded-lg p-3 ${
                             message.sender === 'user'
                               ? 'bg-primary text-primary-foreground'
                               : 'bg-muted'
