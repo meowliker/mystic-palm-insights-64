@@ -92,10 +92,9 @@ export const PalmGuide: React.FC<PalmGuideProps> = ({ onClose }) => {
       
       <CardContent>
         <Tabs defaultValue="photo-tips" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="photo-tips">Photo Tips</TabsTrigger>
             <TabsTrigger value="palm-lines">Palm Lines</TabsTrigger>
-            <TabsTrigger value="positioning">Hand Position</TabsTrigger>
           </TabsList>
           
           <TabsContent value="photo-tips" className="space-y-4">
@@ -148,70 +147,6 @@ export const PalmGuide: React.FC<PalmGuideProps> = ({ onClose }) => {
             </div>
           </TabsContent>
           
-          <TabsContent value="positioning" className="space-y-4">
-            <h3 className="text-lg font-semibold mb-4">Ideal Hand Positioning</h3>
-            
-            <div className="space-y-6">
-              {/* Visual positioning guide */}
-              <Card className="p-6 bg-gradient-to-br from-primary/5 to-accent/5">
-                <div className="text-center space-y-4">
-                  <div className="relative mx-auto w-48 h-64 bg-muted/30 rounded-3xl border-2 border-dashed border-primary/30 flex items-center justify-center">
-                    <Hand className="h-24 w-24 text-primary/50" />
-                    <div className="absolute top-2 left-1/2 transform -translate-x-1/2">
-                      <Badge className="text-xs">Fingers spread slightly</Badge>
-                    </div>
-                    <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
-                      <Badge className="text-xs">Palm flat on surface</Badge>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div className="text-center p-3 bg-muted/20 rounded-lg">
-                      <div className="font-medium text-green-600 mb-1">✓ DO</div>
-                      <p>Keep palm completely flat</p>
-                    </div>
-                    <div className="text-center p-3 bg-muted/20 rounded-lg">
-                      <div className="font-medium text-green-600 mb-1">✓ DO</div>
-                      <p>Use your dominant hand</p>
-                    </div>
-                    <div className="text-center p-3 bg-muted/20 rounded-lg">
-                      <div className="font-medium text-green-600 mb-1">✓ DO</div>
-                      <p>Ensure all lines are visible</p>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div className="text-center p-3 bg-red-50 rounded-lg">
-                      <div className="font-medium text-red-600 mb-1">✗ AVOID</div>
-                      <p>Curved or cupped palm</p>
-                    </div>
-                    <div className="text-center p-3 bg-red-50 rounded-lg">
-                      <div className="font-medium text-red-600 mb-1">✗ AVOID</div>
-                      <p>Shadows covering lines</p>
-                    </div>
-                    <div className="text-center p-3 bg-red-50 rounded-lg">
-                      <div className="font-medium text-red-600 mb-1">✗ AVOID</div>
-                      <p>Blurry or angled photos</p>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-              
-              <div className="bg-cosmic-purple/10 rounded-lg p-4 border border-cosmic-purple/20">
-                <h4 className="font-medium mb-2 flex items-center gap-2">
-                  <Star className="h-4 w-4 text-cosmic-purple" />
-                  Pro Tips for Best Results
-                </h4>
-                <ul className="space-y-1 text-sm text-muted-foreground">
-                  <li>• Clean your hands before photography</li>
-                  <li>• Remove rings and jewelry that might obstruct lines</li>
-                  <li>• Take multiple photos and choose the clearest one</li>
-                  <li>• Ensure your camera lens is clean</li>
-                  <li>• Use portrait mode if available for better focus</li>
-                </ul>
-              </div>
-            </div>
-          </TabsContent>
         </Tabs>
         
         {onClose && (
