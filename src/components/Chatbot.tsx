@@ -593,11 +593,6 @@ export const Chatbot: React.FC = () => {
               </div>
             </div>
 
-            {/* Palm guidance */}
-            <div className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3">
-              <p className="font-medium mb-1">📷 Palm Photo Tips:</p>
-              <p>• Ensure good lighting • Keep palm flat • Focus on line clarity • Take from directly above</p>
-            </div>
           </div>
         </CardContent>
       </Card>
