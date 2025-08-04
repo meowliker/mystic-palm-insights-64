@@ -394,14 +394,14 @@ export const Chatbot: React.FC = () => {
                       )}
                       
                       <div
-                        className={`flex gap-3 ${
+                        className={`flex gap-3 mb-4 ${
                           message.sender === 'user' ? 'justify-end' : 'justify-start'
                         }`}
                       >
                         {message.sender === 'astrobot' && (
-                          <Avatar className="h-8 w-8">
+                          <Avatar className="h-6 w-6 flex-shrink-0">
                             <AvatarFallback className="bg-primary text-primary-foreground">
-                              <Sparkles className="h-4 w-4" />
+                              <Sparkles className="h-3 w-3" />
                             </AvatarFallback>
                           </Avatar>
                         )}
