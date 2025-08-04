@@ -231,6 +231,7 @@ export const Chatbot: React.FC = () => {
 
     setMessages(prev => [...prev, userMessage]);
     setInputMessage('');
+    removeImage(); // Clear the image immediately after sending
 
     // Save user message to history
     if (user) {
@@ -324,7 +325,6 @@ export const Chatbot: React.FC = () => {
       setMessages(prev => prev.filter(msg => msg.id !== 'typing'));
     } finally {
       setIsLoading(false);
-      removeImage();
     }
   };
 
