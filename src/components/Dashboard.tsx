@@ -201,41 +201,41 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-6 py-4">
+        <div className="container mx-auto px-3 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <h1 className="text-xl md:text-2xl font-bold text-foreground">Welcome back, {user?.user_metadata?.full_name || 'Cosmic Explorer'}</h1>
-              <p className="text-muted-foreground hidden sm:block">Ready to explore your cosmic destiny?</p>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground truncate">Welcome back, {user?.user_metadata?.full_name || 'Cosmic Explorer'}</h1>
+              <p className="text-muted-foreground hidden sm:block text-sm">Ready to explore your cosmic destiny?</p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
               <Link to="/chatbot">
                 <Button 
                   variant="outline" 
-                  className="gap-2"
+                  className="gap-1 sm:gap-2"
                   size="sm"
                 >
                   <MessageCircle className="h-4 w-4" />
-                  <span className="hidden sm:inline">Astrobot</span>
+                  <span className="hidden md:inline">Astrobot</span>
                 </Button>
               </Link>
               <Button 
                 variant="glow" 
                 onClick={onStartScan}
-                className="gap-2"
+                className="gap-1 sm:gap-2"
                 size="sm"
               >
                 <Scan className="h-4 w-4" />
-                <span className="hidden sm:inline">Camera Scan</span>
+                <span className="hidden md:inline">Camera Scan</span>
               </Button>
               {onStartUpload && (
                 <Button 
                   variant="outline" 
                   onClick={onStartUpload}
-                  className="gap-2"
+                  className="gap-1 sm:gap-2 hidden sm:flex"
                   size="sm"
                 >
                   <Upload className="h-4 w-4" />
-                  <span className="hidden sm:inline">Upload Images</span>
+                  <span className="hidden lg:inline">Upload Images</span>
                 </Button>
               )}
               {/* Mobile Settings */}
@@ -249,7 +249,7 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
                   <SheetContent side="right" className="w-80">
                     <div className="space-y-6 pt-6">
                       {/* Mobile Profile Card */}
-                      <Card className="p-6 bg-card/80 backdrop-blur-sm text-center">
+                      <Card className="p-4 bg-card/80 backdrop-blur-sm text-center">
                         <ProfilePicture userId={user?.id} />
                         <h3 className="font-semibold text-foreground mb-4">{user?.user_metadata?.full_name || 'Cosmic Explorer'}</h3>
                         <div className="space-y-2">
@@ -263,10 +263,10 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
                       </Card>
 
                       {/* Mobile Daily Insight */}
-                      <Card className="p-6 bg-card/80 backdrop-blur-sm">
+                      <Card className="p-4 bg-card/80 backdrop-blur-sm">
                         <h3 className="font-semibold text-foreground mb-4">Daily Insight</h3>
                         <div 
-                          className="p-4 rounded-lg bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20"
+                          className="p-3 rounded-lg bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20"
                         >
                           <p className="text-sm text-foreground/90 italic">
                             "The stars align to reveal new possibilities. Trust your intuition as it guides you toward meaningful connections today."
@@ -285,36 +285,36 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
         </div>
       </header>
 
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto px-3 sm:px-6 py-4 sm:py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Quick Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Card className="p-4 text-center bg-card/80 backdrop-blur-sm">
-                <History className="h-6 w-6 text-primary mx-auto mb-2" />
-                <div className="text-2xl font-bold text-foreground">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+              <Card className="p-3 sm:p-4 text-center bg-card/80 backdrop-blur-sm">
+                <History className="h-5 w-5 sm:h-6 sm:w-6 text-primary mx-auto mb-2" />
+                <div className="text-xl sm:text-2xl font-bold text-foreground">
                   {stats.loading ? "..." : stats.totalReadings}
                 </div>
                 <div className="text-xs text-muted-foreground">Total Readings</div>
               </Card>
-              <Card className="p-4 text-center bg-card/80 backdrop-blur-sm">
-                <Calendar className="h-6 w-6 text-accent mx-auto mb-2" />
-                <div className="text-2xl font-bold text-foreground">
+              <Card className="p-3 sm:p-4 text-center bg-card/80 backdrop-blur-sm">
+                <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-accent mx-auto mb-2" />
+                <div className="text-xl sm:text-2xl font-bold text-foreground">
                   {stats.loading ? "..." : stats.daysStreak}
                 </div>
                 <div className="text-xs text-muted-foreground">Days Streak</div>
               </Card>
-              <Card className="p-4 text-center bg-card/80 backdrop-blur-sm">
-                <Star className="h-6 w-6 text-secondary mx-auto mb-2" />
-                <div className="text-2xl font-bold text-foreground">
+              <Card className="p-3 sm:p-4 text-center bg-card/80 backdrop-blur-sm">
+                <Star className="h-5 w-5 sm:h-6 sm:w-6 text-secondary mx-auto mb-2" />
+                <div className="text-xl sm:text-2xl font-bold text-foreground">
                   {stats.loading ? "..." : stats.accuracy}
                 </div>
                 <div className="text-xs text-muted-foreground">Accuracy</div>
               </Card>
-              <Card className="p-4 text-center bg-card/80 backdrop-blur-sm">
-                <Zap className="h-6 w-6 text-primary-glow mx-auto mb-2" />
-                <div className="text-2xl font-bold text-foreground">
+              <Card className="p-3 sm:p-4 text-center bg-card/80 backdrop-blur-sm">
+                <Zap className="h-5 w-5 sm:h-6 sm:w-6 text-primary-glow mx-auto mb-2" />
+                <div className="text-xl sm:text-2xl font-bold text-foreground">
                   {stats.loading ? "..." : `${stats.cosmicSync}%`}
                 </div>
                 <div className="text-xs text-muted-foreground">Cosmic Sync</div>
@@ -322,28 +322,37 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
             </div>
 
             {/* Tabs */}
-            <div className="space-y-6">
-              <div className="flex gap-4">
+            <div className="space-y-4 sm:space-y-6">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
                 <Button 
                   variant={activeTab === 'readings' ? 'default' : 'ghost'}
                   onClick={() => setActiveTab('readings')}
+                  className="justify-start sm:justify-center"
+                  size="sm"
                 >
                   <History className="h-4 w-4 mr-2" />
-                  Recent Readings
+                  <span className="hidden sm:inline">Recent Readings</span>
+                  <span className="sm:hidden">Recent</span>
                 </Button>
                 <Button 
                   variant={activeTab === 'horoscope' ? 'default' : 'ghost'}
                   onClick={() => setActiveTab('horoscope')}
+                  className="justify-start sm:justify-center"
+                  size="sm"
                 >
                   <Calendar className="h-4 w-4 mr-2" />
-                  Today's Horoscope
+                  <span className="hidden sm:inline">Today's Horoscope</span>
+                  <span className="sm:hidden">Horoscope</span>
                 </Button>
                 <Button 
                   variant={activeTab === 'blog' ? 'default' : 'ghost'}
                   onClick={() => setActiveTab('blog')}
+                  className="justify-start sm:justify-center"
+                  size="sm"
                 >
                   <BookOpen className="h-4 w-4 mr-2" />
-                  Astrology Blog
+                  <span className="hidden sm:inline">Astrology Blog</span>
+                  <span className="sm:hidden">Blog</span>
                 </Button>
               </div>
 
@@ -384,9 +393,9 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
                   )}
                   
                   {scans.length > 0 ? scans.map((scan) => (
-                    <Card key={scan.id} className="p-6 bg-card/80 backdrop-blur-sm hover:shadow-mystical transition-all">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
+                    <Card key={scan.id} className="p-4 sm:p-6 bg-card/80 backdrop-blur-sm hover:shadow-mystical transition-all">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-4 gap-3">
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-2">
                             <Clock className="h-4 w-4 text-muted-foreground" />
                             <span className="text-sm text-muted-foreground">
@@ -395,19 +404,20 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
                           </div>
                           <h3 className="font-semibold text-foreground">Palm Reading</h3>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-shrink-0">
                           <Button 
                             variant="outline" 
                             size="sm"
                             onClick={() => handleShareReading(scan)}
+                            className="flex-1 sm:flex-none"
                           >
-                            <Share className="h-4 w-4 mr-2" />
-                            Share
+                            <Share className="h-4 w-4 sm:mr-2" />
+                            <span className="hidden sm:inline">Share</span>
                           </Button>
                            <ScanDetailDialog scan={scan} onScanDeleted={fetchScans}>
-                             <Button variant="outline" size="sm">
-                               <Eye className="h-4 w-4 mr-2" />
-                               View Details
+                             <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+                               <Eye className="h-4 w-4 sm:mr-2" />
+                               <span className="hidden sm:inline">View Details</span>
                              </Button>
                            </ScanDetailDialog>
                         </div>
