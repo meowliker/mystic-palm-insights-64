@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
-import { Upload, Send, Sparkles, Camera, Image, HelpCircle, Book } from 'lucide-react';
+import { Upload, Send, Sparkles, Camera, Image, HelpCircle, Book, Copy, MessageSquare, Heart, ThumbsUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { PalmGuide } from '@/components/PalmGuide';
@@ -339,6 +339,29 @@ export const Chatbot: React.FC = () => {
     }
   };
 
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({
+        title: "Copied!",
+        description: "Response copied to clipboard",
+      });
+    } catch (err) {
+      toast({
+        title: "Copy failed",
+        description: "Could not copy to clipboard",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleThumbsUp = (messageId: string) => {
+    toast({
+      title: "Thanks for the feedback! 👍",
+      description: "Glad you found this reading helpful!",
+    });
+  };
+
   return (
     <div className="h-full w-full flex flex-col">
       <Card className="h-full flex flex-col overflow-hidden shadow-lg">
@@ -353,16 +376,20 @@ export const Chatbot: React.FC = () => {
           {/* Pre-built questions */}
           <div className="p-4 border-b bg-muted/20">
             <div className="flex flex-wrap gap-2">
-              {prebuiltQuestions.slice(0, 4).map((question, index) => (
-                <Badge
-                  key={index}
-                  variant="outline"
-                  className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
-                  onClick={() => handleQuestionClick(question)}
-                >
-                  {question}
-                </Badge>
-              ))}
+              {prebuiltQuestions.slice(0, 4).map((question, index) => {
+                const icons = ['💍', '💰', '💕', '✨']; // Icons for each question
+                return (
+                  <Badge
+                    key={index}
+                    variant="outline"
+                    className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-all duration-300 hover:scale-105 hover:shadow-md flex items-center gap-1"
+                    onClick={() => handleQuestionClick(question)}
+                  >
+                    <span>{icons[index]}</span>
+                    {question}
+                  </Badge>
+                );
+              })}
             </div>
           </div>
 
@@ -407,17 +434,17 @@ export const Chatbot: React.FC = () => {
                         )}
                         
                         <div
-                          className={`max-w-[85%] md:max-w-[80%] lg:max-w-[75%] rounded-lg p-3 ${
+                          className={`group relative max-w-[85%] md:max-w-[80%] lg:max-w-[75%] rounded-lg p-3 transition-all duration-200 hover:shadow-md ${
                             message.sender === 'user'
                               ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted'
+                              : 'bg-muted hover:bg-muted/80'
                           }`}
                         >
                           {message.imageUrl && (
                             <img
                               src={message.imageUrl}
                               alt="Palm image"
-                              className="w-full max-w-[200px] rounded-lg mb-2"
+                              className="w-full max-w-[200px] rounded-lg mb-2 transition-transform hover:scale-[1.02]"
                             />
                           )}
                           <div className={`text-sm ${message.isTyping ? 'italic animate-pulse' : ''}`}>
@@ -425,8 +452,8 @@ export const Chatbot: React.FC = () => {
                               // Handle headers (lines starting with ##)
                               if (line.startsWith('## ')) {
                                 return (
-                                  <h3 key={index} className="font-semibold text-base mt-3 mb-2 text-primary">
-                                    {line.replace('## ', '')}
+                                  <h3 key={index} className="font-semibold text-base mt-3 mb-2 text-primary flex items-center gap-2">
+                                    ✨ {line.replace('## ', '')}
                                   </h3>
                                 );
                               }
@@ -434,8 +461,8 @@ export const Chatbot: React.FC = () => {
                               // Handle subheaders (lines starting with #)
                               if (line.startsWith('# ')) {
                                 return (
-                                  <h4 key={index} className="font-medium text-sm mt-2 mb-1 text-cosmic-purple">
-                                    {line.replace('# ', '')}
+                                  <h4 key={index} className="font-medium text-sm mt-2 mb-1 text-cosmic-purple flex items-center gap-1">
+                                    🔮 {line.replace('# ', '')}
                                   </h4>
                                 );
                               }
@@ -443,8 +470,8 @@ export const Chatbot: React.FC = () => {
                               // Handle bullet points
                               if (line.trim().startsWith('• ') || line.trim().startsWith('- ')) {
                                 return (
-                                  <div key={index} className="ml-4 mb-1 flex items-start gap-2">
-                                    <span className="text-cosmic-blue text-xs mt-1">•</span>
+                                  <div key={index} className="ml-4 mb-1 flex items-start gap-2 hover:bg-muted/30 rounded p-1 transition-colors">
+                                    <span className="text-cosmic-blue text-xs mt-1">💫</span>
                                     <span>{line.replace(/^[•\-]\s*/, '')}</span>
                                   </div>
                                 );
@@ -453,9 +480,9 @@ export const Chatbot: React.FC = () => {
                               // Handle numbered lists
                               if (line.trim().match(/^\d+\.\s/)) {
                                 return (
-                                  <div key={index} className="ml-4 mb-1 flex items-start gap-2">
-                                    <span className="text-cosmic-purple font-medium text-xs mt-1">
-                                      {line.match(/^\d+/)?.[0]}.
+                                  <div key={index} className="ml-4 mb-1 flex items-start gap-2 hover:bg-muted/30 rounded p-1 transition-colors">
+                                    <span className="text-cosmic-purple font-medium text-xs mt-1 bg-primary/10 rounded-full w-5 h-5 flex items-center justify-center">
+                                      {line.match(/^\d+/)?.[0]}
                                     </span>
                                     <span>{line.replace(/^\d+\.\s*/, '')}</span>
                                   </div>
@@ -470,7 +497,7 @@ export const Chatbot: React.FC = () => {
                                     {parts.map((part, partIndex) => {
                                       if (part.startsWith('**') && part.endsWith('**')) {
                                         return (
-                                          <strong key={partIndex} className="font-semibold text-cosmic-purple">
+                                          <strong key={partIndex} className="font-semibold text-cosmic-purple bg-primary/5 px-1 rounded">
                                             {part.slice(2, -2)}
                                           </strong>
                                         );
@@ -493,13 +520,50 @@ export const Chatbot: React.FC = () => {
                               );
                             })}
                           </div>
-                          <span className="text-xs opacity-70 mt-1 block">
-                            {message.timestamp.toLocaleTimeString('en-US', { 
-                              hour: '2-digit', 
-                              minute: '2-digit',
-                              hour12: true 
-                            })}
-                          </span>
+                          
+                          {/* Interactive buttons for bot messages */}
+                          {message.sender === 'astrobot' && !message.isTyping && (
+                            <div className="flex items-center justify-between mt-3 pt-2 border-t border-muted-foreground/20">
+                              <span className="text-xs opacity-70">
+                                {message.timestamp.toLocaleTimeString('en-US', { 
+                                  hour: '2-digit', 
+                                  minute: '2-digit',
+                                  hour12: true 
+                                })}
+                              </span>
+                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 w-6 p-0 hover:bg-primary/10"
+                                  onClick={() => copyToClipboard(message.content)}
+                                  title="Copy response"
+                                >
+                                  <Copy className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 w-6 p-0 hover:bg-green-100 dark:hover:bg-green-900/20"
+                                  onClick={() => handleThumbsUp(message.id)}
+                                  title="Helpful reading"
+                                >
+                                  <ThumbsUp className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Timestamp for user messages */}
+                          {message.sender === 'user' && (
+                            <span className="text-xs opacity-70 mt-1 block">
+                              {message.timestamp.toLocaleTimeString('en-US', { 
+                                hour: '2-digit', 
+                                minute: '2-digit',
+                                hour12: true 
+                              })}
+                            </span>
+                          )}
                         </div>
                         
                         {message.sender === 'user' && (
