@@ -570,7 +570,7 @@ export const Chatbot: React.FC = () => {
                         
                         {message.sender === 'user' && (
                           <Avatar className="h-8 w-8 flex-shrink-0">
-                            <AvatarFallback className="bg-muted text-muted-foreground">U</AvatarFallback>
+                            <AvatarFallback className="bg-primary text-primary-foreground">U</AvatarFallback>
                           </Avatar>
                         )}
                       </div>
