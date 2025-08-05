@@ -425,18 +425,16 @@ export const Chatbot: React.FC = () => {
                               // Handle headers (lines starting with ##)
                               if (line.startsWith('## ')) {
                                 return (
-                                  <div key={index} className="border-l-4 border-primary pl-3 my-3">
-                                    <h3 className="font-bold text-base text-primary">
-                                      {line.replace('## ', '')}
-                                    </h3>
-                                  </div>
+                                  <h3 key={index} className="font-semibold text-base mt-3 mb-2 text-primary">
+                                    {line.replace('## ', '')}
+                                  </h3>
                                 );
                               }
                               
                               // Handle subheaders (lines starting with #)
                               if (line.startsWith('# ')) {
                                 return (
-                                  <h4 key={index} className="font-semibold text-sm mt-3 mb-2 text-cosmic-purple bg-cosmic-purple/10 px-2 py-1 rounded-md">
+                                  <h4 key={index} className="font-medium text-sm mt-2 mb-1 text-cosmic-purple">
                                     {line.replace('# ', '')}
                                   </h4>
                                 );
@@ -445,9 +443,9 @@ export const Chatbot: React.FC = () => {
                               // Handle bullet points
                               if (line.trim().startsWith('• ') || line.trim().startsWith('- ')) {
                                 return (
-                                  <div key={index} className="ml-4 mb-2 flex items-start gap-3 p-2 bg-muted/30 rounded-lg">
-                                    <div className="w-2 h-2 rounded-full bg-cosmic-blue mt-2 flex-shrink-0"></div>
-                                    <span className="leading-relaxed">{line.replace(/^[•\-]\s*/, '')}</span>
+                                  <div key={index} className="ml-4 mb-1 flex items-start gap-2">
+                                    <span className="text-cosmic-blue text-xs mt-1">•</span>
+                                    <span>{line.replace(/^[•\-]\s*/, '')}</span>
                                   </div>
                                 );
                               }
@@ -455,11 +453,11 @@ export const Chatbot: React.FC = () => {
                               // Handle numbered lists
                               if (line.trim().match(/^\d+\.\s/)) {
                                 return (
-                                  <div key={index} className="ml-4 mb-2 flex items-start gap-3 p-2 bg-muted/30 rounded-lg">
-                                    <div className="w-6 h-6 rounded-full bg-cosmic-purple text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
-                                      {line.match(/^\d+/)?.[0]}
-                                    </div>
-                                    <span className="leading-relaxed">{line.replace(/^\d+\.\s*/, '')}</span>
+                                  <div key={index} className="ml-4 mb-1 flex items-start gap-2">
+                                    <span className="text-cosmic-purple font-medium text-xs mt-1">
+                                      {line.match(/^\d+/)?.[0]}.
+                                    </span>
+                                    <span>{line.replace(/^\d+\.\s*/, '')}</span>
                                   </div>
                                 );
                               }
@@ -468,13 +466,13 @@ export const Chatbot: React.FC = () => {
                               if (line.includes('**')) {
                                 const parts = line.split(/(\*\*.*?\*\*)/g);
                                 return (
-                                  <p key={index} className={line.trim() === '' ? 'mb-3' : 'mb-2 leading-relaxed'}>
+                                  <p key={index} className={line.trim() === '' ? 'mb-2' : 'mb-1'}>
                                     {parts.map((part, partIndex) => {
                                       if (part.startsWith('**') && part.endsWith('**')) {
                                         return (
-                                          <span key={partIndex} className="font-bold text-cosmic-purple bg-cosmic-purple/10 px-1 py-0.5 rounded">
+                                          <strong key={partIndex} className="font-semibold text-cosmic-purple">
                                             {part.slice(2, -2)}
-                                          </span>
+                                          </strong>
                                         );
                                       }
                                       return part;
@@ -483,35 +481,13 @@ export const Chatbot: React.FC = () => {
                                 );
                               }
                               
-                              // Handle quotes or special insights (lines with quotes)
-                              if (line.includes('"') || line.includes('"') || line.includes('"')) {
-                                return (
-                                  <div key={index} className="my-3 p-3 bg-gradient-to-r from-cosmic-purple/10 to-cosmic-blue/10 border-l-4 border-cosmic-purple rounded-r-lg">
-                                    <p className="italic text-cosmic-purple font-medium leading-relaxed">
-                                      {line}
-                                    </p>
-                                  </div>
-                                );
-                              }
-                              
-                              // Handle questions (lines ending with ?)
-                              if (line.trim().endsWith('?') && line.trim().length > 20) {
-                                return (
-                                  <div key={index} className="my-3 p-3 bg-primary/10 border border-primary/20 rounded-lg">
-                                    <p className="font-medium text-primary leading-relaxed">
-                                      {line}
-                                    </p>
-                                  </div>
-                                );
-                              }
-                              
                               // Regular paragraphs
                               if (line.trim() === '') {
-                                return <div key={index} className="mb-3" />;
+                                return <div key={index} className="mb-2" />;
                               }
                               
                               return (
-                                <p key={index} className="mb-2 leading-relaxed text-foreground/90">
+                                <p key={index} className="mb-1 leading-relaxed">
                                   {line}
                                 </p>
                               );
