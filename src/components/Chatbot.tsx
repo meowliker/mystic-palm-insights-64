@@ -399,15 +399,15 @@ export const Chatbot: React.FC = () => {
                         }`}
                       >
                         {message.sender === 'astrobot' && (
-                          <Avatar className="h-6 w-6 flex-shrink-0">
+                          <Avatar className="h-8 w-8 flex-shrink-0">
                             <AvatarFallback className="bg-primary text-primary-foreground">
-                              <Sparkles className="h-3 w-3" />
+                              <Sparkles className="h-4 w-4" />
                             </AvatarFallback>
                           </Avatar>
                         )}
                         
                         <div
-                          className={`max-w-[85%] md:max-w-[80%] lg:max-w-[75%] rounded-lg p-3 ${
+                          className={`max-w-[85%] md:max-w-[80%] lg:max-w-[75%] rounded-lg p-4 ${
                             message.sender === 'user'
                               ? 'bg-primary text-primary-foreground'
                               : 'bg-muted'
@@ -417,148 +417,160 @@ export const Chatbot: React.FC = () => {
                             <img
                               src={message.imageUrl}
                               alt="Palm image"
-                              className="w-full max-w-[200px] rounded-lg mb-2"
+                              className="w-full max-w-[200px] rounded-lg mb-3"
                             />
                           )}
-                          <div className={`text-sm ${message.isTyping ? 'italic animate-pulse' : ''}`}>
-                            {message.content.split('\n').map((line, index) => {
-                              // Add emoji mapping for common keywords
-                              const addEmojis = (text: string) => {
-                                return text
-                                  .replace(/\bmarriage\b/gi, '💍 marriage')
-                                  .replace(/\bmarried?\b/gi, '💒 married')
-                                  .replace(/\blove\b/gi, '❤️ love')
-                                  .replace(/\bheart\b/gi, '💖 heart')
-                                  .replace(/\brelationship\b/gi, '💕 relationship')
-                                  .replace(/\bmoney\b/gi, '💰 money')
-                                  .replace(/\brich\b/gi, '💎 rich')
-                                  .replace(/\bwealth\b/gi, '💰 wealth')
-                                  .replace(/\bcareer\b/gi, '🏆 career')
-                                  .replace(/\bjob\b/gi, '💼 job')
-                                  .replace(/\bhealth\b/gi, '🌿 health')
-                                  .replace(/\blife\b/gi, '🌟 life')
-                                  .replace(/\bfuture\b/gi, '🔮 future')
-                                  .replace(/\bchildren\b/gi, '👶 children')
-                                  .replace(/\bfamily\b/gi, '👨‍👩‍👧‍👦 family')
-                                  .replace(/\bchallenge\b/gi, '⚡ challenge')
-                                  .replace(/\btalent\b/gi, '✨ talent')
-                                  .replace(/\bsuccess\b/gi, '🎯 success')
-                                  .replace(/\benergy\b/gi, '⚡ energy')
-                                  .replace(/\bspiritual\b/gi, '🕯️ spiritual')
-                                  .replace(/\bwisdom\b/gi, '🦉 wisdom')
-                                  .replace(/\bdestiny\b/gi, '🌟 destiny')
-                                  .replace(/\bfate\b/gi, '🔮 fate');
-                              };
+                          
+                          {message.sender === 'user' ? (
+                            // User message - simple formatting
+                            <div className="text-sm">
+                              <p className="leading-relaxed">{message.content}</p>
+                            </div>
+                          ) : (
+                            // Bot message - enhanced formatting
+                            <div className={`text-sm ${message.isTyping ? 'italic animate-pulse' : ''}`}>
+                              {message.content.split('\n').map((line, index) => {
+                                // Add emoji mapping for common keywords
+                                const addEmojis = (text: string) => {
+                                  return text
+                                    .replace(/\bmarriage\b/gi, '💍 marriage')
+                                    .replace(/\bmarried?\b/gi, '💒 married')
+                                    .replace(/\blove\b/gi, '❤️ love')
+                                    .replace(/\bheart\b/gi, '💖 heart')
+                                    .replace(/\brelationship\b/gi, '💕 relationship')
+                                    .replace(/\bmoney\b/gi, '💰 money')
+                                    .replace(/\brich\b/gi, '💎 rich')
+                                    .replace(/\bwealth\b/gi, '💰 wealth')
+                                    .replace(/\bcareer\b/gi, '🏆 career')
+                                    .replace(/\bjob\b/gi, '💼 job')
+                                    .replace(/\bhealth\b/gi, '🌿 health')
+                                    .replace(/\blife\b/gi, '🌟 life')
+                                    .replace(/\bfuture\b/gi, '🔮 future')
+                                    .replace(/\bchildren\b/gi, '👶 children')
+                                    .replace(/\bfamily\b/gi, '👨‍👩‍👧‍👦 family')
+                                    .replace(/\bchallenge\b/gi, '⚡ challenge')
+                                    .replace(/\btalent\b/gi, '✨ talent')
+                                    .replace(/\bsuccess\b/gi, '🎯 success')
+                                    .replace(/\benergy\b/gi, '⚡ energy')
+                                    .replace(/\bspiritual\b/gi, '🕯️ spiritual')
+                                    .replace(/\bwisdom\b/gi, '🦉 wisdom')
+                                    .replace(/\bdestiny\b/gi, '🌟 destiny')
+                                    .replace(/\bfate\b/gi, '🔮 fate');
+                                };
 
-                              // Handle headers (lines starting with ##)
-                              if (line.startsWith('## ')) {
-                                return (
-                                  <div key={index}>
-                                    <div className="mb-3 mt-4 border-b border-primary/20 pb-2">
-                                      <h3 className="font-bold text-lg text-primary flex items-center gap-2">
-                                        🔮 {line.replace('## ', '')}
-                                      </h3>
+                                // Handle headers (lines starting with ##)
+                                if (line.startsWith('## ')) {
+                                  return (
+                                    <div key={index}>
+                                      <div className="mb-3 mt-4 border-b border-primary/20 pb-2">
+                                        <h3 className="font-bold text-lg text-primary flex items-center gap-2">
+                                          🔮 {line.replace('## ', '')}
+                                        </h3>
+                                      </div>
                                     </div>
-                                  </div>
-                                );
-                              }
-                              
-                              // Handle subheaders (lines starting with #)
-                              if (line.startsWith('# ')) {
-                                return (
-                                  <div key={index}>
-                                    <div className="mb-2 mt-3">
-                                      <h4 className="font-semibold text-base text-cosmic-purple flex items-center gap-2">
-                                        ✨ {line.replace('# ', '')}
-                                      </h4>
+                                  );
+                                }
+                                
+                                // Handle subheaders (lines starting with #)
+                                if (line.startsWith('# ')) {
+                                  return (
+                                    <div key={index}>
+                                      <div className="mb-2 mt-3">
+                                        <h4 className="font-semibold text-base text-cosmic-purple flex items-center gap-2">
+                                          ✨ {line.replace('# ', '')}
+                                        </h4>
+                                      </div>
                                     </div>
-                                  </div>
-                                );
-                              }
-                              
-                              // Handle bullet points
-                              if (line.trim().startsWith('• ') || line.trim().startsWith('- ')) {
-                                const cleanLine = line.replace(/^[•\-]\s*/, '');
+                                  );
+                                }
+                                
+                                // Handle bullet points
+                                if (line.trim().startsWith('• ') || line.trim().startsWith('- ')) {
+                                  const cleanLine = line.replace(/^[•\-]\s*/, '');
+                                  return (
+                                    <div key={index} className="ml-4 mb-2 flex items-start gap-3 py-1">
+                                      <span className="text-cosmic-blue text-lg mt-0.5">🔹</span>
+                                      <span className="leading-relaxed">{addEmojis(cleanLine)}</span>
+                                    </div>
+                                  );
+                                }
+                                
+                                // Handle numbered lists
+                                if (line.trim().match(/^\d+\.\s/)) {
+                                  const number = line.match(/^\d+/)?.[0];
+                                  const content = line.replace(/^\d+\.\s*/, '');
+                                  return (
+                                    <div key={index} className="ml-4 mb-2 flex items-start gap-3 py-1">
+                                      <span className="text-cosmic-purple font-bold text-sm bg-cosmic-purple/10 rounded-full w-6 h-6 flex items-center justify-center mt-0.5">
+                                        {number}
+                                      </span>
+                                      <span className="leading-relaxed">{addEmojis(content)}</span>
+                                    </div>
+                                  );
+                                }
+                                
+                                // Handle bold text (**text**)
+                                if (line.includes('**')) {
+                                  const parts = line.split(/(\*\*.*?\*\*)/g);
+                                  return (
+                                    <div key={index} className={line.trim() === '' ? 'mb-3' : 'mb-2'}>
+                                      <p className="leading-relaxed">
+                                        {parts.map((part, partIndex) => {
+                                          if (part.startsWith('**') && part.endsWith('**')) {
+                                            return (
+                                              <strong key={partIndex} className="font-bold text-cosmic-purple bg-cosmic-purple/5 px-1 rounded">
+                                                {addEmojis(part.slice(2, -2))}
+                                              </strong>
+                                            );
+                                          }
+                                          return addEmojis(part);
+                                        })}
+                                      </p>
+                                    </div>
+                                  );
+                                }
+                                
+                                // Handle questions (lines ending with ?)
+                                if (line.trim().endsWith('?')) {
+                                  return (
+                                    <div key={index} className="mb-3 p-3 bg-primary/5 border-l-4 border-primary rounded-r-lg">
+                                      <p className="leading-relaxed font-medium text-primary">
+                                        💭 {addEmojis(line)}
+                                      </p>
+                                    </div>
+                                  );
+                                }
+                                
+                                // Regular paragraphs
+                                if (line.trim() === '') {
+                                  return <div key={index} className="mb-3" />;
+                                }
+                                
                                 return (
-                                  <div key={index} className="ml-4 mb-2 flex items-start gap-3 py-1">
-                                    <span className="text-cosmic-blue text-lg mt-0.5">🔹</span>
-                                    <span className="leading-relaxed">{addEmojis(cleanLine)}</span>
-                                  </div>
-                                );
-                              }
-                              
-                              // Handle numbered lists
-                              if (line.trim().match(/^\d+\.\s/)) {
-                                const number = line.match(/^\d+/)?.[0];
-                                const content = line.replace(/^\d+\.\s*/, '');
-                                return (
-                                  <div key={index} className="ml-4 mb-2 flex items-start gap-3 py-1">
-                                    <span className="text-cosmic-purple font-bold text-sm bg-cosmic-purple/10 rounded-full w-6 h-6 flex items-center justify-center mt-0.5">
-                                      {number}
-                                    </span>
-                                    <span className="leading-relaxed">{addEmojis(content)}</span>
-                                  </div>
-                                );
-                              }
-                              
-                              // Handle bold text (**text**)
-                              if (line.includes('**')) {
-                                const parts = line.split(/(\*\*.*?\*\*)/g);
-                                return (
-                                  <div key={index} className={line.trim() === '' ? 'mb-3' : 'mb-2'}>
+                                  <div key={index} className="mb-2">
                                     <p className="leading-relaxed">
-                                      {parts.map((part, partIndex) => {
-                                        if (part.startsWith('**') && part.endsWith('**')) {
-                                          return (
-                                            <strong key={partIndex} className="font-bold text-cosmic-purple bg-cosmic-purple/5 px-1 rounded">
-                                              {addEmojis(part.slice(2, -2))}
-                                            </strong>
-                                          );
-                                        }
-                                        return addEmojis(part);
-                                      })}
+                                      {addEmojis(line)}
                                     </p>
                                   </div>
                                 );
-                              }
-                              
-                              // Handle questions (lines ending with ?)
-                              if (line.trim().endsWith('?')) {
-                                return (
-                                  <div key={index} className="mb-3 p-3 bg-primary/5 border-l-4 border-primary rounded-r-lg">
-                                    <p className="leading-relaxed font-medium text-primary">
-                                      💭 {addEmojis(line)}
-                                    </p>
-                                  </div>
-                                );
-                              }
-                              
-                              // Regular paragraphs
-                              if (line.trim() === '') {
-                                return <div key={index} className="mb-3" />;
-                              }
-                              
-                              return (
-                                <div key={index} className="mb-2">
-                                  <p className="leading-relaxed">
-                                    {addEmojis(line)}
-                                  </p>
-                                </div>
-                              );
-                            })}
+                              })}
+                            </div>
+                          )}
+                          
+                          <div className="text-xs opacity-70 mt-2 flex justify-between items-center">
+                            <span>
+                              {message.timestamp.toLocaleTimeString('en-US', { 
+                                hour: '2-digit', 
+                                minute: '2-digit',
+                                hour12: true 
+                              })}
+                            </span>
                           </div>
-                          <span className="text-xs opacity-70 mt-1 block">
-                            {message.timestamp.toLocaleTimeString('en-US', { 
-                              hour: '2-digit', 
-                              minute: '2-digit',
-                              hour12: true 
-                            })}
-                          </span>
                         </div>
                         
                         {message.sender === 'user' && (
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback>U</AvatarFallback>
+                          <Avatar className="h-8 w-8 flex-shrink-0">
+                            <AvatarFallback className="bg-muted text-muted-foreground">U</AvatarFallback>
                           </Avatar>
                         )}
                       </div>
