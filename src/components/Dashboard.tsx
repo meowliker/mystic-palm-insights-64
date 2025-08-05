@@ -225,7 +225,7 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
                 size="sm"
               >
                 <Scan className="h-4 w-4" />
-                <span className="hidden md:inline">Camera Scan</span>
+                <span className="hidden md:inline">Scan Your Palm</span>
               </Button>
               {onStartUpload && (
                 <Button 
@@ -235,7 +235,7 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
                   size="sm"
                 >
                   <Upload className="h-4 w-4" />
-                  <span className="hidden lg:inline">Upload Images</span>
+                  <span className="hidden lg:inline">Upload your Palm</span>
                 </Button>
               )}
               {/* Mobile Settings */}
