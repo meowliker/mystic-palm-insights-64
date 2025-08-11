@@ -22,6 +22,30 @@ interface EnhancedPalmDisplayProps {
 const EnhancedPalmDisplay = ({ palmData }: EnhancedPalmDisplayProps) => {
   if (!palmData) return null;
 
+  // Check if this reading has enhanced data
+  const hasEnhancedData = palmData.age_predictions || 
+                         palmData.wealth_analysis || 
+                         palmData.mount_analysis || 
+                         palmData.line_intersections || 
+                         palmData.age_timeline || 
+                         palmData.partnership_predictions;
+
+  // If no enhanced data, show upgrade message
+  if (!hasEnhancedData) {
+    return (
+      <Card className="p-6 bg-muted/20 border-primary/20">
+        <div className="text-center space-y-4">
+          <Sparkles className="h-12 w-12 mx-auto text-primary/60" />
+          <h3 className="text-lg font-semibold">Enhanced Analysis Not Available</h3>
+          <p className="text-muted-foreground max-w-md mx-auto">
+            This reading was created before our enhanced palmistry analysis was available. 
+            Take a new palm reading to get detailed age predictions, wealth analysis, mount interpretations, and more!
+          </p>
+        </div>
+      </Card>
+    );
+  }
+
   const getPotentialColor = (potential: string) => {
     const level = potential?.toLowerCase() || '';
     if (level.includes('high')) return 'text-success';
