@@ -14,6 +14,13 @@ interface ScanData {
   traits: any;
   palm_image_url?: string;
   right_palm_image_url?: string;
+  // Enhanced palmistry fields
+  age_predictions?: any;
+  wealth_analysis?: any;
+  mount_analysis?: any;
+  line_intersections?: any;
+  age_timeline?: any;
+  partnership_predictions?: any;
   created_at: string;
   updated_at: string;
 }
@@ -69,6 +76,13 @@ export const useScans = () => {
     traits: any;
     palm_image_url?: string;
     right_palm_image_url?: string;
+    // Enhanced palmistry fields
+    age_predictions?: any;
+    wealth_analysis?: any;
+    mount_analysis?: any;
+    line_intersections?: any;
+    age_timeline?: any;
+    partnership_predictions?: any;
   }) => {
     if (!user) {
       console.error('Cannot save scan: user not authenticated');
@@ -89,7 +103,14 @@ export const useScans = () => {
         overall_insight: scanData.overall_insight,
         traits: scanData.traits,
         palm_image_url: scanData.palm_image_url || null,
-        right_palm_image_url: scanData.right_palm_image_url || null
+        right_palm_image_url: scanData.right_palm_image_url || null,
+        // Enhanced palmistry fields
+        age_predictions: scanData.age_predictions || null,
+        wealth_analysis: scanData.wealth_analysis || null,
+        mount_analysis: scanData.mount_analysis || null,
+        line_intersections: scanData.line_intersections || null,
+        age_timeline: scanData.age_timeline || null,
+        partnership_predictions: scanData.partnership_predictions || null
       };
       
       console.log('Final data for database insert:', dataToInsert);

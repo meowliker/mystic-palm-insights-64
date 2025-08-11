@@ -7,6 +7,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Upload, FileImage, Sparkles, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import InteractivePalmGuide from '@/components/InteractivePalmGuide';
+import VisualPalmMapper from '@/components/VisualPalmMapper';
 
 interface PalmUploadFormProps {
   onScanComplete: (scanData: any) => void;

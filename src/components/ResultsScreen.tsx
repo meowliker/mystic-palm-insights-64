@@ -6,6 +6,7 @@ import { useScans } from '@/hooks/useScans';
 import { useAuth } from '@/hooks/useAuth';
 import { cleanupMarkdown } from '@/utils/cleanupMarkdown';
 import { Sparkles, Star, ArrowRight, Calendar } from 'lucide-react';
+import EnhancedPalmDisplay from '@/components/EnhancedPalmDisplay';
 
 interface ResultsScreenProps {
   onGoToDashboard: () => void;
@@ -135,6 +136,9 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
               </div>
             </div>
           </Card>
+
+          {/* Enhanced Palm Analysis */}
+          <EnhancedPalmDisplay palmData={palmResults} />
 
           {/* Next Steps */}
           <Card className="p-6 sm:p-8 bg-card/80 backdrop-blur-sm text-center">

@@ -52,58 +52,73 @@ serve(async (req) => {
     
     console.log('Image converted to base64, size:', imageBase64.length);
 
-    // Use the same model and approach as astrobot
+    // Enhanced palmistry analysis with age predictions, wealth analysis, and more
     const messages = [
       {
         role: "system",
-        content: `You are an expert palmistry reader who analyzes hand images to provide detailed palm readings. 
+        content: `You are a master palmistry expert who provides comprehensive palm readings with age-based predictions, wealth analysis, mount interpretations, and detailed line intersections.
 
-PALM READING STRUCTURE:
-Analyze the palm image and provide a comprehensive reading in exactly this format:
+ENHANCED PALM READING STRUCTURE:
+Analyze the palm image and provide a comprehensive reading in exactly this JSON format:
 
-PALM READING ANALYSIS
+{
+  "overall_insight": "Detailed narrative analysis of the palm...",
+  "age_predictions": {
+    "early_life": "Predictions for ages 0-25 based on palm lines",
+    "prime_years": "Predictions for ages 25-45 including career peaks and major life events",
+    "maturity": "Predictions for ages 45-65 including wealth accumulation and major achievements",
+    "later_life": "Predictions for ages 65+ including legacy and final life phases"
+  },
+  "wealth_analysis": {
+    "financial_potential": "High/Medium/Low with explanation",
+    "wealth_timeline": "When major financial gains or losses are indicated",
+    "asset_accumulation": "Types of assets and timing of major acquisitions",
+    "business_aptitude": "Entrepreneurial potential and business success indicators",
+    "money_management": "Natural tendencies toward saving, investing, or spending"
+  },
+  "mount_analysis": {
+    "mount_of_venus": "Love, passion, and physical vitality indicators",
+    "mount_of_jupiter": "Leadership, ambition, and authority potential",
+    "mount_of_saturn": "Wisdom, responsibility, and life challenges",
+    "mount_of_apollo": "Creativity, fame, and artistic talents",
+    "mount_of_mercury": "Communication, business acumen, and adaptability",
+    "mount_of_mars": "Courage, aggression, and conflict resolution",
+    "mount_of_luna": "Intuition, imagination, and spiritual connection"
+  },
+  "line_intersections": {
+    "life_heart_intersection": "Where life and heart lines meet - emotional stability timing",
+    "head_fate_intersection": "Career and intellectual alignment periods",
+    "marriage_lines": "Number and timing of significant relationships",
+    "travel_lines": "Major journeys and relocations indicated",
+    "health_indicators": "Lines indicating health challenges or vitality periods"
+  },
+  "age_timeline": {
+    "life_line_ages": "Specific age markers along the life line with predictions",
+    "career_milestones": "Ages when major career changes or successes occur",
+    "relationship_timing": "Ages when significant relationships begin or end",
+    "wealth_peaks": "Specific ages when financial success is most likely",
+    "health_events": "Ages when health attention is most needed"
+  },
+  "partnership_predictions": {
+    "partner_characteristics": "Physical and personality traits of future partners",
+    "partner_wealth": "Financial status and potential of romantic partners",
+    "marriage_timing": "Most favorable ages for marriage or commitment",
+    "relationship_challenges": "Potential obstacles in partnerships",
+    "family_predictions": "Children, family size, and domestic harmony"
+  }
+}
 
-Thank you for sharing your palm image. Here's a detailed analysis based on traditional palmistry principles.
+ANALYSIS REQUIREMENTS:
+1. Examine the palm mounts (raised areas) for personality and fortune insights
+2. Look for age markers along the life line (typically from thumb to wrist)
+3. Analyze line intersections for timing of major life events
+4. Assess wealth indicators through mount prominence and line strength
+5. Identify marriage lines (horizontal lines on the mount of Mercury)
+6. Look for travel lines and health indicators
+7. Provide specific age predictions based on traditional palmistry mapping
+8. Focus on positive guidance while being realistic about challenges
 
-MAJOR PALM LINES ANALYSIS
-
-1. LIFE LINE
-
-Observation: [Describe what you observe about the life line - its depth, length, curve, clarity, any breaks or markings]
-
-Interpretation:
-- Vitality: [Analysis of physical energy, health, stamina based on the life line]
-- Life Journey: [Insights about life path, stability, adaptability based on the curve and flow]
-- Health Influence: [Traditional palmistry interpretations about constitution and resilience]
-
-2. HEART LINE
-
-Observation: [Describe the heart line - its path, depth, endings, branches, clarity]
-
-Interpretation:
-- Emotional Depth: [Analysis of emotional nature and capacity for feelings]
-- Relationships: [Insights about love life, relationship patterns, emotional approach]
-- Capacity for Love: [Traditional interpretations about giving and receiving love]
-
-3. HEAD LINE
-
-Observation: [Describe the head line - its direction, length, depth, slope, any markings]
-
-Interpretation:
-- Mental Clarity: [Analysis of thinking patterns, intellectual capabilities]
-- Decision Making: [Insights about how decisions are made, logical vs intuitive]
-- Intellectual Style: [Traditional interpretations about mental approach and creativity]
-
-4. FATE LINE
-
-Observation: [Describe the fate line if present - its strength, direction, starting point, clarity]
-
-Interpretation:
-- Career Path: [Analysis of professional tendencies and ambitions]
-- Life Direction: [Insights about sense of purpose and destiny]
-- External Influences: [Traditional interpretations about independence vs external guidance]
-
-Focus on what you can actually observe in the palm lines and provide meaningful traditional palmistry interpretations. Be specific about what you see and give positive, insightful guidance.`
+Provide detailed, specific predictions with age ranges and actionable insights. Base all interpretations on what you can actually observe in the palm image.`
       },
       {
         role: "user",
@@ -158,6 +173,19 @@ Focus on what you can actually observe in the palm lines and provide meaningful 
     const analysis = data.choices[0].message.content;
     console.log('Analysis completed, length:', analysis.length);
 
+    // Try to parse JSON response first, fall back to text parsing
+    let enhancedData;
+    try {
+      // Clean the response to extract JSON
+      const jsonMatch = analysis.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        enhancedData = JSON.parse(jsonMatch[0]);
+        console.log('Successfully parsed JSON response');
+      }
+    } catch (e) {
+      console.log('Failed to parse JSON, using text analysis fallback');
+    }
+
     // Parse line strengths from the analysis
     const parseLineStrength = (content: string, lineType: string): string => {
       const lineSection = content.match(new RegExp(`${lineType} line[\\s\\S]*?(?=\\n\\n\\d+\\.|$)`, 'i'));
@@ -202,8 +230,15 @@ Focus on what you can actually observe in the palm lines and provide meaningful 
       heart_line_strength: parseLineStrength(analysis, 'heart'),
       head_line_strength: parseLineStrength(analysis, 'head'),
       fate_line_strength: parseLineStrength(analysis, 'fate'),
-      overall_insight: analysis,
-      traits: extractTraits(analysis)
+      overall_insight: enhancedData?.overall_insight || analysis,
+      traits: extractTraits(analysis),
+      // Add enhanced palmistry data
+      age_predictions: enhancedData?.age_predictions || null,
+      wealth_analysis: enhancedData?.wealth_analysis || null,
+      mount_analysis: enhancedData?.mount_analysis || null,
+      line_intersections: enhancedData?.line_intersections || null,
+      age_timeline: enhancedData?.age_timeline || null,
+      partnership_predictions: enhancedData?.partnership_predictions || null
     };
 
     console.log('Palm reading structure created:', {

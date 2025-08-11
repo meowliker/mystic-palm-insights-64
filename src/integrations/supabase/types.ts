@@ -211,49 +211,67 @@ export type Database = {
       }
       palm_scans: {
         Row: {
+          age_predictions: Json | null
+          age_timeline: Json | null
           created_at: string
           fate_line_strength: string | null
           head_line_strength: string | null
           heart_line_strength: string | null
           id: string
           life_line_strength: string | null
+          line_intersections: Json | null
+          mount_analysis: Json | null
           overall_insight: string | null
           palm_image_url: string | null
+          partnership_predictions: Json | null
           right_palm_image_url: string | null
           scan_date: string
           traits: Json | null
           updated_at: string
           user_id: string
+          wealth_analysis: Json | null
         }
         Insert: {
+          age_predictions?: Json | null
+          age_timeline?: Json | null
           created_at?: string
           fate_line_strength?: string | null
           head_line_strength?: string | null
           heart_line_strength?: string | null
           id?: string
           life_line_strength?: string | null
+          line_intersections?: Json | null
+          mount_analysis?: Json | null
           overall_insight?: string | null
           palm_image_url?: string | null
+          partnership_predictions?: Json | null
           right_palm_image_url?: string | null
           scan_date?: string
           traits?: Json | null
           updated_at?: string
           user_id: string
+          wealth_analysis?: Json | null
         }
         Update: {
+          age_predictions?: Json | null
+          age_timeline?: Json | null
           created_at?: string
           fate_line_strength?: string | null
           head_line_strength?: string | null
           heart_line_strength?: string | null
           id?: string
           life_line_strength?: string | null
+          line_intersections?: Json | null
+          mount_analysis?: Json | null
           overall_insight?: string | null
           palm_image_url?: string | null
+          partnership_predictions?: Json | null
           right_palm_image_url?: string | null
           scan_date?: string
           traits?: Json | null
           updated_at?: string
           user_id?: string
+          wealth_analysis?: Json | null
         }
         Relationships: []
       }
