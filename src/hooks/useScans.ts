@@ -130,7 +130,7 @@ export const useScans = () => {
         .select('palm_image_url')
         .eq('id', scanId)
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       // Delete the scan record
       const { error } = await supabase
