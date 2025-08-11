@@ -30,16 +30,19 @@ const EnhancedPalmDisplay = ({ palmData }: EnhancedPalmDisplayProps) => {
                          palmData.age_timeline || 
                          palmData.partnership_predictions;
 
-  // If no enhanced data, show upgrade message
-  if (!hasEnhancedData) {
+  // Check for basic palm reading data
+  const hasBasicData = palmData.life_line || palmData.heart_line || palmData.head_line || palmData.fate_line;
+
+  // If no data at all, show message
+  if (!hasEnhancedData && !hasBasicData) {
     return (
       <Card className="p-6 bg-muted/20 border-primary/20">
         <div className="text-center space-y-4">
           <Sparkles className="h-12 w-12 mx-auto text-primary/60" />
-          <h3 className="text-lg font-semibold">Enhanced Analysis Not Available</h3>
+          <h3 className="text-lg font-semibold">No Analysis Data Available</h3>
           <p className="text-muted-foreground max-w-md mx-auto">
-            This reading was created before our enhanced palmistry analysis was available. 
-            Take a new palm reading to get detailed age predictions, wealth analysis, mount interpretations, and more!
+            This reading doesn't contain detailed analysis data. 
+            Take a new palm reading to get comprehensive insights!
           </p>
         </div>
       </Card>
@@ -70,7 +73,7 @@ const EnhancedPalmDisplay = ({ palmData }: EnhancedPalmDisplayProps) => {
               <h3 className="text-xl font-bold">Life Timeline Predictions</h3>
             </div>
             
-            {palmData.age_predictions && (
+            {palmData.age_predictions ? (
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
@@ -111,6 +114,33 @@ const EnhancedPalmDisplay = ({ palmData }: EnhancedPalmDisplayProps) => {
                     {palmData.age_predictions.later_life}
                   </p>
                 </div>
+              </div>
+            ) : hasBasicData && (
+              <div className="space-y-4">
+                {palmData.life_line && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Life Line Analysis</h4>
+                    <p className="text-sm text-muted-foreground">{palmData.life_line}</p>
+                  </div>
+                )}
+                {palmData.heart_line && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Heart Line Analysis</h4>
+                    <p className="text-sm text-muted-foreground">{palmData.heart_line}</p>
+                  </div>
+                )}
+                {palmData.head_line && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Head Line Analysis</h4>
+                    <p className="text-sm text-muted-foreground">{palmData.head_line}</p>
+                  </div>
+                )}
+                {palmData.fate_line && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Fate Line Analysis</h4>
+                    <p className="text-sm text-muted-foreground">{palmData.fate_line}</p>
+                  </div>
+                )}
               </div>
             )}
 
