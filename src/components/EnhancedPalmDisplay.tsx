@@ -12,7 +12,8 @@ import {
   DollarSign,
   Target,
   Users,
-  Sparkles
+  Sparkles,
+  Star
 } from 'lucide-react';
 
 interface EnhancedPalmDisplayProps {
@@ -122,73 +123,40 @@ const EnhancedPalmDisplay = ({ palmData }: EnhancedPalmDisplayProps) => {
               </div>
             ) : (hasBasicData || hasOverallInsight) && (
               <div className="space-y-4">
-                {/* Show detailed overall insight if available */}
+                {/* Show detailed overall insight */}
                 {hasOverallInsight && (
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Complete Palm Analysis</h4>
-                    <div className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
-                      {palmData.overall_insight}
-                    </div>
+                  <div className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
+                    {palmData.overall_insight}
                   </div>
                 )}
                 
-                {/* Show individual line analyses if available */}
-                {palmData.life_line && (
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Life Line Analysis</h4>
-                    <p className="text-sm text-muted-foreground">{palmData.life_line}</p>
-                  </div>
-                )}
-                {palmData.heart_line && (
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Heart Line Analysis</h4>
-                    <p className="text-sm text-muted-foreground">{palmData.heart_line}</p>
-                  </div>
-                )}
-                {palmData.head_line && (
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Head Line Analysis</h4>
-                    <p className="text-sm text-muted-foreground">{palmData.head_line}</p>
-                  </div>
-                )}
-                {palmData.fate_line && (
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Fate Line Analysis</h4>
-                    <p className="text-sm text-muted-foreground">{palmData.fate_line}</p>
-                  </div>
-                )}
-                
-                {/* Show strength information if available */}
-                {(palmData.life_line_strength || palmData.heart_line_strength || 
-                  palmData.head_line_strength || palmData.fate_line_strength) && (
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Line Strength Analysis</h4>
-                    <div className="grid gap-2 md:grid-cols-2">
-                      {palmData.life_line_strength && (
-                        <div className="flex justify-between">
-                          <span className="text-sm">Life Line:</span>
-                          <span className="text-sm font-medium">{palmData.life_line_strength}</span>
-                        </div>
-                      )}
-                      {palmData.heart_line_strength && (
-                        <div className="flex justify-between">
-                          <span className="text-sm">Heart Line:</span>
-                          <span className="text-sm font-medium">{palmData.heart_line_strength}</span>
-                        </div>
-                      )}
-                      {palmData.head_line_strength && (
-                        <div className="flex justify-between">
-                          <span className="text-sm">Head Line:</span>
-                          <span className="text-sm font-medium">{palmData.head_line_strength}</span>
-                        </div>
-                      )}
-                      {palmData.fate_line_strength && (
-                        <div className="flex justify-between">
-                          <span className="text-sm">Fate Line:</span>
-                          <span className="text-sm font-medium">{palmData.fate_line_strength}</span>
-                        </div>
-                      )}
-                    </div>
+                {/* Show individual line analyses if available and no overall insight */}
+                {!hasOverallInsight && (palmData.life_line || palmData.heart_line || palmData.head_line || palmData.fate_line) && (
+                  <div className="space-y-4">
+                    {palmData.life_line && (
+                      <div className="space-y-2">
+                        <h4 className="font-medium">Life Line Analysis</h4>
+                        <p className="text-sm text-muted-foreground">{palmData.life_line}</p>
+                      </div>
+                    )}
+                    {palmData.heart_line && (
+                      <div className="space-y-2">
+                        <h4 className="font-medium">Heart Line Analysis</h4>
+                        <p className="text-sm text-muted-foreground">{palmData.heart_line}</p>
+                      </div>
+                    )}
+                    {palmData.head_line && (
+                      <div className="space-y-2">
+                        <h4 className="font-medium">Head Line Analysis</h4>
+                        <p className="text-sm text-muted-foreground">{palmData.head_line}</p>
+                      </div>
+                    )}
+                    {palmData.fate_line && (
+                      <div className="space-y-2">
+                        <h4 className="font-medium">Fate Line Analysis</h4>
+                        <p className="text-sm text-muted-foreground">{palmData.fate_line}</p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
