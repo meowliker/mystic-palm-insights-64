@@ -246,7 +246,15 @@ Provide detailed, specific predictions with age ranges and actionable insights. 
       heart_line_strength: palmReading.heart_line_strength,
       head_line_strength: palmReading.head_line_strength,
       fate_line_strength: palmReading.fate_line_strength,
-      traits: palmReading.traits
+      traits: palmReading.traits,
+      hasEnhancedData: {
+        age_predictions: !!palmReading.age_predictions,
+        wealth_analysis: !!palmReading.wealth_analysis,
+        mount_analysis: !!palmReading.mount_analysis,
+        line_intersections: !!palmReading.line_intersections,
+        age_timeline: !!palmReading.age_timeline,
+        partnership_predictions: !!palmReading.partnership_predictions
+      }
     });
 
     return new Response(JSON.stringify(palmReading), {

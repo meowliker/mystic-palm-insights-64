@@ -47,7 +47,14 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
         overall_insight: scanData.overall_insight || '',
         traits: scanData.traits || {},
         palm_image_url: scanData.palm_image_url || null,
-        right_palm_image_url: scanData.right_palm_image_url || null
+        right_palm_image_url: scanData.right_palm_image_url || null,
+        // Enhanced palmistry fields - these are what make the detailed view work
+        age_predictions: scanData.age_predictions || null,
+        wealth_analysis: scanData.wealth_analysis || null,
+        mount_analysis: scanData.mount_analysis || null,
+        line_intersections: scanData.line_intersections || null,
+        age_timeline: scanData.age_timeline || null,
+        partnership_predictions: scanData.partnership_predictions || null
       };
       
       console.log('Formatted scan data for database:', scanDataToSave);
