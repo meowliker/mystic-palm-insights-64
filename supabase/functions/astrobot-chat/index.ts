@@ -127,44 +127,6 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     );
 
-    // Function to get relevant educational images based on question keywords
-    const getEducationalImages = async (question: string): Promise<any[]> => {
-      const questionLower = question.toLowerCase();
-      
-      // Enhanced keyword matching with variations and synonyms
-      const keywordMappings = [
-        { patterns: ['life line', 'lifeline', 'life', 'vitality', 'health'], category: 'lines' },
-        { patterns: ['heart line', 'heartline', 'heart', 'love', 'emotion'], category: 'lines' },  
-        { patterns: ['head line', 'headline', 'head', 'mind', 'intelligence'], category: 'lines' },
-        { patterns: ['fate line', 'fateline', 'fate', 'destiny', 'career'], category: 'lines' },
-        { patterns: ['hand type', 'nature', 'personality', 'character'], category: 'hand-types' },
-        { patterns: ['partner', 'spouse', 'marriage', 'relationship'], category: 'relationships' },
-        { patterns: ['millionaire', 'rich', 'wealth', 'money'], category: 'wealth-timing' },
-        { patterns: ['age', 'timing', 'when', 'years'], category: 'timing' }
-      ];
-      
-      // Find matching categories
-      const matchedCategories = keywordMappings
-        .filter(mapping => mapping.patterns.some(pattern => questionLower.includes(pattern)))
-        .map(mapping => mapping.category);
-      
-      if (matchedCategories.length === 0) {
-        // Default to showing basic lines guide for any palm-related question
-        matchedCategories.push('lines');
-      }
-      
-      const { data: images, error } = await supabase
-        .from('educational_palm_images')
-        .select('*')
-        .in('category', matchedCategories);
-
-      if (error) {
-        console.error('Error fetching educational images:', error);
-        return [];
-      }
-
-      return images || [];
-    };
 
     // Check for previous image in conversation history if no current image
     let finalImageUrl = imageUrl;
@@ -333,9 +295,6 @@ Be brutally honest about what you see. If someone has weak marriage lines, say i
       .replace(/#{1,6}\s*/g, '')       // Remove headers
       .trim();
 
-    // Get educational images based on the user's question
-    const educationalImages = await getEducationalImages(message);
-    
     // Only add brief suggestions, not long explanations
     if (finalImageUrl && finalImageUrl.trim() !== '') {
       // For image responses, no additional text needed - let the reading speak for itself
@@ -349,13 +308,7 @@ Be brutally honest about what you see. If someone has weak marriage lines, say i
 
     return new Response(
       JSON.stringify({ 
-        response: botResponse,
-        educationalImages: educationalImages.map(img => ({
-          url: `https://klustrtcwdgjacdezoih.supabase.co/storage/v1/object/public/${img.image_url}`,
-          title: img.title,
-          description: img.description,
-          category: img.category
-        }))
+        response: botResponse
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
