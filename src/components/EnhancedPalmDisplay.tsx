@@ -64,7 +64,19 @@ const EnhancedPalmDisplay = ({ palmData }: EnhancedPalmDisplayProps) => {
 
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="age-predictions" className="w-full">
+      {/* If we only have overall insight (older readings), show it in a clean format */}
+      {hasOverallInsight && !hasEnhancedData ? (
+        <Card className="p-6 bg-card/80 backdrop-blur-sm border-primary/20">
+          <div className="flex items-center gap-2 mb-4">
+            <Sparkles className="h-5 w-5 text-primary" />
+            <h3 className="text-xl font-bold">Complete Palm Reading Analysis</h3>
+          </div>
+          <div className="text-muted-foreground whitespace-pre-line leading-relaxed">
+            {palmData.overall_insight}
+          </div>
+        </Card>
+      ) : (
+        <Tabs defaultValue="age-predictions" className="w-full">
         <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
           <TabsTrigger value="age-predictions" className="text-xs">Age Timeline</TabsTrigger>
           <TabsTrigger value="wealth" className="text-xs">Wealth</TabsTrigger>
@@ -358,6 +370,7 @@ const EnhancedPalmDisplay = ({ palmData }: EnhancedPalmDisplayProps) => {
           </Card>
         </TabsContent>
       </Tabs>
+      )}
     </div>
   );
 };
