@@ -30,11 +30,16 @@ const EnhancedPalmDisplay = ({ palmData }: EnhancedPalmDisplayProps) => {
                          palmData.age_timeline || 
                          palmData.partnership_predictions;
 
-  // Check for basic palm reading data
-  const hasBasicData = palmData.life_line || palmData.heart_line || palmData.head_line || palmData.fate_line;
+  // Check for basic palm reading data (including strength fields)
+  const hasBasicData = palmData.life_line || palmData.heart_line || palmData.head_line || palmData.fate_line ||
+                      palmData.life_line_strength || palmData.heart_line_strength || 
+                      palmData.head_line_strength || palmData.fate_line_strength;
+
+  // Check if we have overall insight (this contains the full reading details)
+  const hasOverallInsight = palmData.overall_insight && palmData.overall_insight.trim().length > 0;
 
   // If no data at all, show message
-  if (!hasEnhancedData && !hasBasicData) {
+  if (!hasEnhancedData && !hasBasicData && !hasOverallInsight) {
     return (
       <Card className="p-6 bg-muted/20 border-primary/20">
         <div className="text-center space-y-4">
@@ -115,8 +120,19 @@ const EnhancedPalmDisplay = ({ palmData }: EnhancedPalmDisplayProps) => {
                   </p>
                 </div>
               </div>
-            ) : hasBasicData && (
+            ) : (hasBasicData || hasOverallInsight) && (
               <div className="space-y-4">
+                {/* Show detailed overall insight if available */}
+                {hasOverallInsight && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Complete Palm Analysis</h4>
+                    <div className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
+                      {palmData.overall_insight}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Show individual line analyses if available */}
                 {palmData.life_line && (
                   <div className="space-y-2">
                     <h4 className="font-medium">Life Line Analysis</h4>
@@ -139,6 +155,40 @@ const EnhancedPalmDisplay = ({ palmData }: EnhancedPalmDisplayProps) => {
                   <div className="space-y-2">
                     <h4 className="font-medium">Fate Line Analysis</h4>
                     <p className="text-sm text-muted-foreground">{palmData.fate_line}</p>
+                  </div>
+                )}
+                
+                {/* Show strength information if available */}
+                {(palmData.life_line_strength || palmData.heart_line_strength || 
+                  palmData.head_line_strength || palmData.fate_line_strength) && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Line Strength Analysis</h4>
+                    <div className="grid gap-2 md:grid-cols-2">
+                      {palmData.life_line_strength && (
+                        <div className="flex justify-between">
+                          <span className="text-sm">Life Line:</span>
+                          <span className="text-sm font-medium">{palmData.life_line_strength}</span>
+                        </div>
+                      )}
+                      {palmData.heart_line_strength && (
+                        <div className="flex justify-between">
+                          <span className="text-sm">Heart Line:</span>
+                          <span className="text-sm font-medium">{palmData.heart_line_strength}</span>
+                        </div>
+                      )}
+                      {palmData.head_line_strength && (
+                        <div className="flex justify-between">
+                          <span className="text-sm">Head Line:</span>
+                          <span className="text-sm font-medium">{palmData.head_line_strength}</span>
+                        </div>
+                      )}
+                      {palmData.fate_line_strength && (
+                        <div className="flex justify-between">
+                          <span className="text-sm">Fate Line:</span>
+                          <span className="text-sm font-medium">{palmData.fate_line_strength}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
