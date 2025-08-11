@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useScans } from '@/hooks/useScans';
 import { format } from 'date-fns';
 import { cleanupMarkdown } from '@/utils/cleanupMarkdown';
+import EnhancedPalmDisplay from '@/components/EnhancedPalmDisplay';
 
 interface ScanDetailDialogProps {
   scan: any;
@@ -133,7 +134,8 @@ const ScanDetailDialog = ({ scan, children, onScanDeleted }: ScanDetailDialogPro
             </CardContent>
           </Card>
 
-          {/* Removed individual palm line cards and character traits - all details are in the main reading */}
+          {/* Enhanced Palm Analysis - Show detailed analysis if available */}
+          <EnhancedPalmDisplay palmData={scan} />
 
           {/* Delete Button */}
           <div className="flex justify-center pt-4">
