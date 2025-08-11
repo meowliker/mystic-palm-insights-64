@@ -172,6 +172,7 @@ Provide detailed, specific predictions with age ranges and actionable insights. 
 
     const analysis = data.choices[0].message.content;
     console.log('Analysis completed, length:', analysis.length);
+    console.log('Raw analysis preview:', analysis.substring(0, 500));
 
     // Try to parse JSON response first, fall back to text parsing
     let enhancedData;
@@ -179,11 +180,17 @@ Provide detailed, specific predictions with age ranges and actionable insights. 
       // Clean the response to extract JSON
       const jsonMatch = analysis.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        enhancedData = JSON.parse(jsonMatch[0]);
+        const jsonString = jsonMatch[0];
+        console.log('Found JSON string, length:', jsonString.length);
+        enhancedData = JSON.parse(jsonString);
         console.log('Successfully parsed JSON response');
+        console.log('Enhanced data keys:', Object.keys(enhancedData));
+      } else {
+        console.log('No JSON found in response');
       }
     } catch (e) {
-      console.log('Failed to parse JSON, using text analysis fallback');
+      console.log('Failed to parse JSON:', e.message);
+      console.log('Using text analysis fallback');
     }
 
     // Parse line strengths from the analysis

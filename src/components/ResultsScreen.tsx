@@ -36,6 +36,15 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
 
       console.log('=== SAVING PALM READING TO DATABASE (ONCE) ===');
       console.log('User authenticated:', user.id);
+      console.log('Raw scanData received:', scanData);
+      console.log('Enhanced data check in scanData:', {
+        age_predictions: !!scanData.age_predictions,
+        wealth_analysis: !!scanData.wealth_analysis,
+        mount_analysis: !!scanData.mount_analysis,
+        line_intersections: !!scanData.line_intersections,
+        age_timeline: !!scanData.age_timeline,
+        partnership_predictions: !!scanData.partnership_predictions
+      });
       hasSaved.current = true; // Mark as saved to prevent duplicates
       
       // Format the data to match the database schema
