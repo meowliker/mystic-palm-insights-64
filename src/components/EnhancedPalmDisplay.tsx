@@ -23,6 +23,22 @@ interface EnhancedPalmDisplayProps {
 const EnhancedPalmDisplay = ({ palmData }: EnhancedPalmDisplayProps) => {
   if (!palmData) return null;
 
+  // Debug logging to see what data we have
+  console.log('=== ENHANCED PALM DISPLAY DEBUG ===');
+  console.log('Palm data keys:', Object.keys(palmData));
+  console.log('Enhanced data check:', {
+    age_predictions: !!palmData.age_predictions,
+    wealth_analysis: !!palmData.wealth_analysis,
+    mount_analysis: !!palmData.mount_analysis,
+    line_intersections: !!palmData.line_intersections,
+    age_timeline: !!palmData.age_timeline,
+    partnership_predictions: !!palmData.partnership_predictions
+  });
+  console.log('Sample enhanced data:', {
+    age_predictions: palmData.age_predictions,
+    wealth_analysis: palmData.wealth_analysis
+  });
+
   // Check if this reading has enhanced data
   const hasEnhancedData = palmData.age_predictions || 
                          palmData.wealth_analysis || 

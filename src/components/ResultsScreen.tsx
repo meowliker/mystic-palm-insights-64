@@ -58,6 +58,14 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
       };
       
       console.log('Formatted scan data for database:', scanDataToSave);
+      console.log('Enhanced fields check:', {
+        age_predictions: !!scanData.age_predictions,
+        wealth_analysis: !!scanData.wealth_analysis,
+        mount_analysis: !!scanData.mount_analysis,
+        line_intersections: !!scanData.line_intersections,
+        age_timeline: !!scanData.age_timeline,
+        partnership_predictions: !!scanData.partnership_predictions
+      });
       const result = await saveScan(scanDataToSave);
       console.log('Save result:', result);
       
