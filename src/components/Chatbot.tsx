@@ -19,6 +19,14 @@ interface Message {
   timestamp: Date;
   imageUrl?: string;
   isTyping?: boolean;
+  educationalImages?: EducationalImage[];
+}
+
+interface EducationalImage {
+  url: string;
+  title: string;
+  description: string;
+  category: string;
 }
 
 const prebuiltQuestions = [
@@ -303,7 +311,8 @@ export const Chatbot: React.FC = () => {
         id: (Date.now() + 1).toString(),
         content: data.response,
         sender: 'astrobot',
-        timestamp: new Date()
+        timestamp: new Date(),
+        educationalImages: data.educationalImages || []
       };
 
       setMessages(prev => [...prev, botResponse]);
@@ -520,6 +529,30 @@ export const Chatbot: React.FC = () => {
                               );
                             })}
                           </div>
+                          
+                          {/* Educational Images */}
+                          {message.educationalImages && message.educationalImages.length > 0 && (
+                            <div className="mt-3 space-y-2">
+                              <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                                📚 Educational References:
+                              </p>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {message.educationalImages.map((eduImage, index) => (
+                                  <div key={index} className="bg-card/30 rounded-lg p-3 border border-border/20 hover:border-primary/20 transition-colors">
+                                    <img 
+                                      src={eduImage.url} 
+                                      alt={eduImage.title}
+                                      className="w-full h-24 object-cover rounded-lg mb-2"
+                                    />
+                                    <h4 className="text-xs font-medium text-foreground">{eduImage.title}</h4>
+                                    {eduImage.description && (
+                                      <p className="text-xs text-muted-foreground mt-1">{eduImage.description}</p>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                           
                           {/* Interactive buttons for bot messages */}
                           {message.sender === 'astrobot' && !message.isTyping && (

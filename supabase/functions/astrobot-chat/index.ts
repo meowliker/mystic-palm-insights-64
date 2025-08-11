@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.51.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -119,6 +120,29 @@ serve(async (req) => {
     if (!openAIApiKey) {
       throw new Error('OpenAI API key not configured');
     }
+
+    // Initialize Supabase client
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+    );
+
+    // Function to get relevant educational images based on question keywords
+    const getEducationalImages = async (question: string): Promise<any[]> => {
+      const keywords = question.toLowerCase().split(' ');
+      
+      const { data: images, error } = await supabase
+        .from('educational_palm_images')
+        .select('*')
+        .or(keywords.map(keyword => `keywords.cs.{${keyword}}`).join(','));
+
+      if (error) {
+        console.error('Error fetching educational images:', error);
+        return [];
+      }
+
+      return images || [];
+    };
 
     // Check for previous image in conversation history if no current image
     let finalImageUrl = imageUrl;
@@ -287,6 +311,9 @@ Be brutally honest about what you see. If someone has weak marriage lines, say i
       .replace(/#{1,6}\s*/g, '')       // Remove headers
       .trim();
 
+    // Get educational images based on the user's question
+    const educationalImages = await getEducationalImages(message);
+    
     // Only add brief suggestions, not long explanations
     if (finalImageUrl && finalImageUrl.trim() !== '') {
       // For image responses, no additional text needed - let the reading speak for itself
@@ -299,7 +326,15 @@ Be brutally honest about what you see. If someone has weak marriage lines, say i
     }
 
     return new Response(
-      JSON.stringify({ response: botResponse }),
+      JSON.stringify({ 
+        response: botResponse,
+        educationalImages: educationalImages.map(img => ({
+          url: `https://klustrtcwdgjacdezoih.supabase.co/storage/v1/object/public/${img.image_url}`,
+          title: img.title,
+          description: img.description,
+          category: img.category
+        }))
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 

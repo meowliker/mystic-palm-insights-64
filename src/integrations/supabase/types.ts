@@ -209,6 +209,36 @@ export type Database = {
           },
         ]
       }
+      educational_palm_images: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string
+          keywords: string[]
+          title: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url: string
+          keywords: string[]
+          title: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string
+          keywords?: string[]
+          title?: string
+        }
+        Relationships: []
+      }
       palm_scans: {
         Row: {
           age_predictions: Json | null
