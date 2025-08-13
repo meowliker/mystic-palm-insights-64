@@ -6,9 +6,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Camera, Hand, CheckCircle, AlertCircle, RefreshCw, Sparkles, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import palmOutline from '@/assets/palm-outline.png';
-import leftPalmOutline from '@/assets/left-palm-outline.png';
-import rightPalmOutline from '@/assets/right-palm-outline.png';
 
 type ScanState = 'ready' | 'detecting' | 'scanning' | 'capturing' | 'analyzing' | 'complete' | 'error';
 
@@ -377,55 +374,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
               {/* Hidden canvas for image capture */}
               <canvas ref={canvasRef} className="hidden" />
               
-              {/* Palm Outline Overlay - Only show during scanning states, not analyzing */}
-              {scanState !== 'analyzing' && (
-                <div className="absolute inset-0 z-20 flex items-center justify-center" style={{ marginTop: '-80px' }}>
-                  <div className="relative">
-                    <img 
-                      src={palmOutline} 
-                      alt="Palm Outline" 
-                      className={`w-48 h-60 transition-all duration-500 ${
-                        alignment === 'good' 
-                          ? 'opacity-90 drop-shadow-[0_0_30px_rgba(168,85,247,0.9)] scale-105' 
-                          : 'opacity-60 scale-100'
-                      }`}
-                      style={{
-                        filter: alignment === 'good' ? 'brightness(1.2) contrast(1.1)' : 'none'
-                      }}
-                    />
-                    
-                    {/* Hold Steady message */}
-                    {scanState === 'scanning' && (
-                      <div className="absolute -bottom-20 left-1/2 transform -translate-x-1/2">
-                        <div className="bg-primary/90 backdrop-blur-sm text-white px-6 py-3 rounded-full text-lg font-bold shadow-lg border border-primary/20">
-                          Hold Steady
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Cosmic Effects for Scanning */}
-                    {(scanState === 'scanning' || scanState === 'capturing') && alignment === 'good' && (
-                      <>
-                        {/* Planetary symbols */}
-                        <div className="absolute inset-0 pointer-events-none">
-                          <div className="absolute top-1/4 left-1/4 w-8 h-8 bg-yellow-400 rounded-full animate-pulse opacity-80" />
-                          <div className="absolute top-1/3 right-1/4 w-6 h-6 bg-red-400 rounded-full animate-pulse opacity-80" />
-                          <div className="absolute bottom-1/3 left-1/3 w-7 h-7 bg-blue-400 rounded-full animate-pulse opacity-80" />
-                          <div className="absolute bottom-1/4 right-1/3 w-5 h-5 bg-purple-400 rounded-full animate-pulse opacity-80" />
-                        </div>
-                        
-                        {/* Scanning lines */}
-                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/30 to-transparent animate-pulse" />
-                      </>
-                    )}
-
-                    {/* Capture Success Effect */}
-                    {scanState === 'capturing' && (
-                      <div className="absolute inset-0 bg-green-500/20 animate-ping rounded-lg" />
-                    )}
-                  </div>
-                </div>
-              )}
+              {/* Palm Outline Overlay - COMPLETELY REMOVED */}
               
               {/* Scanning Progress Overlay - Don't show during analyzing */}
               {(scanState === 'scanning' || scanState === 'capturing') && (
@@ -591,7 +540,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
               Palm Reading
             </h1>
             <p className="text-muted-foreground text-base sm:text-lg px-4">
-              {getStatusMessage()}
+              Position your palm for scanning
             </p>
             {scanState === 'ready' && (
               <p className="text-xs sm:text-sm text-muted-foreground px-4">
@@ -656,49 +605,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
                   {/* Hidden canvas for image capture */}
                   <canvas ref={canvasRef} className="hidden" />
                   
-                  {/* Palm Outline Overlay */}
-                  <div className="relative z-10 flex items-center justify-center">
-                    <div className="relative">
-                      <img 
-                        src={palmOutline} 
-                        alt="Palm Outline" 
-                        className={`w-40 h-52 sm:w-56 sm:h-72 transition-all duration-500 ${
-                          alignment === 'good' 
-                            ? 'opacity-90 drop-shadow-[0_0_30px_rgba(168,85,247,0.9)] scale-105' 
-                            : 'opacity-60 scale-100'
-                        }`}
-                        style={{
-                          filter: alignment === 'good' ? 'brightness(1.2) contrast(1.1)' : 'none'
-                        }}
-                      />
-                      
-
-                      {/* Cosmic Effects for Scanning */}
-                      {scanState === 'scanning' && alignment === 'good' && (
-                        <>
-                          {/* Planetary symbols */}
-                          <div className="absolute inset-0 pointer-events-none">
-                            <div className="absolute top-1/4 left-1/4 w-8 h-8 bg-yellow-400 rounded-full animate-pulse opacity-80" />
-                            <div className="absolute top-1/3 right-1/4 w-6 h-6 bg-red-400 rounded-full animate-pulse opacity-80" />
-                            <div className="absolute bottom-1/3 left-1/3 w-7 h-7 bg-blue-400 rounded-full animate-pulse opacity-80" />
-                            <div className="absolute bottom-1/4 right-1/3 w-5 h-5 bg-purple-400 rounded-full animate-pulse opacity-80" />
-                          </div>
-                          
-                          {/* Scanning lines */}
-                          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/30 to-transparent animate-pulse" />
-                        </>
-                      )}
-                      
-                      {/* Analysis Phase Effects */}
-                      {scanState === 'analyzing' && (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="text-2xl font-bold text-primary animate-pulse">
-                            <Sparkles className="h-12 w-12" />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  {/* Palm Outline Overlay - COMPLETELY REMOVED */}
                   
                   {/* Scanning Progress Overlay */}
                   {(scanState === 'scanning' || scanState === 'analyzing') && (
