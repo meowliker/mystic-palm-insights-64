@@ -353,6 +353,22 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: undefined
       }
+      get_safe_blog_comment_data: {
+        Args: { comment_blog_id: string }
+        Returns: {
+          id: string
+          blog_id: string
+          parent_comment_id: string
+          content: string
+          created_at: string
+          updated_at: string
+          author_name: string
+          author_profile_picture: string
+          like_count: number
+          user_has_liked: boolean
+          replies: Json
+        }[]
+      }
       get_safe_profile_data: {
         Args: { profile_user_id: string }
         Returns: {
