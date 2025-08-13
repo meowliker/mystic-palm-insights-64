@@ -228,7 +228,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
 
   const handleScanComplete = async () => {
     setScanState('analyzing');
-    setProcessingStage('Capturing image...');
+    setProcessingStage('Analyzing cosmic patterns...');
     
     try {
       // Capture the palm image immediately
@@ -241,12 +241,6 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
       
       // Stop camera immediately for privacy after capture
       stopCamera();
-      
-      // Show capture success feedback
-      toast({
-        title: "Capture Successful!",
-        description: "Your palm has been captured. Analyzing in background...",
-      });
 
       // Background processing - upload and analyze
       setProcessingStage('Uploading to secure storage...');
@@ -293,7 +287,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
   const getStatusMessage = () => {
     switch (scanState) {
       case 'ready':
-        return 'Position your palm within the outline';
+        return 'Position your palm for scanning';
       case 'detecting':
         return 'Looking for your palm...';
       case 'scanning':
@@ -311,6 +305,51 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
 
   return (
     <div className="min-h-screen bg-background relative">
+      {/* Full Screen Analysis Animation */}
+      {scanState === 'analyzing' && (
+        <div className="fixed inset-0 bg-gradient-to-br from-purple-900 via-black to-purple-900 z-50 flex flex-col items-center justify-center">
+          {/* Cosmic Background Effect */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-purple-500/20 rounded-full animate-pulse" />
+            <div className="absolute top-1/3 right-1/4 w-24 h-24 bg-pink-500/20 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }} />
+            <div className="absolute bottom-1/3 left-1/3 w-28 h-28 bg-blue-500/20 rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
+            <div className="absolute bottom-1/4 right-1/3 w-20 h-20 bg-yellow-500/20 rounded-full animate-pulse" style={{ animationDelay: '1.5s' }} />
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-pulse" />
+          </div>
+          
+          {/* Main Analysis Content */}
+          <div className="relative z-10 text-center space-y-8">
+            {/* Multiple spinning sparkles */}
+            <div className="relative">
+              <div className="text-purple-400 animate-spin">
+                <Sparkles className="h-24 w-24" />
+              </div>
+              <div className="absolute inset-0 text-pink-400 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '3s' }}>
+                <Sparkles className="h-16 w-16" />
+              </div>
+              <div className="absolute inset-0 text-blue-400 animate-spin" style={{ animationDuration: '4s' }}>
+                <Sparkles className="h-12 w-12" />
+              </div>
+            </div>
+            
+            {/* Analysis Text */}
+            <div className="space-y-4">
+              <h1 className="text-4xl font-bold text-white animate-pulse">
+                Analyzing Your Palm
+              </h1>
+              <p className="text-white/80 text-lg animate-fade-in">
+                {processingStage || 'Reading cosmic patterns...'}
+              </p>
+              <div className="flex justify-center space-x-2 mt-4">
+                <div className="w-3 h-3 bg-purple-400 rounded-full animate-bounce" />
+                <div className="w-3 h-3 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                <div className="w-3 h-3 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Mobile: Fullscreen camera view */}
       <div className="sm:hidden">
         {/* Fullscreen Camera Area */}
@@ -338,72 +377,58 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
               {/* Hidden canvas for image capture */}
               <canvas ref={canvasRef} className="hidden" />
               
-              {/* Palm Outline Overlay - moved up */}
-              <div className="absolute inset-0 z-20 flex items-center justify-center" style={{ marginTop: '-80px' }}>
-                <div className="relative">
-                  <img 
-                    src={palmOutline} 
-                    alt="Palm Outline" 
-                    className={`w-48 h-60 transition-all duration-500 ${
-                      alignment === 'good' 
-                        ? 'opacity-90 drop-shadow-[0_0_30px_rgba(168,85,247,0.9)] scale-105' 
-                        : 'opacity-60 scale-100'
-                    }`}
-                    style={{
-                      filter: alignment === 'good' ? 'brightness(1.2) contrast(1.1)' : 'none'
-                    }}
-                  />
-                  
+              {/* Palm Outline Overlay - Only show during scanning states, not analyzing */}
+              {scanState !== 'analyzing' && (
+                <div className="absolute inset-0 z-20 flex items-center justify-center" style={{ marginTop: '-80px' }}>
+                  <div className="relative">
+                    <img 
+                      src={palmOutline} 
+                      alt="Palm Outline" 
+                      className={`w-48 h-60 transition-all duration-500 ${
+                        alignment === 'good' 
+                          ? 'opacity-90 drop-shadow-[0_0_30px_rgba(168,85,247,0.9)] scale-105' 
+                          : 'opacity-60 scale-100'
+                      }`}
+                      style={{
+                        filter: alignment === 'good' ? 'brightness(1.2) contrast(1.1)' : 'none'
+                      }}
+                    />
+                    
+                    {/* Hold Steady message */}
+                    {scanState === 'scanning' && (
+                      <div className="absolute -bottom-20 left-1/2 transform -translate-x-1/2">
+                        <div className="bg-primary/90 backdrop-blur-sm text-white px-6 py-3 rounded-full text-lg font-bold shadow-lg border border-primary/20">
+                          Hold Steady
+                        </div>
+                      </div>
+                    )}
 
-                  {/* Countdown Display - Remove countdown, just show Hold Steady */}
-                  {scanState === 'scanning' && (
-                    <div className="absolute -bottom-20 left-1/2 transform -translate-x-1/2">
-                      <div className="bg-primary/90 backdrop-blur-sm text-white px-6 py-3 rounded-full text-lg font-bold shadow-lg border border-primary/20">
-                        Hold Steady
-                      </div>
-                    </div>
-                  )}
+                    {/* Cosmic Effects for Scanning */}
+                    {(scanState === 'scanning' || scanState === 'capturing') && alignment === 'good' && (
+                      <>
+                        {/* Planetary symbols */}
+                        <div className="absolute inset-0 pointer-events-none">
+                          <div className="absolute top-1/4 left-1/4 w-8 h-8 bg-yellow-400 rounded-full animate-pulse opacity-80" />
+                          <div className="absolute top-1/3 right-1/4 w-6 h-6 bg-red-400 rounded-full animate-pulse opacity-80" />
+                          <div className="absolute bottom-1/3 left-1/3 w-7 h-7 bg-blue-400 rounded-full animate-pulse opacity-80" />
+                          <div className="absolute bottom-1/4 right-1/3 w-5 h-5 bg-purple-400 rounded-full animate-pulse opacity-80" />
+                        </div>
+                        
+                        {/* Scanning lines */}
+                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/30 to-transparent animate-pulse" />
+                      </>
+                    )}
 
-                  {/* Cosmic Effects for Scanning */}
-                  {(scanState === 'scanning' || scanState === 'capturing') && alignment === 'good' && (
-                    <>
-                      {/* Planetary symbols */}
-                      <div className="absolute inset-0 pointer-events-none">
-                        <div className="absolute top-1/4 left-1/4 w-8 h-8 bg-yellow-400 rounded-full animate-pulse opacity-80" />
-                        <div className="absolute top-1/3 right-1/4 w-6 h-6 bg-red-400 rounded-full animate-pulse opacity-80" />
-                        <div className="absolute bottom-1/3 left-1/3 w-7 h-7 bg-blue-400 rounded-full animate-pulse opacity-80" />
-                        <div className="absolute bottom-1/4 right-1/3 w-5 h-5 bg-purple-400 rounded-full animate-pulse opacity-80" />
-                      </div>
-                      
-                      {/* Scanning lines */}
-                      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/30 to-transparent animate-pulse" />
-                    </>
-                  )}
-                  
-                  {/* Analysis Phase Effects */}
-                  {scanState === 'analyzing' && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <div className="text-primary animate-spin mb-4">
-                        <Sparkles className="h-16 w-16" />
-                      </div>
-                      <div className="text-white text-lg font-semibold animate-pulse">
-                        Analyzing Your Palm
-                      </div>
-                      <div className="text-white/70 text-sm mt-2 animate-fade-in">
-                        Reading cosmic patterns...
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Capture Success Effect */}
-                  {scanState === 'capturing' && (
-                    <div className="absolute inset-0 bg-green-500/20 animate-ping rounded-lg" />
-                  )}
+                    {/* Capture Success Effect */}
+                    {scanState === 'capturing' && (
+                      <div className="absolute inset-0 bg-green-500/20 animate-ping rounded-lg" />
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
               
-              {/* Scanning Progress Overlay */}
-              {(scanState === 'scanning' || scanState === 'analyzing' || scanState === 'capturing') && (
+              {/* Scanning Progress Overlay - Don't show during analyzing */}
+              {(scanState === 'scanning' || scanState === 'capturing') && (
                 <div className="absolute inset-0 bg-primary/10 animate-pulse z-15" />
               )}
             </>
@@ -512,7 +537,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
                   <span className="text-center">
                     {alignment === 'good' ? 
                       'Perfect alignment! Ready to scan...' : 
-                      'Adjust your hand position within the outline'
+                      'Position your palm for scanning'
                     }
                   </span>
                 </div>
@@ -708,7 +733,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
                   <span className="text-center">
                     {alignment === 'good' 
                       ? 'Perfect alignment! Ready to scan...' 
-                      : 'Adjust your hand position within the outline'
+                      : 'Position your palm for scanning'
                     }
                   </span>
                 </div>
