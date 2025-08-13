@@ -56,7 +56,8 @@ export const BlogDetail = () => {
 
         // Get author profile using safe function
         console.log('Fetching profile for user:', blogData.user_id);
-        const { data: profileData, error: profileError } = await supabase.rpc('get_safe_profile_data', { profile_user_id: blogData.user_id });
+        const { data: profileResponse, error: profileError } = await supabase.rpc('get_safe_profile_data', { profile_user_id: blogData.user_id });
+        const profileData = profileResponse?.[0] || null;
 
         console.log('Profile query result:', { profileData, profileError });
 
@@ -79,7 +80,7 @@ export const BlogDetail = () => {
         const transformedBlog = {
           ...blogData,
           author_name: profileData?.full_name || 'Unknown User',
-          author_email: profileData?.email || '',
+          author_email: '', // No longer exposed for security
           author_profile_picture: profileData?.profile_picture_url || '',
           likes_count: likesData?.length || 0,
           comments_count: 0,

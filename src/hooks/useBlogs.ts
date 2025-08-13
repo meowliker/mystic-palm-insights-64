@@ -66,11 +66,6 @@ export const useBlogs = () => {
       });
       const profilesData = (await Promise.all(profilesDataPromises)).filter(Boolean);
 
-      if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
-        // Continue with blogs but without author names
-      }
-
       // Get likes for the blogs
       const blogIds = blogsData.map(blog => blog.id);
       const { data: likesData, error: likesError } = await supabase
@@ -103,7 +98,7 @@ export const useBlogs = () => {
         return {
           ...blog,
           author_name: profile?.full_name || 'Unknown',
-          author_email: profile?.email || '',
+          author_email: '', // No longer exposed for security
           author_profile_picture: profile?.profile_picture_url || '',
           likes_count: blogLikes.length,
           comments_count: blogComments.length,
@@ -258,11 +253,7 @@ export const useBlogs = () => {
         });
         const profiles = (await Promise.all(profilesDataPromises)).filter(Boolean);
 
-        if (profilesError) {
-          console.error('Error fetching comment profiles:', profilesError);
-        } else {
-          profilesData = profiles || [];
-        }
+        profilesData = profiles;
       }
       
       console.log('Fetched profiles:', profilesData);
@@ -286,7 +277,7 @@ export const useBlogs = () => {
         return {
           ...comment,
           author_name: profile?.full_name || 'Unknown User',
-          author_email: profile?.email || '',
+          author_email: '', // No longer exposed for security
           author_profile_picture: profile?.profile_picture_url || '',
           likes_count: commentLikes.length,
           isLikedByUser: user ? commentLikes.some(like => like.user_id === user.id) : false
@@ -466,7 +457,8 @@ export const useBlogs = () => {
       if (blogsError) throw blogsError;
 
       // Get user profile using safe function
-      const { data: profileData, error: profileError } = await supabase.rpc('get_safe_profile_data', { profile_user_id: user.id });
+      const { data: profileResponse, error: profileError } = await supabase.rpc('get_safe_profile_data', { profile_user_id: user.id });
+      const profileData = profileResponse?.[0] || null;
 
       if (profileError) {
         console.error('Profile error in fetchUserBlogs:', profileError);
@@ -489,7 +481,7 @@ export const useBlogs = () => {
         return {
           ...blog,
           author_name: profileData?.full_name || 'Unknown',
-          author_email: profileData?.email || '',
+          author_email: '', // No longer exposed for security
           author_profile_picture: profileData?.profile_picture_url || '',
           likes_count: blogLikes.length,
           comments_count: 0,

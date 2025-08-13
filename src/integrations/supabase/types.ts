@@ -353,6 +353,15 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: undefined
       }
+      get_safe_profile_data: {
+        Args: { profile_user_id: string }
+        Returns: {
+          id: string
+          profile_picture_url: string
+          full_name: string
+          created_at: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
