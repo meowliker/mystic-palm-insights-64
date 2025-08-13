@@ -58,12 +58,13 @@ export const useBlogs = () => {
         return;
       }
 
-      // Get user profiles for the blogs
+      // Get user profiles for the blogs using the safe profile function
       const userIds = blogsData.map(blog => blog.user_id);
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, full_name, email, profile_picture_url')
-        .in('id', userIds);
+      const profilesDataPromises = userIds.map(async (userId) => {
+        const { data, error } = await supabase.rpc('get_safe_profile_data', { profile_user_id: userId });
+        return error ? null : data?.[0];
+      });
+      const profilesData = (await Promise.all(profilesDataPromises)).filter(Boolean);
 
       if (profilesError) {
         console.error('Error fetching profiles:', profilesError);
@@ -251,10 +252,11 @@ export const useBlogs = () => {
       
       let profilesData = [];
       if (userIds.length > 0) {
-        const { data: profiles, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, full_name, email, profile_picture_url')
-          .in('id', userIds);
+        const profilesDataPromises = userIds.map(async (userId) => {
+          const { data, error } = await supabase.rpc('get_safe_profile_data', { profile_user_id: userId });
+          return error ? null : data?.[0];
+        });
+        const profiles = (await Promise.all(profilesDataPromises)).filter(Boolean);
 
         if (profilesError) {
           console.error('Error fetching comment profiles:', profilesError);
@@ -463,12 +465,8 @@ export const useBlogs = () => {
 
       if (blogsError) throw blogsError;
 
-      // Get user profile
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, full_name, email, profile_picture_url')
-        .eq('id', user.id)
-        .single();
+      // Get user profile using safe function
+      const { data: profileData, error: profileError } = await supabase.rpc('get_safe_profile_data', { profile_user_id: user.id });
 
       if (profileError) {
         console.error('Profile error in fetchUserBlogs:', profileError);

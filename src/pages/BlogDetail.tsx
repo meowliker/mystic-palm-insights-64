@@ -54,13 +54,9 @@ export const BlogDetail = () => {
           return;
         }
 
-        // Get author profile
+        // Get author profile using safe function
         console.log('Fetching profile for user:', blogData.user_id);
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('id, full_name, email, profile_picture_url')
-          .eq('id', blogData.user_id)
-          .single();
+        const { data: profileData, error: profileError } = await supabase.rpc('get_safe_profile_data', { profile_user_id: blogData.user_id });
 
         console.log('Profile query result:', { profileData, profileError });
 
