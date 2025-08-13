@@ -196,9 +196,9 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
               <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/20 rounded-full mb-2">
                 <Zap className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="text-xl font-bold text-foreground">Dive Deeper with Astrobot</h3>
+              <h3 className="text-xl font-bold text-foreground">Get to Know More</h3>
               <p className="text-muted-foreground mb-6">
-                Know more with our Astrobot
+                Dive Deeper with Astrobot
               </p>
               <div className="grid gap-3 sm:gap-4">
                 {selectedQuestions.map((question, index) => (
