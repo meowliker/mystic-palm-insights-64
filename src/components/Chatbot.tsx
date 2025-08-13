@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { PalmGuide } from '@/components/PalmGuide';
 import { useAuth } from '@/hooks/useAuth';
+import { useLocation } from 'react-router-dom';
 
 interface Message {
   id: string;
@@ -46,6 +47,7 @@ const palmGuidanceInstructions = {
 
 export const Chatbot: React.FC = () => {
   const { user } = useAuth();
+  const location = useLocation();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -53,6 +55,7 @@ export const Chatbot: React.FC = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+  const [hasProcessedNavigation, setHasProcessedNavigation] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -81,6 +84,46 @@ export const Chatbot: React.FC = () => {
       setIsLoadingHistory(false);
     }
   }, [user]);
+
+  // Handle navigation state from ResultsScreen
+  useEffect(() => {
+    const navigationState = location.state as any;
+    if (navigationState?.question && navigationState?.autoSend && !hasProcessedNavigation) {
+      setHasProcessedNavigation(true);
+      
+      // Set the question in input
+      setInputMessage(navigationState.question);
+      
+      // If palm image is provided, convert it to the expected format
+      if (navigationState.palmImage) {
+        // Create a mock file object for the palm image
+        fetch(navigationState.palmImage)
+          .then(res => res.blob())
+          .then(blob => {
+            const file = new File([blob], 'palm-reading.jpg', { type: 'image/jpeg' });
+            setSelectedImage(file);
+            setImagePreview(navigationState.palmImage);
+            
+            // Auto-send the message after a short delay
+            setTimeout(() => {
+              sendMessage();
+            }, 1000);
+          })
+          .catch(err => {
+            console.error('Error loading palm image:', err);
+            // Send message without image if loading fails
+            setTimeout(() => {
+              sendMessage();
+            }, 1000);
+          });
+      } else {
+        // Send message without image
+        setTimeout(() => {
+          sendMessage();
+        }, 1000);
+      }
+    }
+  }, [location.state, hasProcessedNavigation]);
 
   useEffect(() => {
     scrollToBottom();

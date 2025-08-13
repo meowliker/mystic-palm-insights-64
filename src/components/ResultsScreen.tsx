@@ -5,18 +5,34 @@ import { Badge } from '@/components/ui/badge';
 import { useScans } from '@/hooks/useScans';
 import { useAuth } from '@/hooks/useAuth';
 import { cleanupMarkdown } from '@/utils/cleanupMarkdown';
-import { Sparkles, Star, ArrowRight, Calendar } from 'lucide-react';
+import { Sparkles, Star, ArrowRight, Calendar, MessageCircle, Zap } from 'lucide-react';
 import EnhancedPalmDisplay from '@/components/EnhancedPalmDisplay';
+import { useNavigate } from 'react-router-dom';
 
 interface ResultsScreenProps {
   onGoToDashboard: () => void;
   scanData?: any;
 }
 
+const popularQuestions = [
+  "When will I find my soulmate?",
+  "What does my wealth line reveal?",
+  "Will I have a long and healthy life?",
+  "What career path should I pursue?",
+  "How many children will I have?",
+  "What challenges await me this year?",
+  "What are my natural talents?",
+  "When will I achieve success?"
+];
+
 const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
   const { saveScan } = useScans();
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
   const hasSaved = useRef(false); // Prevent duplicate saves
+  
+  // Get 3 random questions
+  const selectedQuestions = popularQuestions.sort(() => 0.5 - Math.random()).slice(0, 3);
 
   // Always call useEffect - it's a hook and must be called in the same order every render
   useEffect(() => {
@@ -127,6 +143,16 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
 
   const palmResults = scanData;
 
+  const handleQuestionClick = (question: string) => {
+    navigate('/chatbot', { 
+      state: { 
+        question, 
+        palmImage: scanData.palm_image_url || scanData.right_palm_image_url,
+        autoSend: true 
+      } 
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -163,6 +189,34 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
 
           {/* Enhanced Palm Analysis */}
           <EnhancedPalmDisplay palmData={palmResults} />
+
+          {/* Palmistry Questions */}
+          <Card className="p-6 sm:p-8 bg-card/80 backdrop-blur-sm">
+            <div className="text-center space-y-6">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/20 rounded-full mb-2">
+                <Zap className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground">Dive Deeper with Astrobot</h3>
+              <p className="text-muted-foreground mb-6">
+                Get personalized answers about your palm reading from our AI palmistry guide
+              </p>
+              <div className="grid gap-3 sm:gap-4">
+                {selectedQuestions.map((question, index) => (
+                  <Button
+                    key={index}
+                    variant="outline"
+                    size="lg"
+                    onClick={() => handleQuestionClick(question)}
+                    className="w-full text-left justify-start hover:bg-primary/10 hover:border-primary/30 transition-all duration-300 group"
+                  >
+                    <MessageCircle className="h-4 w-4 mr-3 text-primary group-hover:scale-110 transition-transform" />
+                    <span className="flex-1">{question}</span>
+                    <ArrowRight className="h-4 w-4 ml-2 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </Card>
 
           {/* Next Steps */}
           <Card className="p-6 sm:p-8 bg-card/80 backdrop-blur-sm text-center">
