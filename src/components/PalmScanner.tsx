@@ -354,18 +354,6 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
                     }}
                   />
                   
-                  {/* Alignment Indicator - Only show during scanning phases */}
-                  {(scanState === 'detecting' || scanState === 'scanning') && (
-                    <div className={`absolute -top-6 -right-6 p-3 rounded-full transition-all duration-300 ${
-                      alignment === 'good' ? 'bg-green-500 scale-110' : 'bg-red-500'
-                    }`}>
-                      {alignment === 'good' ? (
-                        <CheckCircle className="h-5 w-5 text-white" />
-                      ) : (
-                        <AlertCircle className="h-5 w-5 text-white" />
-                      )}
-                    </div>
-                  )}
 
                   {/* Countdown Display - Remove countdown, just show Hold Steady */}
                   {scanState === 'scanning' && (
@@ -516,15 +504,13 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
               </div>
             )}
             
-            {/* Controls for Mobile - Hide message during analysis */}
+            {/* Controls for Mobile - Hide message during scanning and analysis */}
             <div className="text-center space-y-3">
-              {scanState !== 'analyzing' && (
+              {scanState !== 'analyzing' && scanState !== 'scanning' && (
                 <div className="flex items-center justify-center gap-2 text-sm text-white/70">
                   <Camera className="h-4 w-4 flex-shrink-0" />
                   <span className="text-center">
-                    {scanState === 'scanning' ? 
-                      'Perfect! Hold steady...' :
-                      alignment === 'good' ? 
+                    {alignment === 'good' ? 
                       'Perfect alignment! Ready to scan...' : 
                       'Adjust your hand position within the outline'
                     }
@@ -661,16 +647,6 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
                         }}
                       />
                       
-                      {/* Alignment Indicator */}
-                      <div className={`absolute -top-6 -right-6 p-3 rounded-full transition-all duration-300 ${
-                        alignment === 'good' ? 'bg-green-500 scale-110' : 'bg-red-500'
-                      }`}>
-                        {alignment === 'good' ? (
-                          <CheckCircle className="h-5 w-5 text-white" />
-                        ) : (
-                          <AlertCircle className="h-5 w-5 text-white" />
-                        )}
-                      </div>
 
                       {/* Cosmic Effects for Scanning */}
                       {scanState === 'scanning' && alignment === 'good' && (
@@ -724,14 +700,14 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
               </div>
             )}
             
-            {/* Controls - Hide message during analysis */}
+            {/* Controls - Hide message during scanning and analysis */}
             <div className="p-4 sm:p-6 text-center space-y-3 sm:space-y-4">
-              {scanState !== 'analyzing' && (
+              {scanState !== 'analyzing' && scanState !== 'scanning' && (
                 <div className="flex items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground px-2">
                   <Camera className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                   <span className="text-center">
                     {alignment === 'good' 
-                      ? 'Perfect alignment! Hold steady...' 
+                      ? 'Perfect alignment! Ready to scan...' 
                       : 'Adjust your hand position within the outline'
                     }
                   </span>
