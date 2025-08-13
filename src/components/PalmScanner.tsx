@@ -362,16 +362,18 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
                     }}
                   />
                   
-                  {/* Alignment Indicator */}
-                  <div className={`absolute -top-6 -right-6 p-3 rounded-full transition-all duration-300 ${
-                    alignment === 'good' ? 'bg-green-500 scale-110' : 'bg-red-500'
-                  }`}>
-                    {alignment === 'good' ? (
-                      <CheckCircle className="h-5 w-5 text-white" />
-                    ) : (
-                      <AlertCircle className="h-5 w-5 text-white" />
-                    )}
-                  </div>
+                  {/* Alignment Indicator - Only show during scanning phases */}
+                  {(scanState === 'detecting' || scanState === 'scanning') && (
+                    <div className={`absolute -top-6 -right-6 p-3 rounded-full transition-all duration-300 ${
+                      alignment === 'good' ? 'bg-green-500 scale-110' : 'bg-red-500'
+                    }`}>
+                      {alignment === 'good' ? (
+                        <CheckCircle className="h-5 w-5 text-white" />
+                      ) : (
+                        <AlertCircle className="h-5 w-5 text-white" />
+                      )}
+                    </div>
+                  )}
 
                   {/* Countdown Display */}
                   {scanState === 'scanning' && countdown !== null && (
@@ -399,10 +401,16 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
                   )}
                   
                   {/* Analysis Phase Effects */}
-                  {(scanState === 'analyzing' || scanState === 'capturing') && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-2xl font-bold text-primary animate-pulse">
-                        <Sparkles className="h-12 w-12" />
+                  {scanState === 'analyzing' && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <div className="text-primary animate-spin mb-4">
+                        <Sparkles className="h-16 w-16" />
+                      </div>
+                      <div className="text-white text-lg font-semibold animate-pulse">
+                        Analyzing Your Palm
+                      </div>
+                      <div className="text-white/70 text-sm mt-2 animate-fade-in">
+                        Reading cosmic patterns...
                       </div>
                     </div>
                   )}
@@ -443,9 +451,11 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
                 <Sparkles className="h-5 w-5 text-primary" />
                 Palm Reading
               </h1>
-              <p className="text-white/80 text-sm">
-                {getStatusMessage()}
-              </p>
+              {scanState !== 'analyzing' && (
+                <p className="text-white/80 text-sm">
+                  {getStatusMessage()}
+                </p>
+              )}
               {scanState === 'ready' && (
                 <p className="text-xs text-white/60 mt-1">
                   Please use the flashlight for better scans in dark backgrounds
