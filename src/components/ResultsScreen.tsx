@@ -198,7 +198,7 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
               </div>
               <h3 className="text-xl font-bold text-foreground">Dive Deeper with Astrobot</h3>
               <p className="text-muted-foreground mb-6">
-                Get personalized answers about your palm reading from our AI palmistry guide
+                Know more with our Astrobot
               </p>
               <div className="grid gap-3 sm:gap-4">
                 {selectedQuestions.map((question, index) => (
