@@ -205,21 +205,13 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
   };
 
   const startCountdownTimer = () => {
-    let timeLeft = Math.floor(SCANNING_DURATION / 1000); // 5 seconds
-    setCountdown(timeLeft);
-    
-    const countdownInterval = setInterval(() => {
-      timeLeft -= 1;
-      setCountdown(timeLeft);
-      
-      if (timeLeft <= 0) {
-        clearInterval(countdownInterval);
-        setScanState('capturing');
-        setCountdown(null);
-        // Immediate capture after countdown
-        setTimeout(() => handleScanComplete(), 500);
-      }
-    }, COUNTDOWN_INTERVAL);
+    // Remove countdown, just wait for the scanning duration
+    setTimeout(() => {
+      setScanState('capturing');
+      setCountdown(null);
+      // Immediate capture after scanning duration
+      setTimeout(() => handleScanComplete(), 500);
+    }, SCANNING_DURATION);
   };
 
   // Cleanup effect for countdown and intervals
@@ -305,7 +297,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
       case 'detecting':
         return 'Looking for your palm...';
       case 'scanning':
-        return countdown ? `Hold steady... ${countdown}` : 'Hold your palm steady...';
+        return 'Hold Steady';
       case 'capturing':
         return 'Capturing your palm...';
       case 'analyzing':
@@ -375,11 +367,11 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
                     </div>
                   )}
 
-                  {/* Countdown Display */}
-                  {scanState === 'scanning' && countdown !== null && (
+                  {/* Countdown Display - Remove countdown, just show Hold Steady */}
+                  {scanState === 'scanning' && (
                     <div className="absolute -bottom-20 left-1/2 transform -translate-x-1/2">
-                      <div className="bg-primary/90 backdrop-blur-sm text-white px-6 py-3 rounded-full text-2xl font-bold shadow-lg border border-primary/20">
-                        {countdown}
+                      <div className="bg-primary/90 backdrop-blur-sm text-white px-6 py-3 rounded-full text-lg font-bold shadow-lg border border-primary/20">
+                        Hold Steady
                       </div>
                     </div>
                   )}
@@ -451,7 +443,16 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
                 <Sparkles className="h-5 w-5 text-primary" />
                 Palm Reading
               </h1>
-              {scanState !== 'analyzing' && (
+              {scanState === 'analyzing' ? (
+                <div className="text-center">
+                  <p className="text-white text-lg font-semibold animate-pulse mb-2">
+                    Analyzing Your Palm
+                  </p>
+                  <p className="text-white/70 text-sm">
+                    Reading cosmic patterns...
+                  </p>
+                </div>
+              ) : (
                 <p className="text-white/80 text-sm">
                   {getStatusMessage()}
                 </p>
@@ -515,19 +516,21 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
               </div>
             )}
             
-            {/* Controls for Mobile */}
+            {/* Controls for Mobile - Hide message during analysis */}
             <div className="text-center space-y-3">
-              <div className="flex items-center justify-center gap-2 text-sm text-white/70">
-                <Camera className="h-4 w-4 flex-shrink-0" />
-                <span className="text-center">
-                  {scanState === 'scanning' && countdown ? 
-                    `Perfect! Hold steady for ${countdown} more seconds...` :
-                    alignment === 'good' ? 
-                    'Perfect alignment! Ready to scan...' : 
-                    'Adjust your hand position within the outline'
-                  }
-                </span>
-              </div>
+              {scanState !== 'analyzing' && (
+                <div className="flex items-center justify-center gap-2 text-sm text-white/70">
+                  <Camera className="h-4 w-4 flex-shrink-0" />
+                  <span className="text-center">
+                    {scanState === 'scanning' ? 
+                      'Perfect! Hold steady...' :
+                      alignment === 'good' ? 
+                      'Perfect alignment! Ready to scan...' : 
+                      'Adjust your hand position within the outline'
+                    }
+                  </span>
+                </div>
+              )}
               
               {scanState === 'ready' && cameraActive && (
                 <Button 
@@ -721,17 +724,19 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
               </div>
             )}
             
-            {/* Controls */}
+            {/* Controls - Hide message during analysis */}
             <div className="p-4 sm:p-6 text-center space-y-3 sm:space-y-4">
-              <div className="flex items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground px-2">
-                <Camera className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                <span className="text-center">
-                  {alignment === 'good' 
-                    ? 'Perfect alignment! Hold steady...' 
-                    : 'Adjust your hand position within the outline'
-                  }
-                </span>
-              </div>
+              {scanState !== 'analyzing' && (
+                <div className="flex items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground px-2">
+                  <Camera className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                  <span className="text-center">
+                    {alignment === 'good' 
+                      ? 'Perfect alignment! Hold steady...' 
+                      : 'Adjust your hand position within the outline'
+                    }
+                  </span>
+                </div>
+              )}
               
               {scanState === 'ready' && cameraActive && (
                 <Button 
