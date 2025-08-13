@@ -10,7 +10,12 @@ import palmOutline from '@/assets/palm-outline.png';
 import leftPalmOutline from '@/assets/left-palm-outline.png';
 import rightPalmOutline from '@/assets/right-palm-outline.png';
 
-type ScanState = 'ready' | 'detecting' | 'scanning' | 'analyzing' | 'complete' | 'error';
+type ScanState = 'ready' | 'detecting' | 'scanning' | 'capturing' | 'analyzing' | 'complete' | 'error';
+
+// Configuration constants for timing
+const DETECTION_DURATION = 2000; // 2 seconds for palm detection
+const SCANNING_DURATION = 5000; // 5 seconds for hand positioning with countdown
+const COUNTDOWN_INTERVAL = 1000; // 1 second countdown intervals
 
 const PalmScanner = ({ onScanComplete, onGoBack }: { 
   onScanComplete: (scanData: any) => void;
@@ -24,6 +29,8 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [cameraActive, setCameraActive] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const [processingStage, setProcessingStage] = useState<string>('');
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -179,39 +186,60 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
     
     setScanState('detecting');
     setProgress(0);
+    setCountdown(null);
     
-    // Simplified alignment detection - more forgiving
+    // Enhanced alignment detection - more forgiving
     alignmentIntervalRef.current = setInterval(() => {
-      // Much more forgiving palm detection
+      // More forgiving palm detection
       const isAligned = Math.random() > 0.2; // 80% chance of good alignment
       setAlignment(isAligned ? 'good' : 'poor');
     }, 500);
 
-    // Auto start scanning after 2 seconds regardless of alignment
+    // Move to scanning phase after detection
     setTimeout(() => {
       if (scanState === 'detecting' || scanState === 'ready') {
         setScanState('scanning');
+        startCountdownTimer();
       }
-    }, 2000);
+    }, DETECTION_DURATION);
   };
 
-  // Progress tracking effect - unlimited loop
-  useEffect(() => {
-    if (scanState === 'scanning') {
-      // Start scanning automatically after 3 seconds
-      const scanTimeout = setTimeout(() => {
-        handleScanComplete();
-      }, 3000);
+  const startCountdownTimer = () => {
+    let timeLeft = Math.floor(SCANNING_DURATION / 1000); // 5 seconds
+    setCountdown(timeLeft);
+    
+    const countdownInterval = setInterval(() => {
+      timeLeft -= 1;
+      setCountdown(timeLeft);
       
-      return () => clearTimeout(scanTimeout);
-    }
+      if (timeLeft <= 0) {
+        clearInterval(countdownInterval);
+        setScanState('capturing');
+        setCountdown(null);
+        // Immediate capture after countdown
+        setTimeout(() => handleScanComplete(), 500);
+      }
+    }, COUNTDOWN_INTERVAL);
+  };
+
+  // Cleanup effect for countdown and intervals
+  useEffect(() => {
+    return () => {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+      if (alignmentIntervalRef.current) {
+        clearInterval(alignmentIntervalRef.current);
+      }
+    };
   }, [scanState]);
 
   const handleScanComplete = async () => {
     setScanState('analyzing');
+    setProcessingStage('Capturing image...');
     
     try {
-      // Capture the palm image
+      // Capture the palm image immediately
       const imageDataUrl = await captureImage();
       if (!imageDataUrl) {
         throw new Error("Failed to capture palm image");
@@ -219,32 +247,45 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
 
       setCapturedImage(imageDataUrl);
       
-      // Upload image and generate reading
+      // Stop camera immediately for privacy after capture
+      stopCamera();
+      
+      // Show capture success feedback
+      toast({
+        title: "Capture Successful!",
+        description: "Your palm has been captured. Analyzing in background...",
+      });
+
+      // Background processing - upload and analyze
+      setProcessingStage('Uploading to secure storage...');
       const imageUrl = await uploadImageToStorage(imageDataUrl);
       if (!imageUrl) {
         throw new Error("Failed to save palm image");
       }
 
+      setProcessingStage('Analyzing cosmic patterns...');
       const palmReading = await generatePalmReading(imageUrl);
       if (!palmReading) {
         throw new Error("Failed to generate palm reading");
       }
 
-      // Palm scan complete - stop camera for privacy
-      setScanState('complete');
-      stopCamera();
+      setProcessingStage('Generating insights...');
       
-      // Pass the complete scan data (ResultsScreen will save it ONCE)
+      // Palm scan complete
+      setScanState('complete');
+      
+      // Pass the complete scan data
       const scanData = {
         ...palmReading,
         palm_image_url: imageUrl,
         capturedImage: imageDataUrl
       };
       
-      setTimeout(() => onScanComplete(scanData), 2000);
+      setTimeout(() => onScanComplete(scanData), 1500);
     } catch (error) {
       console.error('Error during scan completion:', error);
       setScanState('error');
+      setProcessingStage('');
       toast({
         title: "Analysis Failed",
         description: error instanceof Error ? error.message : "Failed to analyze palm. Please try again.",
@@ -264,9 +305,11 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
       case 'detecting':
         return 'Looking for your palm...';
       case 'scanning':
-        return 'Scanning your palm for insights...';
+        return countdown ? `Hold steady... ${countdown}` : 'Hold your palm steady...';
+      case 'capturing':
+        return 'Capturing your palm...';
       case 'analyzing':
-        return 'Analyzing cosmic patterns in your palm...';
+        return processingStage || 'Analyzing cosmic patterns in your palm...';
       case 'complete':
         return 'Palm reading complete!';
       default:
@@ -330,8 +373,17 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
                     )}
                   </div>
 
+                  {/* Countdown Display */}
+                  {scanState === 'scanning' && countdown !== null && (
+                    <div className="absolute -bottom-20 left-1/2 transform -translate-x-1/2">
+                      <div className="bg-primary/90 backdrop-blur-sm text-white px-6 py-3 rounded-full text-2xl font-bold shadow-lg border border-primary/20">
+                        {countdown}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Cosmic Effects for Scanning */}
-                  {scanState === 'scanning' && alignment === 'good' && (
+                  {(scanState === 'scanning' || scanState === 'capturing') && alignment === 'good' && (
                     <>
                       {/* Planetary symbols */}
                       <div className="absolute inset-0 pointer-events-none">
@@ -347,18 +399,23 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
                   )}
                   
                   {/* Analysis Phase Effects */}
-                  {scanState === 'analyzing' && (
+                  {(scanState === 'analyzing' || scanState === 'capturing') && (
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="text-2xl font-bold text-primary animate-pulse">
                         <Sparkles className="h-12 w-12" />
                       </div>
                     </div>
                   )}
+
+                  {/* Capture Success Effect */}
+                  {scanState === 'capturing' && (
+                    <div className="absolute inset-0 bg-green-500/20 animate-ping rounded-lg" />
+                  )}
                 </div>
               </div>
               
               {/* Scanning Progress Overlay */}
-              {(scanState === 'scanning' || scanState === 'analyzing') && (
+              {(scanState === 'scanning' || scanState === 'analyzing' || scanState === 'capturing') && (
                 <div className="absolute inset-0 bg-primary/10 animate-pulse z-15" />
               )}
             </>
@@ -426,17 +483,22 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
               )}
             </div>
             
-            {/* Progress Bar for Mobile */}
-            {(scanState === 'scanning' || scanState === 'analyzing') && (
+            {/* Enhanced Progress Bar for Mobile */}
+            {(scanState === 'scanning' || scanState === 'analyzing' || scanState === 'capturing') && (
               <div className="mb-4">
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-white/80">
-                      {scanState === 'scanning' ? 'Scanning Progress' : 'Analyzing...'}
+                      {scanState === 'scanning' && countdown ? `Hold steady... ${countdown}s` : 
+                       scanState === 'capturing' ? 'Capturing...' :
+                       scanState === 'analyzing' ? processingStage || 'Analyzing...' : 'Processing...'}
                     </span>
+                    {scanState === 'scanning' && countdown && (
+                      <span className="text-primary font-bold">{countdown}</span>
+                    )}
                   </div>
                   <Progress 
-                    value={undefined}
+                    value={scanState === 'scanning' && countdown ? ((5 - countdown) / 5) * 100 : undefined}
                     className="h-2 bg-white/20"
                   />
                 </div>
@@ -448,9 +510,11 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
               <div className="flex items-center justify-center gap-2 text-sm text-white/70">
                 <Camera className="h-4 w-4 flex-shrink-0" />
                 <span className="text-center">
-                  {alignment === 'good' 
-                    ? 'Perfect alignment! Hold steady...' 
-                    : 'Adjust your hand position within the outline'
+                  {scanState === 'scanning' && countdown ? 
+                    `Perfect! Hold steady for ${countdown} more seconds...` :
+                    alignment === 'good' ? 
+                    'Perfect alignment! Ready to scan...' : 
+                    'Adjust your hand position within the outline'
                   }
                 </span>
               </div>
