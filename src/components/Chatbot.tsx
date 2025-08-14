@@ -583,6 +583,29 @@ export const Chatbot: React.FC = () => {
                             })}
                           </div>
                           
+                          {/* Follow-up Questions - Show only for the most recent astrobot message */}
+                          {message.sender === 'astrobot' && 
+                           !message.isTyping && 
+                           message.followUpQuestions && 
+                           message.followUpQuestions.length > 0 && 
+                           index === messages.length - 1 && (
+                            <div className="mt-3 space-y-2">
+                              <div className="flex flex-wrap gap-2">
+                                {message.followUpQuestions.map((question, qIndex) => (
+                                  <Button
+                                    key={qIndex}
+                                    onClick={() => handleFollowUpQuestion(question)}
+                                    variant="outline"
+                                    size="sm"
+                                    className="bg-background/50 border-primary/30 text-foreground hover:bg-primary/10 hover:border-primary/50 text-xs px-3 py-1 h-auto rounded-full transition-all duration-200 hover:scale-105"
+                                  >
+                                    {question}
+                                  </Button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          
                           
 
                            {/* Interactive buttons for bot messages */}
@@ -720,29 +743,6 @@ export const Chatbot: React.FC = () => {
                 </Button>
               </div>
             </div>
-
-            {/* Follow-up Questions - Show below message box */}
-            {messages.length > 0 && 
-             messages[messages.length - 1]?.sender === 'astrobot' && 
-             !messages[messages.length - 1]?.isTyping && 
-             messages[messages.length - 1]?.followUpQuestions && 
-             messages[messages.length - 1]?.followUpQuestions?.length > 0 && (
-              <div className="space-y-2">
-                <div className="flex flex-col gap-2">
-                  {messages[messages.length - 1].followUpQuestions!.map((question, qIndex) => (
-                    <Button
-                      key={qIndex}
-                      onClick={() => handleFollowUpQuestion(question)}
-                      variant="outline"
-                      size="sm"
-                      className="bg-background border-primary/30 text-foreground hover:bg-primary/10 hover:border-primary/50 text-sm px-4 py-2 h-auto rounded-lg transition-all duration-200 hover:scale-[1.02] text-left justify-start"
-                    >
-                      {question}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            )}
 
           </div>
         </CardContent>
