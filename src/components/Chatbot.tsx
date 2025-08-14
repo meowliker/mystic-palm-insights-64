@@ -277,16 +277,19 @@ export const Chatbot: React.FC = () => {
       imageUrl: imagePreview || undefined
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    // Save the input message and clear it immediately
+    const messageToSend = inputMessage;
     setInputMessage('');
-    removeImage(); // Clear the image immediately after sending
-
+    
+    // Add user message first
+    setMessages(prev => [...prev, userMessage]);
+    
     // Save user message to history
     if (user) {
       await saveMessageToHistory(userMessage);
     }
 
-    // Add typing indicator
+    // Add typing indicator after user message
     const typingMessage: Message = {
       id: 'typing',
       content: 'Astrobot is analyzing...',
@@ -296,6 +299,8 @@ export const Chatbot: React.FC = () => {
     };
     setMessages(prev => [...prev, typingMessage]);
 
+    // Clear the image after adding messages
+    removeImage();
     setIsLoading(true);
 
     try {
@@ -331,7 +336,7 @@ export const Chatbot: React.FC = () => {
       // Send to chatbot API
       const { data, error } = await supabase.functions.invoke('astrobot-chat', {
         body: {
-          message: inputMessage,
+          message: messageToSend,
           imageUrl,
           conversationHistory: messages.slice(-10) // Send last 10 messages for context
         }
@@ -411,9 +416,12 @@ export const Chatbot: React.FC = () => {
     });
   };
 
-  const handleFollowUpQuestion = (question: string) => {
+  const handleFollowUpQuestion = async (question: string) => {
     setInputMessage(question);
-    sendMessage();
+    // Wait for state update then send
+    setTimeout(() => {
+      sendMessage();
+    }, 100);
   };
 
   return (
@@ -576,29 +584,6 @@ export const Chatbot: React.FC = () => {
                           </div>
                           
                           
-                           {/* Follow-up Questions - Show only for the most recent astrobot message */}
-                          {message.sender === 'astrobot' && 
-                           !message.isTyping && 
-                           message.followUpQuestions && 
-                           message.followUpQuestions.length > 0 && 
-                           index === messages.length - 1 && (
-                            <div className="mt-3 space-y-2">
-                              <p className="text-xs text-muted-foreground mb-2">You might also ask:</p>
-                              <div className="flex flex-wrap gap-2">
-                                {message.followUpQuestions.map((question, qIndex) => (
-                                  <Button
-                                    key={qIndex}
-                                    onClick={() => handleFollowUpQuestion(question)}
-                                    variant="outline"
-                                    size="sm"
-                                    className="bg-background/50 border-primary/30 text-foreground hover:bg-primary/10 hover:border-primary/50 text-xs px-3 py-1 h-auto rounded-full transition-all duration-200 hover:scale-105"
-                                  >
-                                    {question}
-                                  </Button>
-                                ))}
-                              </div>
-                            </div>
-                          )}
 
                            {/* Interactive buttons for bot messages */}
                           {message.sender === 'astrobot' && !message.isTyping && (
@@ -735,6 +720,29 @@ export const Chatbot: React.FC = () => {
                 </Button>
               </div>
             </div>
+
+            {/* Follow-up Questions - Show below message box */}
+            {messages.length > 0 && 
+             messages[messages.length - 1]?.sender === 'astrobot' && 
+             !messages[messages.length - 1]?.isTyping && 
+             messages[messages.length - 1]?.followUpQuestions && 
+             messages[messages.length - 1]?.followUpQuestions?.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex flex-col gap-2">
+                  {messages[messages.length - 1].followUpQuestions!.map((question, qIndex) => (
+                    <Button
+                      key={qIndex}
+                      onClick={() => handleFollowUpQuestion(question)}
+                      variant="outline"
+                      size="sm"
+                      className="bg-background border-primary/30 text-foreground hover:bg-primary/10 hover:border-primary/50 text-sm px-4 py-2 h-auto rounded-lg transition-all duration-200 hover:scale-[1.02] text-left justify-start"
+                    >
+                      {question}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
 
           </div>
         </CardContent>
