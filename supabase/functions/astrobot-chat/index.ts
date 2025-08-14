@@ -309,9 +309,13 @@ Be conversational and invite follow-up questions rather than overwhelming with i
       botResponse += "\n\n📷 Upload your palm for accurate reading!";
     }
 
+    // Generate follow-up questions based on the response
+    const followUpQuestions = await generateFollowUpQuestions(botResponse, finalImageUrl);
+    
     return new Response(
       JSON.stringify({ 
-        response: botResponse
+        response: botResponse,
+        followUpQuestions 
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -331,7 +335,10 @@ Be conversational and invite follow-up questions rather than overwhelming with i
     const fallbackResponse = `I'm having trouble processing your request right now. ${hasImage ? 'Try uploading your palm image again' : 'Please upload a clear palm photo'} and ask your question. ✨`;
     
     return new Response(
-      JSON.stringify({ response: fallbackResponse }),
+      JSON.stringify({ 
+        response: fallbackResponse,
+        followUpQuestions: generateFallbackQuestions(false)
+      }),
       { 
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -339,3 +346,78 @@ Be conversational and invite follow-up questions rather than overwhelming with i
     );
   }
 });
+
+// Function to generate contextual follow-up questions
+async function generateFollowUpQuestions(response: string, imageUrl?: string): Promise<string[]> {
+  try {
+    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+    
+    const followUpPrompt = `Based on this palmistry response: "${response}"
+    
+Generate 2-3 short, engaging follow-up questions that a user might naturally ask next. 
+${imageUrl ? 'Consider that this is about a palm reading with an image.' : ''}
+
+The questions should be:
+- Brief (under 10 words each)
+- Naturally curious and engaging
+- Related to palmistry, destiny, or life guidance
+- Actionable (can be answered with palm reading knowledge)
+
+Examples of good follow-up questions:
+- "What about my love life timeline?"
+- "When will I find success?"
+- "Are there any warning signs?"
+- "What should I focus on this year?"
+- "How can I strengthen my destiny?"
+
+Return only the questions as a JSON array of strings, nothing else.`;
+
+    const followUpResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: 'You are a helpful assistant that generates follow-up questions. Return only valid JSON arrays.' },
+          { role: 'user', content: followUpPrompt }
+        ],
+        max_tokens: 150,
+        temperature: 0.7,
+      }),
+    });
+
+    const followUpData = await followUpResponse.json();
+    const questionsText = followUpData.choices[0].message.content.trim();
+    
+    try {
+      const questions = JSON.parse(questionsText);
+      return Array.isArray(questions) ? questions.slice(0, 3) : [];
+    } catch {
+      // Fallback questions if JSON parsing fails
+      return generateFallbackQuestions(!!imageUrl);
+    }
+  } catch (error) {
+    console.error('Error generating follow-up questions:', error);
+    return generateFallbackQuestions(!!imageUrl);
+  }
+}
+
+// Fallback questions based on context
+function generateFallbackQuestions(imageUrl: boolean): string[] {
+  const palmQuestions = [
+    "What about my love life?",
+    "When will I find success?",
+    "Any health insights?"
+  ];
+  
+  const generalQuestions = [
+    "Tell me about my destiny",
+    "What should I focus on?",
+    "Any upcoming changes?"
+  ];
+  
+  return imageUrl ? palmQuestions : generalQuestions;
+}

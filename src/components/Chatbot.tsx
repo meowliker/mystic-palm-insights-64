@@ -20,6 +20,7 @@ interface Message {
   timestamp: Date;
   imageUrl?: string;
   isTyping?: boolean;
+  followUpQuestions?: string[];
 }
 
 
@@ -145,7 +146,8 @@ export const Chatbot: React.FC = () => {
             content,
             sender,
             created_at,
-            image_url
+            image_url,
+            follow_up_questions
           )
         `)
         .eq('user_id', user.id)
@@ -188,7 +190,8 @@ export const Chatbot: React.FC = () => {
           content: msg.content,
           sender: msg.sender as 'user' | 'astrobot',
           timestamp: new Date(msg.created_at),
-          imageUrl: msg.image_url || undefined
+          imageUrl: msg.image_url || undefined,
+          followUpQuestions: msg.follow_up_questions || undefined
         }));
         setMessages(loadedMessages);
       } else {
@@ -228,7 +231,8 @@ export const Chatbot: React.FC = () => {
           session_id: sessionId,
           content: message.content,
           sender: message.sender,
-          image_url: message.imageUrl || null
+          image_url: message.imageUrl || null,
+          follow_up_questions: message.followUpQuestions || null
         });
 
       // Update session timestamp
@@ -347,7 +351,8 @@ export const Chatbot: React.FC = () => {
         id: (Date.now() + 1).toString(),
         content: data.response,
         sender: 'astrobot',
-        timestamp: new Date()
+        timestamp: new Date(),
+        followUpQuestions: data.followUpQuestions || []
       };
 
       setMessages(prev => [...prev, botResponse]);
@@ -404,6 +409,11 @@ export const Chatbot: React.FC = () => {
       title: "Thanks for the feedback! 👍",
       description: "Glad you found this reading helpful!",
     });
+  };
+
+  const handleFollowUpQuestion = (question: string) => {
+    setInputMessage(question);
+    sendMessage();
   };
 
   return (
@@ -566,7 +576,31 @@ export const Chatbot: React.FC = () => {
                           </div>
                           
                           
-                          {/* Interactive buttons for bot messages */}
+                           {/* Follow-up Questions - Show only for the most recent astrobot message */}
+                          {message.sender === 'astrobot' && 
+                           !message.isTyping && 
+                           message.followUpQuestions && 
+                           message.followUpQuestions.length > 0 && 
+                           index === messages.length - 1 && (
+                            <div className="mt-3 space-y-2">
+                              <p className="text-xs text-muted-foreground mb-2">You might also ask:</p>
+                              <div className="flex flex-wrap gap-2">
+                                {message.followUpQuestions.map((question, qIndex) => (
+                                  <Button
+                                    key={qIndex}
+                                    onClick={() => handleFollowUpQuestion(question)}
+                                    variant="outline"
+                                    size="sm"
+                                    className="bg-background/50 border-primary/30 text-foreground hover:bg-primary/10 hover:border-primary/50 text-xs px-3 py-1 h-auto rounded-full transition-all duration-200 hover:scale-105"
+                                  >
+                                    {question}
+                                  </Button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                           {/* Interactive buttons for bot messages */}
                           {message.sender === 'astrobot' && !message.isTyping && (
                             <div className="flex items-center justify-between mt-3 pt-2 border-t border-muted-foreground/20">
                               <span className="text-xs opacity-70">

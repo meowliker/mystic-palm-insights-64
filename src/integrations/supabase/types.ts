@@ -125,6 +125,7 @@ export type Database = {
         Row: {
           content: string
           created_at: string
+          follow_up_questions: Json | null
           id: string
           image_url: string | null
           sender: string
@@ -133,6 +134,7 @@ export type Database = {
         Insert: {
           content: string
           created_at?: string
+          follow_up_questions?: Json | null
           id?: string
           image_url?: string | null
           sender: string
@@ -141,6 +143,7 @@ export type Database = {
         Update: {
           content?: string
           created_at?: string
+          follow_up_questions?: Json | null
           id?: string
           image_url?: string | null
           sender?: string
