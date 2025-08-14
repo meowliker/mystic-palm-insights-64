@@ -316,6 +316,7 @@ export type Database = {
           phone_number: string | null
           phone_verified: boolean | null
           profile_picture_url: string | null
+          seen_questions: number[] | null
           updated_at: string
         }
         Insert: {
@@ -328,6 +329,7 @@ export type Database = {
           phone_number?: string | null
           phone_verified?: boolean | null
           profile_picture_url?: string | null
+          seen_questions?: number[] | null
           updated_at?: string
         }
         Update: {
@@ -340,6 +342,7 @@ export type Database = {
           phone_number?: string | null
           phone_verified?: boolean | null
           profile_picture_url?: string | null
+          seen_questions?: number[] | null
           updated_at?: string
         }
         Relationships: []

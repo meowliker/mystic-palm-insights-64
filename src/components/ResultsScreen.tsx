@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useScans } from '@/hooks/useScans';
 import { useAuth } from '@/hooks/useAuth';
+import { useQuestionRotation } from '@/hooks/useQuestionRotation';
 import { cleanupMarkdown } from '@/utils/cleanupMarkdown';
 import { Sparkles, Star, ArrowRight, Calendar, MessageCircle, Zap } from 'lucide-react';
 import EnhancedPalmDisplay from '@/components/EnhancedPalmDisplay';
@@ -14,25 +15,12 @@ interface ResultsScreenProps {
   scanData?: any;
 }
 
-const popularQuestions = [
-  "When will I find my soulmate?",
-  "What does my wealth line reveal?",
-  "Will I have a long and healthy life?",
-  "What career path should I pursue?",
-  "How many children will I have?",
-  "What challenges await me this year?",
-  "What are my natural talents?",
-  "When will I achieve success?"
-];
-
 const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
   const { saveScan } = useScans();
   const { user, loading } = useAuth();
+  const { selectedQuestions, loading: questionsLoading } = useQuestionRotation();
   const navigate = useNavigate();
   const hasSaved = useRef(false); // Prevent duplicate saves
-  
-  // Get 3 random questions
-  const selectedQuestions = popularQuestions.sort(() => 0.5 - Math.random()).slice(0, 3);
 
   // Always call useEffect - it's a hook and must be called in the same order every render
   useEffect(() => {
