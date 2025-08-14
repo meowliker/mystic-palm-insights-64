@@ -127,12 +127,14 @@ export const useQuestionRotation = () => {
     fetchSeenQuestions();
   }, [user, fetchSeenQuestions]);
 
-  // Set selected questions once we have seen questions data
+  // Set selected questions once we have seen questions data - only once!
   useEffect(() => {
-    if (!loading && user) {
+    if (!loading && user && selectedQuestions.length === 0) {
+      setSelectedQuestions(getRotatedQuestions());
+    } else if (!loading && !user && selectedQuestions.length === 0) {
       setSelectedQuestions(getRotatedQuestions());
     }
-  }, [loading, user, getRotatedQuestions]);
+  }, [loading, user]); // Removed getRotatedQuestions dependency to prevent infinite loop
 
   return {
     selectedQuestions,
