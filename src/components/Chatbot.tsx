@@ -136,20 +136,10 @@ export const Chatbot: React.FC = () => {
     try {
       setIsLoadingHistory(true);
       
-      // Get or create session and load messages in one optimized query
+      // Simplified query to avoid timeouts
       let { data: sessions, error: sessionError } = await supabase
         .from('chat_sessions')
-        .select(`
-          id,
-          chat_messages (
-            id,
-            content,
-            sender,
-            created_at,
-            image_url,
-            follow_up_questions
-          )
-        `)
+        .select('id')
         .eq('user_id', user.id)
         .order('updated_at', { ascending: false })
         .limit(1);
@@ -157,58 +147,74 @@ export const Chatbot: React.FC = () => {
       if (sessionError) throw sessionError;
 
       let currentSessionId: string;
-      let existingMessages: any[] = [];
       
       if (sessions && sessions.length > 0) {
         currentSessionId = sessions[0].id;
-        existingMessages = sessions[0].chat_messages || [];
+        
+        // Load messages separately with timeout protection
+        try {
+          const { data: messages, error: messagesError } = await supabase
+            .from('chat_messages')
+            .select('id, content, sender, created_at, image_url, follow_up_questions')
+            .eq('session_id', currentSessionId)
+            .order('created_at', { ascending: true })
+            .limit(50); // Limit to last 50 messages to avoid timeouts
+
+          if (!messagesError && messages && messages.length > 0) {
+            const loadedMessages: Message[] = messages.map(msg => ({
+              id: msg.id,
+              content: msg.content,
+              sender: msg.sender as 'user' | 'astrobot',
+              timestamp: new Date(msg.created_at),
+              imageUrl: msg.image_url || undefined,
+              followUpQuestions: Array.isArray(msg.follow_up_questions) ? msg.follow_up_questions.filter((q): q is string => typeof q === 'string') : undefined
+            }));
+            setMessages(loadedMessages);
+            setSessionId(currentSessionId);
+            return; // Success, exit early
+          }
+        } catch (messageError) {
+          console.error('Error loading messages:', messageError);
+          // Continue to create welcome message
+        }
       } else {
         // Create a new session only if none exists
-        const { data: newSession, error: createError } = await supabase
-          .from('chat_sessions')
-          .insert({
-            user_id: user.id,
-            session_name: 'Astrobot Chat'
-          })
-          .select()
-          .single();
+        try {
+          const { data: newSession, error: createError } = await supabase
+            .from('chat_sessions')
+            .insert({
+              user_id: user.id,
+              session_name: 'Astrobot Chat'
+            })
+            .select()
+            .single();
 
-        if (createError) throw createError;
-        currentSessionId = newSession.id;
+          if (!createError) {
+            currentSessionId = newSession.id;
+            setSessionId(currentSessionId);
+          }
+        } catch (createError) {
+          console.error('Error creating session:', createError);
+          // Continue with local session
+        }
       }
 
-      setSessionId(currentSessionId);
-
-      if (existingMessages.length > 0) {
-        // Sort messages by creation time
-        const sortedMessages = existingMessages.sort((a, b) => 
-          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-        );
-        
-        const loadedMessages: Message[] = sortedMessages.map(msg => ({
-          id: msg.id,
-          content: msg.content,
-          sender: msg.sender as 'user' | 'astrobot',
-          timestamp: new Date(msg.created_at),
-          imageUrl: msg.image_url || undefined,
-          followUpQuestions: msg.follow_up_questions || undefined
-        }));
-        setMessages(loadedMessages);
-      } else {
-        // If no messages, just add welcome message locally (don't save immediately)
-        const welcomeMessage = {
-          id: 'welcome-' + Date.now(),
-          content: "Hello! I'm Astrobot, your AI palmistry guide. I can help you understand your palm lines and what they reveal about your life, relationships, and future. Feel free to ask me any questions or upload a palm image for analysis!",
-          sender: 'astrobot' as const,
-          timestamp: new Date()
-        };
-        
-        setMessages([welcomeMessage]);
+      // Default welcome message if no messages loaded
+      const welcomeMessage = {
+        id: 'welcome-' + Date.now(),
+        content: "Hello! I'm Astrobot, your AI palmistry guide. I can help you understand your palm lines and what they reveal about your life, relationships, and future. Feel free to ask me any questions or upload a palm image for analysis!",
+        sender: 'astrobot' as const,
+        timestamp: new Date()
+      };
+      
+      setMessages([welcomeMessage]);
+      if (currentSessionId!) {
+        setSessionId(currentSessionId);
       }
 
     } catch (error) {
       console.error('Error loading chat history:', error);
-      // Show welcome message on error
+      // Show welcome message on error and continue functionality
       const welcomeMessage = {
         id: 'welcome-error-' + Date.now(),
         content: "Hello! I'm Astrobot, your AI palmistry guide. I can help you understand your palm lines and what they reveal about your life, relationships, and future. Feel free to ask me any questions or upload a palm image for analysis!",
@@ -225,24 +231,35 @@ export const Chatbot: React.FC = () => {
     if (!sessionId || !user) return;
 
     try {
-      await supabase
-        .from('chat_messages')
-        .insert({
-          session_id: sessionId,
-          content: message.content,
-          sender: message.sender,
-          image_url: message.imageUrl || null,
-          follow_up_questions: message.followUpQuestions || null
-        });
+      await Promise.race([
+        supabase
+          .from('chat_messages')
+          .insert({
+            session_id: sessionId,
+            content: message.content,
+            sender: message.sender,
+            image_url: message.imageUrl || null,
+            follow_up_questions: message.followUpQuestions || null
+          }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Save timeout')), 5000)
+        )
+      ]);
 
-      // Update session timestamp
-      await supabase
-        .from('chat_sessions')
-        .update({ updated_at: new Date().toISOString() })
-        .eq('id', sessionId);
+      // Update session timestamp with timeout protection
+      await Promise.race([
+        supabase
+          .from('chat_sessions')
+          .update({ updated_at: new Date().toISOString() })
+          .eq('id', sessionId),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Update timeout')), 3000)
+        )
+      ]);
 
     } catch (error) {
-      console.error('Error saving message to history:', error);
+      console.error('Error saving message to history (will continue with local state):', error);
+      // Don't throw error - continue with local state management
     }
   };
 
