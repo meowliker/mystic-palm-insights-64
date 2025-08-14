@@ -269,17 +269,23 @@ export const Chatbot: React.FC = () => {
   const sendMessage = async () => {
     if (!inputMessage.trim() && !selectedImage) return;
 
+    // Save the input message before clearing it
+    const messageToSend = inputMessage;
+    const imageToSend = selectedImage;
+    const imagePreviewToSend = imagePreview;
+
+    // Create user message
     const userMessage: Message = {
       id: Date.now().toString(),
-      content: inputMessage,
+      content: messageToSend,
       sender: 'user',
       timestamp: new Date(),
-      imageUrl: imagePreview || undefined
+      imageUrl: imagePreviewToSend || undefined
     };
 
-    // Save the input message and clear it immediately
-    const messageToSend = inputMessage;
+    // Clear input immediately
     setInputMessage('');
+    removeImage();
     
     // Add user message first
     setMessages(prev => [...prev, userMessage]);
@@ -299,20 +305,18 @@ export const Chatbot: React.FC = () => {
     };
     setMessages(prev => [...prev, typingMessage]);
 
-    // Clear the image after adding messages
-    removeImage();
     setIsLoading(true);
 
     try {
       let imageUrl = null;
       
       // Upload image if selected
-      if (selectedImage) {
-        console.log('Uploading image:', selectedImage.name);
-        const fileName = `chat-${Date.now()}-${selectedImage.name}`;
+      if (imageToSend) {
+        console.log('Uploading image:', imageToSend.name);
+        const fileName = `chat-${Date.now()}-${imageToSend.name}`;
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('palm-images')
-          .upload(fileName, selectedImage);
+          .upload(fileName, imageToSend);
 
         if (uploadError) {
           console.error('Image upload error:', uploadError);
@@ -328,9 +332,9 @@ export const Chatbot: React.FC = () => {
       }
 
       console.log('Sending message to astrobot-chat:', { 
-        message: inputMessage, 
+        message: messageToSend, 
         hasImage: !!imageUrl,
-        imageUrl: imageUrl?.substring(0, 50)
+        imageUrl: imageUrl ? imageUrl.substring(0, 50) : 'none'
       });
 
       // Send to chatbot API
@@ -417,11 +421,84 @@ export const Chatbot: React.FC = () => {
   };
 
   const handleFollowUpQuestion = async (question: string) => {
-    setInputMessage(question);
-    // Wait for state update then send
-    setTimeout(() => {
-      sendMessage();
-    }, 100);
+    // Directly call sendMessage with the question
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      content: question,
+      sender: 'user',
+      timestamp: new Date()
+    };
+
+    // Add user message first
+    setMessages(prev => [...prev, userMessage]);
+    
+    // Save user message to history
+    if (user) {
+      await saveMessageToHistory(userMessage);
+    }
+
+    // Add typing indicator
+    const typingMessage: Message = {
+      id: 'typing',
+      content: 'Astrobot is analyzing...',
+      sender: 'astrobot',
+      timestamp: new Date(),
+      isTyping: true
+    };
+    setMessages(prev => [...prev, typingMessage]);
+
+    setIsLoading(true);
+
+    try {
+      console.log('Sending follow-up question to astrobot-chat:', question);
+
+      // Send to chatbot API
+      const { data, error } = await supabase.functions.invoke('astrobot-chat', {
+        body: {
+          message: question,
+          imageUrl: null,
+          conversationHistory: messages.slice(-10)
+        }
+      });
+
+      console.log('Astrobot response:', { data, error });
+
+      if (error) {
+        console.error('Astrobot function error:', error);
+        throw error;
+      }
+
+      // Remove typing indicator and add response
+      setMessages(prev => prev.filter(msg => msg.id !== 'typing'));
+      
+      const botResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        content: data.response,
+        sender: 'astrobot',
+        timestamp: new Date(),
+        followUpQuestions: data.followUpQuestions || []
+      };
+
+      setMessages(prev => [...prev, botResponse]);
+
+      // Save bot response to history
+      if (user) {
+        await saveMessageToHistory(botResponse);
+      }
+
+    } catch (error) {
+      console.error('Error sending follow-up question:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send question. Please try again.",
+        variant: "destructive"
+      });
+      
+      // Remove typing indicator
+      setMessages(prev => prev.filter(msg => msg.id !== 'typing'));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
