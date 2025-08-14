@@ -286,26 +286,33 @@ export const Chatbot: React.FC = () => {
     // Clear input immediately
     setInputMessage('');
     removeImage();
+    setIsLoading(true);
     
-    // Add user message first
-    setMessages(prev => [...prev, userMessage]);
-    
-    // Save user message to history
-    if (user) {
-      await saveMessageToHistory(userMessage);
-    }
+    // Add user message first and save to database
+    setMessages(prevMessages => {
+      const newMessages = [...prevMessages, userMessage];
+      
+      // Save user message to history (don't await to avoid blocking UI)
+      if (user) {
+        saveMessageToHistory(userMessage).catch(console.error);
+      }
+      
+      return newMessages;
+    });
 
-    // Add typing indicator after user message
+    // Small delay to ensure user message is rendered before typing indicator
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    // Add typing indicator
     const typingMessage: Message = {
-      id: 'typing',
+      id: 'typing-' + Date.now(),
       content: 'Astrobot is analyzing...',
       sender: 'astrobot',
       timestamp: new Date(),
       isTyping: true
     };
-    setMessages(prev => [...prev, typingMessage]);
 
-    setIsLoading(true);
+    setMessages(prevMessages => [...prevMessages, typingMessage]);
 
     try {
       let imageUrl = null;
@@ -353,22 +360,24 @@ export const Chatbot: React.FC = () => {
         throw error;
       }
 
-      // Remove typing indicator and add response
-      setMessages(prev => prev.filter(msg => msg.id !== 'typing'));
-      
+      // Create bot response
       const botResponse: Message = {
-        id: (Date.now() + 1).toString(),
+        id: 'bot-' + Date.now(),
         content: data.response,
         sender: 'astrobot',
         timestamp: new Date(),
         followUpQuestions: data.followUpQuestions || []
       };
 
-      setMessages(prev => [...prev, botResponse]);
+      // Remove typing indicator and add bot response atomically
+      setMessages(prevMessages => {
+        const messagesWithoutTyping = prevMessages.filter(msg => !msg.id.startsWith('typing-'));
+        return [...messagesWithoutTyping, botResponse];
+      });
 
-      // Save bot response to history
+      // Save bot response to history (don't await to avoid blocking UI)
       if (user) {
-        await saveMessageToHistory(botResponse);
+        saveMessageToHistory(botResponse).catch(console.error);
       }
 
     } catch (error) {
@@ -379,8 +388,8 @@ export const Chatbot: React.FC = () => {
         variant: "destructive"
       });
       
-      // Remove typing indicator
-      setMessages(prev => prev.filter(msg => msg.id !== 'typing'));
+      // Remove typing indicator on error
+      setMessages(prevMessages => prevMessages.filter(msg => !msg.id.startsWith('typing-')));
     } finally {
       setIsLoading(false);
     }
@@ -421,33 +430,43 @@ export const Chatbot: React.FC = () => {
   };
 
   const handleFollowUpQuestion = async (question: string) => {
-    // Directly call sendMessage with the question
+    if (isLoading) return; // Prevent multiple simultaneous requests
+    
+    // Create user message for the follow-up question
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: 'followup-user-' + Date.now(),
       content: question,
       sender: 'user',
       timestamp: new Date()
     };
 
-    // Add user message first
-    setMessages(prev => [...prev, userMessage]);
-    
-    // Save user message to history
-    if (user) {
-      await saveMessageToHistory(userMessage);
-    }
+    setIsLoading(true);
+
+    // Add user message
+    setMessages(prevMessages => {
+      const newMessages = [...prevMessages, userMessage];
+      
+      // Save user message to history (don't await to avoid blocking UI)
+      if (user) {
+        saveMessageToHistory(userMessage).catch(console.error);
+      }
+      
+      return newMessages;
+    });
+
+    // Small delay to ensure user message is rendered
+    await new Promise(resolve => setTimeout(resolve, 50));
 
     // Add typing indicator
     const typingMessage: Message = {
-      id: 'typing',
+      id: 'typing-followup-' + Date.now(),
       content: 'Astrobot is analyzing...',
       sender: 'astrobot',
       timestamp: new Date(),
       isTyping: true
     };
-    setMessages(prev => [...prev, typingMessage]);
 
-    setIsLoading(true);
+    setMessages(prevMessages => [...prevMessages, typingMessage]);
 
     try {
       console.log('Sending follow-up question to astrobot-chat:', question);
@@ -468,22 +487,24 @@ export const Chatbot: React.FC = () => {
         throw error;
       }
 
-      // Remove typing indicator and add response
-      setMessages(prev => prev.filter(msg => msg.id !== 'typing'));
-      
+      // Create bot response
       const botResponse: Message = {
-        id: (Date.now() + 1).toString(),
+        id: 'bot-followup-' + Date.now(),
         content: data.response,
         sender: 'astrobot',
         timestamp: new Date(),
         followUpQuestions: data.followUpQuestions || []
       };
 
-      setMessages(prev => [...prev, botResponse]);
+      // Remove typing indicator and add bot response atomically
+      setMessages(prevMessages => {
+        const messagesWithoutTyping = prevMessages.filter(msg => !msg.id.startsWith('typing-'));
+        return [...messagesWithoutTyping, botResponse];
+      });
 
-      // Save bot response to history
+      // Save bot response to history (don't await to avoid blocking UI)
       if (user) {
-        await saveMessageToHistory(botResponse);
+        saveMessageToHistory(botResponse).catch(console.error);
       }
 
     } catch (error) {
@@ -494,8 +515,8 @@ export const Chatbot: React.FC = () => {
         variant: "destructive"
       });
       
-      // Remove typing indicator
-      setMessages(prev => prev.filter(msg => msg.id !== 'typing'));
+      // Remove typing indicator on error
+      setMessages(prevMessages => prevMessages.filter(msg => !msg.id.startsWith('typing-')));
     } finally {
       setIsLoading(false);
     }
