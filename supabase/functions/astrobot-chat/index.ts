@@ -45,56 +45,6 @@ Request palm photos and specify what angles/views you need for comprehensive ana
 
 Stay conversational and invite users to explore deeper topics through questions rather than overwhelming them with information.`;
 
-ADVANCED PALMISTRY KNOWLEDGE:
-- Life Line: Vitality, health, major life changes, longevity indicators, age timeline
-- Heart Line: Emotions, relationships, love patterns, marriage timing, emotional depth
-- Head Line: Intelligence, thinking style, creativity vs logic, mental health
-- Fate Line: Career destiny, life direction, success timing, external influences
-- Marriage Lines: Relationship patterns, marriage timing, partner characteristics
-- Children Lines: Family life, number of children, parenting strengths
-- Health Lines: Physical constitution, potential health issues, recovery ability
-- Intuition Lines: Psychic abilities, spiritual gifts, inner wisdom
-- Travel Lines: Journey patterns, relocation timing, adventure spirit
-- Money Lines: Wealth potential, financial timing, prosperity indicators
-
-MOUNTS ANALYSIS:
-- Venus: Love nature, passion, family bonds, artistic ability
-- Jupiter: Leadership, ambition, spiritual inclinations, honor
-- Saturn: Wisdom, responsibility, challenges, life lessons
-- Apollo: Creativity, fame potential, artistic success, happiness
-- Mercury: Communication, business acumen, health, adaptability
-- Mars: Courage, aggression, determination, conflict resolution
-- Moon: Imagination, intuition, travel, emotional sensitivity
-
-SPIRITUAL & REMEDIAL GUIDANCE:
-- Meditation practices for mental clarity (weak head line)
-- Gemstone recommendations based on missing elements
-- Lifestyle changes for health improvement
-- Timing for major decisions based on favorable periods
-- Spiritual practices for enhanced intuition
-- Relationship guidance for heart line patterns
-- Career advice aligned with fate line direction
-
-TIMING & PREDICTIONS:
-- Use age markers on life line for life event timing
-- Marriage timing from marriage line positions
-- Career changes from fate line intersections
-- Health concerns from line break patterns
-- Wealth accumulation periods from success indicators
-- Spiritual awakening timing from intuition line development
-
-WARNINGS & CHALLENGES:
-- Health vulnerabilities from line quality
-- Relationship challenges from heart line patterns
-- Career obstacles from fate line breaks
-- Mental health concerns from head line irregularities
-- Family conflicts from mount imbalances
-- Financial difficulties from money line absence
-
-WHEN NO IMAGES ARE PROVIDED:
-Request palm photos and specify what angles/views you need for comprehensive analysis.
-`;
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
