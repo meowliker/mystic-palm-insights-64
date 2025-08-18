@@ -64,6 +64,7 @@ export const Chatbot: React.FC = () => {
   const [showCameraModal, setShowCameraModal] = useState(false);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const { toast } = useToast();
+  const [userAge, setUserAge] = useState<number | null>(null);
 
   const scrollToBottom = () => {
     if (scrollAreaRef.current) {
@@ -72,6 +73,24 @@ export const Chatbot: React.FC = () => {
         scrollContainer.scrollTop = scrollContainer.scrollHeight;
       }
     }
+  };
+
+  // Extract a numeric age (10-100) from free text like "I'm 22", "22 years old"
+  const extractAgeFromText = (text: string): number | null => {
+    if (!text) return null;
+    const patterns = [
+      /\b(?:i'?m|i am|am|age|aged)\s*(\d{1,3})\b/i,
+      /\b(\d{1,3})\s*(?:years?|yrs?)\b/i,
+      /\b(\d{2})\b/ // loose fallback (two-digit number)
+    ];
+    for (const re of patterns) {
+      const m = text.match(re);
+      if (m) {
+        const n = Number(m[1]);
+        if (!isNaN(n) && n >= 10 && n <= 100) return n;
+      }
+    }
+    return null;
   };
 
   // Load chat history on component mount
@@ -422,10 +441,16 @@ export const Chatbot: React.FC = () => {
         console.log('Image uploaded successfully:', imageUrl);
       }
 
+      // Determine age to send (extract from current message or reuse stored)
+      const extractedAge = extractAgeFromText(messageToSend);
+      if (extractedAge) setUserAge(extractedAge);
+      const ageToSend = extractedAge ?? userAge;
+
       console.log('Sending message to astrobot-chat:', { 
         message: messageToSend, 
         hasImage: !!imageUrl,
-        imageUrl: imageUrl ? imageUrl.substring(0, 50) : 'none'
+        imageUrl: imageUrl ? imageUrl.substring(0, 50) : 'none',
+        userAge: ageToSend ?? null
       });
 
       // Send to chatbot API
@@ -433,7 +458,8 @@ export const Chatbot: React.FC = () => {
         body: {
           message: messageToSend,
           imageUrl,
-          conversationHistory: messages.slice(-10) // Send last 10 messages for context
+          conversationHistory: messages.slice(-10), // Send last 10 messages for context
+          userAge: ageToSend ?? null
         }
       });
 
@@ -555,12 +581,18 @@ export const Chatbot: React.FC = () => {
     try {
       console.log('Sending follow-up question to astrobot-chat:', question);
 
+      // Determine age to send
+      const extractedAge = extractAgeFromText(question);
+      if (extractedAge) setUserAge(extractedAge);
+      const ageToSend = extractedAge ?? userAge;
+
       // Send to chatbot API
       const { data, error } = await supabase.functions.invoke('astrobot-chat', {
         body: {
           message: question,
           imageUrl: null,
-          conversationHistory: messages.slice(-10)
+          conversationHistory: messages.slice(-10),
+          userAge: ageToSend ?? null
         }
       });
 
@@ -648,12 +680,18 @@ export const Chatbot: React.FC = () => {
     try {
       console.log('Sending quick response to astrobot-chat:', response);
 
+      // Determine age to send
+      const extractedAge = extractAgeFromText(response);
+      if (extractedAge) setUserAge(extractedAge);
+      const ageToSend = extractedAge ?? userAge;
+
       // Send to chatbot API
       const { data, error } = await supabase.functions.invoke('astrobot-chat', {
         body: {
           message: response,
           imageUrl: null,
-          conversationHistory: messages.slice(-10)
+          conversationHistory: messages.slice(-10),
+          userAge: ageToSend ?? null
         }
       });
 

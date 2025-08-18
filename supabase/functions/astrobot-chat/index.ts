@@ -73,6 +73,25 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     );
 
+    // Try to derive age from message text if not provided explicitly
+    let age = userAge as number | undefined;
+    if (!age && typeof message === 'string') {
+      const patterns = [
+        /\b(?:i'?m|i am|am|age|aged)\s*(\d{1,3})\b/i,
+        /\b(\d{1,3})\s*(?:years?|yrs?)\b/i
+      ];
+      for (const re of patterns) {
+        const m = message.match(re);
+        if (m) {
+          const n = parseInt(m[1], 10);
+          if (!isNaN(n) && n >= 10 && n <= 100) {
+            age = n;
+            break;
+          }
+        }
+      }
+    }
+
 
     // Check for previous image in conversation history if no current image
     let finalImageUrl = imageUrl;
@@ -105,7 +124,7 @@ serve(async (req) => {
     let systemPrompt = palmistryKnowledge;
 
     // Check if we have an image but no age - ask for age first
-    if (finalImageUrl && !userAge) {
+    if (finalImageUrl && !age) {
       const ageRequest = "I can see your palm! 🔮 To give you the most accurate reading with precise timing for your past, present, and future, please tell me your age first. This will help me map the exact timeline on your palm lines ✨";
       
       return new Response(
@@ -119,7 +138,7 @@ serve(async (req) => {
 
     // If there's an image (current or from history), analyze it for detailed predictions
     if (finalImageUrl) {
-      const ageContext = userAge ? `The user is ${userAge} years old. Use this for precise age-based timing in your palm reading analysis.` : '';
+      const ageContext = age ? `The user is ${age} years old. Use this for precise age-based timing in your palm reading analysis.` : '';
       
 systemPrompt = `You are Astrobot, a mystical palmistry reader who can analyze palm images and engage in friendly conversation.
 
