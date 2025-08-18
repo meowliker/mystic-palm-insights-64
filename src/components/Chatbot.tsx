@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Upload, Send, Sparkles, Camera, Image, HelpCircle, Book, Copy, MessageSquare, Heart, ThumbsUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -293,14 +293,22 @@ export const Chatbot: React.FC = () => {
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } 
+        video: { 
+          facingMode: 'environment',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        } 
       });
       setCameraStream(stream);
       setShowCameraModal(true);
       
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
+      // Wait for the modal to open and video element to be available
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play().catch(console.error);
+        }
+      }, 100);
     } catch (error) {
       toast({
         title: "Camera access denied",
@@ -944,14 +952,11 @@ export const Chatbot: React.FC = () => {
       {/* Camera Preview Modal */}
       <Dialog open={showCameraModal} onOpenChange={stopCamera}>
         <DialogContent className="max-w-md">
+          <DialogTitle>Position Your Palm</DialogTitle>
+          <DialogDescription>
+            Hold your palm flat and steady within the frame, then capture when ready
+          </DialogDescription>
           <div className="space-y-4">
-            <div className="text-center">
-              <h3 className="text-lg font-semibold">Position Your Palm</h3>
-              <p className="text-sm text-muted-foreground">
-                Hold your palm flat and steady within the frame
-              </p>
-            </div>
-            
             <div className="relative aspect-square bg-black rounded-lg overflow-hidden">
               <video
                 ref={videoRef}
