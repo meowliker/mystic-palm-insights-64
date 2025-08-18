@@ -880,40 +880,8 @@ export const Chatbot: React.FC = () => {
                                 ))}
                               </div>
                             </div>
-                          )}
-
-                          {/* Yes/No Quick Response Buttons - Show for bot messages that contain questions */}
-                          {message.sender === 'astrobot' && 
-                           !message.isTyping && 
-                           index === messages.length - 1 &&
-                           (message.content.includes('?') || 
-                            message.content.toLowerCase().includes('would you like') ||
-                            message.content.toLowerCase().includes('do you want') ||
-                            message.content.toLowerCase().includes('are you') ||
-                            message.content.toLowerCase().includes('can i') ||
-                            message.content.toLowerCase().includes('shall i')) && (
-                            <div className="mt-3 flex gap-2">
-                              <Button
-                                onClick={() => handleQuickResponse('Yes')}
-                                variant="outline"
-                                size="sm"
-                                className="bg-green-500/10 border-green-500/30 text-green-600 hover:bg-green-500/20 hover:border-green-500/50 text-xs px-4 py-1 h-auto rounded-full transition-all duration-200 hover:scale-105"
-                              >
-                                ✓ Yes
-                              </Button>
-                              <Button
-                                onClick={() => handleQuickResponse('No')}
-                                variant="outline"
-                                size="sm"
-                                className="bg-red-500/10 border-red-500/30 text-red-600 hover:bg-red-500/20 hover:border-red-500/50 text-xs px-4 py-1 h-auto rounded-full transition-all duration-200 hover:scale-105"
-                              >
-                                ✗ No
-                              </Button>
-                            </div>
-                          )}
+                           )}
                           
-                          
-
                            {/* Interactive buttons for bot messages */}
                           {message.sender === 'astrobot' && !message.isTyping && (
                             <div className="flex items-center justify-between mt-3 pt-2 border-t border-muted-foreground/20">
