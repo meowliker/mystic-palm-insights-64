@@ -843,7 +843,28 @@ export const Chatbot: React.FC = () => {
                   size="icon"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isLoading}
-                  title="Upload Palm Image"
+                  title="Select from Library"
+                >
+                  <Image className="h-4 w-4" />
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                      const input = document.createElement('input');
+                      input.type = 'file';
+                      input.accept = 'image/*';
+                      input.capture = 'environment';
+                      input.onchange = (e) => handleImageUpload(e as any);
+                      input.click();
+                    } else {
+                      fileInputRef.current?.click();
+                    }
+                  }}
+                  disabled={isLoading}
+                  title="Capture Image"
                 >
                   <Camera className="h-4 w-4" />
                 </Button>
