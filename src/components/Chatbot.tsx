@@ -64,6 +64,10 @@ export const Chatbot: React.FC = () => {
   const [showCameraModal, setShowCameraModal] = useState(false);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const { toast } = useToast();
+  
+  // Prevent duplicate history loads/flicker
+  const hasLoadedHistoryRef = useRef(false);
+  const loadingHistoryRef = useRef(false);
 
   const scrollToBottom = () => {
     if (scrollAreaRef.current) {
@@ -74,21 +78,25 @@ export const Chatbot: React.FC = () => {
     }
   };
 
-  // Load chat history on component mount
+  // Load chat history on component mount (run only when user ID changes)
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
+      hasLoadedHistoryRef.current = false; // allow fresh load for this user
       loadChatHistory();
     } else {
-      // If not authenticated, show welcome message
-      setMessages([{
-        id: '1',
-        content: "Hello! I'm Astrobot, your AI palmistry guide. I can help you understand your palm lines and what they reveal about your life, relationships, and future. Feel free to ask me any questions or upload a palm image for analysis!",
-        sender: 'astrobot',
-        timestamp: new Date()
-      }]);
+      // If not authenticated, show welcome message once and avoid flicker
+      if (!hasLoadedHistoryRef.current) {
+        setMessages([{
+          id: '1',
+          content: "Hello! I'm Astrobot, your AI palmistry guide. I can help you understand your palm lines and what they reveal about your life, relationships, and future. Feel free to ask me any questions or upload a palm image for analysis!",
+          sender: 'astrobot',
+          timestamp: new Date()
+        }]);
+        hasLoadedHistoryRef.current = true;
+      }
       setIsLoadingHistory(false);
     }
-  }, [user]);
+  }, [user?.id]);
 
   // Handle navigation state from ResultsScreen - only after history is loaded
   useEffect(() => {
@@ -138,6 +146,8 @@ export const Chatbot: React.FC = () => {
 
   const loadChatHistory = async () => {
     if (!user) return;
+    if (loadingHistoryRef.current || hasLoadedHistoryRef.current) return; // prevent duplicate loads
+    loadingHistoryRef.current = true;
 
     try {
       setIsLoadingHistory(true);
@@ -229,6 +239,8 @@ export const Chatbot: React.FC = () => {
       setMessages([welcomeMessage]);
     } finally {
       setIsLoadingHistory(false);
+      loadingHistoryRef.current = false;
+      hasLoadedHistoryRef.current = true;
     }
   };
 
@@ -251,6 +263,7 @@ export const Chatbot: React.FC = () => {
         )
       ]);
 
+      // Optimistically append to history in memory (do not reload)
       // Update session timestamp with timeout protection
       await Promise.race([
         supabase
@@ -734,7 +747,7 @@ export const Chatbot: React.FC = () => {
 
           {/* Chat messages */}
           <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
-            {isLoadingHistory ? (
+            {isLoadingHistory && messages.length === 0 ? (
               <div className="flex items-center justify-center h-full">
                 <div className="animate-pulse">Loading chat history...</div>
               </div>
