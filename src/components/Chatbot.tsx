@@ -863,15 +863,58 @@ export const Chatbot: React.FC = () => {
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => {
-                    if (cameraInputRef.current) {
-                      cameraInputRef.current.click();
+                  onClick={async () => {
+                    // Check if we're on desktop and camera is available
+                    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                      try {
+                        // Try to access camera directly on desktop
+                        const stream = await navigator.mediaDevices.getUserMedia({ 
+                          video: { facingMode: 'environment' } 
+                        });
+                        
+                        // Create a video element to capture the stream
+                        const video = document.createElement('video');
+                        video.srcObject = stream;
+                        video.play();
+                        
+                        // Wait for video to load
+                        video.onloadedmetadata = () => {
+                          const canvas = document.createElement('canvas');
+                          canvas.width = video.videoWidth;
+                          canvas.height = video.videoHeight;
+                          const ctx = canvas.getContext('2d');
+                          ctx?.drawImage(video, 0, 0);
+                          
+                          // Convert to blob and create file
+                          canvas.toBlob((blob) => {
+                            if (blob) {
+                              const file = new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' });
+                              const dataTransfer = new DataTransfer();
+                              dataTransfer.items.add(file);
+                              
+                              // Create synthetic event
+                              const syntheticEvent = {
+                                target: { files: dataTransfer.files }
+                              } as React.ChangeEvent<HTMLInputElement>;
+                              
+                              handleImageUpload(syntheticEvent);
+                            }
+                            
+                            // Stop camera stream
+                            stream.getTracks().forEach(track => track.stop());
+                          }, 'image/jpeg', 0.8);
+                        };
+                      } catch (error) {
+                        // Fallback to file input if camera access fails
+                        toast({
+                          title: "Camera access denied",
+                          description: "Opening photo library instead.",
+                        });
+                        cameraInputRef.current?.click();
+                      }
                     } else {
-                      toast({
-                        title: "Camera not available",
-                        description: "Opening photo library instead.",
-                      });
-                      libraryInputRef.current?.click();
+                      // Fallback for browsers without camera support
+                      cameraInputRef.current?.click();
                     }
                   }}
                   disabled={isLoading}
