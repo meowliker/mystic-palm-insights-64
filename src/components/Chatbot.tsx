@@ -90,8 +90,10 @@ export const Chatbot: React.FC = () => {
     }
   }, [user]);
 
-  // Handle navigation state from ResultsScreen
+  // Handle navigation state from ResultsScreen - only after history is loaded
   useEffect(() => {
+    if (isLoadingHistory) return; // Don't process navigation until history is loaded
+    
     const navigationState = location.state as any;
     if (navigationState?.question && navigationState?.autoSend && !hasProcessedNavigation) {
       setHasProcessedNavigation(true);
@@ -128,7 +130,7 @@ export const Chatbot: React.FC = () => {
         }, 1000);
       }
     }
-  }, [location.state, hasProcessedNavigation]);
+  }, [location.state, hasProcessedNavigation, isLoadingHistory]);
 
   useEffect(() => {
     scrollToBottom();
