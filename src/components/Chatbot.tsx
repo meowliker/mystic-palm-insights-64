@@ -161,8 +161,7 @@ export const Chatbot: React.FC = () => {
             .from('chat_messages')
             .select('id, content, sender, created_at, image_url, follow_up_questions')
             .eq('session_id', currentSessionId)
-            .order('created_at', { ascending: true })
-            .limit(50); // Limit to last 50 messages to avoid timeouts
+            .order('created_at', { ascending: true }); // Remove limit to load all messages
 
           if (!messagesError && messages && messages.length > 0) {
             const loadedMessages: Message[] = messages.map(msg => ({
