@@ -607,6 +607,99 @@ export const Chatbot: React.FC = () => {
     }
   };
 
+  const handleQuickResponse = async (response: string) => {
+    if (isLoading) return; // Prevent multiple simultaneous requests
+    
+    // Create user message for the quick response
+    const userMessage: Message = {
+      id: 'quick-response-' + Date.now(),
+      content: response,
+      sender: 'user',
+      timestamp: new Date()
+    };
+
+    setIsLoading(true);
+
+    // Add user message
+    setMessages(prevMessages => {
+      const newMessages = [...prevMessages, userMessage];
+      
+      // Save user message to history (don't await to avoid blocking UI)
+      if (user) {
+        saveMessageToHistory(userMessage).catch(console.error);
+      }
+      
+      return newMessages;
+    });
+
+    // Small delay to ensure user message is rendered
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    // Add typing indicator
+    const typingMessage: Message = {
+      id: 'typing-quick-' + Date.now(),
+      content: 'Astrobot is analyzing...',
+      sender: 'astrobot',
+      timestamp: new Date(),
+      isTyping: true
+    };
+
+    setMessages(prevMessages => [...prevMessages, typingMessage]);
+
+    try {
+      console.log('Sending quick response to astrobot-chat:', response);
+
+      // Send to chatbot API
+      const { data, error } = await supabase.functions.invoke('astrobot-chat', {
+        body: {
+          message: response,
+          imageUrl: null,
+          conversationHistory: messages.slice(-10)
+        }
+      });
+
+      console.log('Astrobot response:', { data, error });
+
+      if (error) {
+        console.error('Astrobot function error:', error);
+        throw error;
+      }
+
+      // Create bot response
+      const botResponse: Message = {
+        id: 'bot-quick-' + Date.now(),
+        content: data.response,
+        sender: 'astrobot',
+        timestamp: new Date(),
+        followUpQuestions: data.followUpQuestions || []
+      };
+
+      // Remove typing indicator and add bot response atomically
+      setMessages(prevMessages => {
+        const messagesWithoutTyping = prevMessages.filter(msg => !msg.id.startsWith('typing-'));
+        return [...messagesWithoutTyping, botResponse];
+      });
+
+      // Save bot response to history (don't await to avoid blocking UI)
+      if (user) {
+        saveMessageToHistory(botResponse).catch(console.error);
+      }
+
+    } catch (error) {
+      console.error('Error sending quick response:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send response. Please try again.",
+        variant: "destructive"
+      });
+      
+      // Remove typing indicator on error
+      setMessages(prevMessages => prevMessages.filter(msg => !msg.id.startsWith('typing-')));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="h-full w-full flex flex-col">
       <Card className="h-full flex flex-col overflow-hidden shadow-lg">
@@ -786,6 +879,36 @@ export const Chatbot: React.FC = () => {
                                   </Button>
                                 ))}
                               </div>
+                            </div>
+                          )}
+
+                          {/* Yes/No Quick Response Buttons - Show for bot messages that contain questions */}
+                          {message.sender === 'astrobot' && 
+                           !message.isTyping && 
+                           index === messages.length - 1 &&
+                           (message.content.includes('?') || 
+                            message.content.toLowerCase().includes('would you like') ||
+                            message.content.toLowerCase().includes('do you want') ||
+                            message.content.toLowerCase().includes('are you') ||
+                            message.content.toLowerCase().includes('can i') ||
+                            message.content.toLowerCase().includes('shall i')) && (
+                            <div className="mt-3 flex gap-2">
+                              <Button
+                                onClick={() => handleQuickResponse('Yes')}
+                                variant="outline"
+                                size="sm"
+                                className="bg-green-500/10 border-green-500/30 text-green-600 hover:bg-green-500/20 hover:border-green-500/50 text-xs px-4 py-1 h-auto rounded-full transition-all duration-200 hover:scale-105"
+                              >
+                                ✓ Yes
+                              </Button>
+                              <Button
+                                onClick={() => handleQuickResponse('No')}
+                                variant="outline"
+                                size="sm"
+                                className="bg-red-500/10 border-red-500/30 text-red-600 hover:bg-red-500/20 hover:border-red-500/50 text-xs px-4 py-1 h-auto rounded-full transition-all duration-200 hover:scale-105"
+                              >
+                                ✗ No
+                              </Button>
                             </div>
                           )}
                           
