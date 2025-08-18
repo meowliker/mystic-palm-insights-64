@@ -60,6 +60,9 @@ export const Chatbot: React.FC = () => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const libraryInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [showCameraModal, setShowCameraModal] = useState(false);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const { toast } = useToast();
 
   const scrollToBottom = () => {
@@ -284,6 +287,59 @@ export const Chatbot: React.FC = () => {
     }
     if (cameraInputRef.current) {
       cameraInputRef.current.value = '';
+    }
+  };
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'environment' } 
+      });
+      setCameraStream(stream);
+      setShowCameraModal(true);
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (error) {
+      toast({
+        title: "Camera access denied",
+        description: "Opening photo library instead.",
+      });
+      cameraInputRef.current?.click();
+    }
+  };
+
+  const stopCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      setCameraStream(null);
+    }
+    setShowCameraModal(false);
+  };
+
+  const captureImage = () => {
+    if (videoRef.current && cameraStream) {
+      const canvas = document.createElement('canvas');
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(videoRef.current, 0, 0);
+      
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const file = new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' });
+          const dataTransfer = new DataTransfer();
+          dataTransfer.items.add(file);
+          
+          const syntheticEvent = {
+            target: { files: dataTransfer.files }
+          } as React.ChangeEvent<HTMLInputElement>;
+          
+          handleImageUpload(syntheticEvent);
+          stopCamera();
+        }
+      }, 'image/jpeg', 0.8);
     }
   };
 
@@ -863,60 +919,7 @@ export const Chatbot: React.FC = () => {
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={async () => {
-                    // Check if we're on desktop and camera is available
-                    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                      try {
-                        // Try to access camera directly on desktop
-                        const stream = await navigator.mediaDevices.getUserMedia({ 
-                          video: { facingMode: 'environment' } 
-                        });
-                        
-                        // Create a video element to capture the stream
-                        const video = document.createElement('video');
-                        video.srcObject = stream;
-                        video.play();
-                        
-                        // Wait for video to load
-                        video.onloadedmetadata = () => {
-                          const canvas = document.createElement('canvas');
-                          canvas.width = video.videoWidth;
-                          canvas.height = video.videoHeight;
-                          const ctx = canvas.getContext('2d');
-                          ctx?.drawImage(video, 0, 0);
-                          
-                          // Convert to blob and create file
-                          canvas.toBlob((blob) => {
-                            if (blob) {
-                              const file = new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' });
-                              const dataTransfer = new DataTransfer();
-                              dataTransfer.items.add(file);
-                              
-                              // Create synthetic event
-                              const syntheticEvent = {
-                                target: { files: dataTransfer.files }
-                              } as React.ChangeEvent<HTMLInputElement>;
-                              
-                              handleImageUpload(syntheticEvent);
-                            }
-                            
-                            // Stop camera stream
-                            stream.getTracks().forEach(track => track.stop());
-                          }, 'image/jpeg', 0.8);
-                        };
-                      } catch (error) {
-                        // Fallback to file input if camera access fails
-                        toast({
-                          title: "Camera access denied",
-                          description: "Opening photo library instead.",
-                        });
-                        cameraInputRef.current?.click();
-                      }
-                    } else {
-                      // Fallback for browsers without camera support
-                      cameraInputRef.current?.click();
-                    }
-                  }}
+                  onClick={startCamera}
                   disabled={isLoading}
                   title="Capture Image"
                 >
@@ -937,6 +940,46 @@ export const Chatbot: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Camera Preview Modal */}
+      <Dialog open={showCameraModal} onOpenChange={stopCamera}>
+        <DialogContent className="max-w-md">
+          <div className="space-y-4">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold">Position Your Palm</h3>
+              <p className="text-sm text-muted-foreground">
+                Hold your palm flat and steady within the frame
+              </p>
+            </div>
+            
+            <div className="relative aspect-square bg-black rounded-lg overflow-hidden">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-4 border-2 border-white/50 rounded-lg pointer-events-none">
+                <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-primary"></div>
+                <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-primary"></div>
+                <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-primary"></div>
+                <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-primary"></div>
+              </div>
+            </div>
+            
+            <div className="flex gap-2 justify-center">
+              <Button variant="outline" onClick={stopCamera}>
+                Cancel
+              </Button>
+              <Button onClick={captureImage} className="bg-primary hover:bg-primary/90">
+                <Camera className="h-4 w-4 mr-2" />
+                Capture
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
