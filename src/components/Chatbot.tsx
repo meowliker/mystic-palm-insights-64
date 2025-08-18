@@ -58,7 +58,8 @@ export const Chatbot: React.FC = () => {
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [hasProcessedNavigation, setHasProcessedNavigation] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const libraryInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const scrollToBottom = () => {
@@ -278,8 +279,11 @@ export const Chatbot: React.FC = () => {
   const removeImage = () => {
     setSelectedImage(null);
     setImagePreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+    if (libraryInputRef.current) {
+      libraryInputRef.current.value = '';
+    }
+    if (cameraInputRef.current) {
+      cameraInputRef.current.value = '';
     }
   };
 
@@ -818,7 +822,15 @@ export const Chatbot: React.FC = () => {
                   type="file"
                   accept="image/*"
                   onChange={handleImageUpload}
-                  ref={fileInputRef}
+                  ref={libraryInputRef}
+                  className="hidden"
+                />
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleImageUpload}
+                  ref={cameraInputRef}
                   className="hidden"
                 />
                 
@@ -841,7 +853,7 @@ export const Chatbot: React.FC = () => {
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => libraryInputRef.current?.click()}
                   disabled={isLoading}
                   title="Select from Library"
                 >
@@ -852,15 +864,14 @@ export const Chatbot: React.FC = () => {
                   variant="outline"
                   size="icon"
                   onClick={() => {
-                    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                      const input = document.createElement('input');
-                      input.type = 'file';
-                      input.accept = 'image/*';
-                      input.capture = 'environment';
-                      input.onchange = (e) => handleImageUpload(e as any);
-                      input.click();
+                    if (cameraInputRef.current) {
+                      cameraInputRef.current.click();
                     } else {
-                      fileInputRef.current?.click();
+                      toast({
+                        title: "Camera not available",
+                        description: "Opening photo library instead.",
+                      });
+                      libraryInputRef.current?.click();
                     }
                   }}
                   disabled={isLoading}
