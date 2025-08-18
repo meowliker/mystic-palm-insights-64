@@ -52,13 +52,14 @@ serve(async (req) => {
   }
 
   try {
-    const { message, imageUrl, conversationHistory } = await req.json();
+    const { message, imageUrl, conversationHistory, userAge } = await req.json();
     
     console.log('Request received:', { 
       hasMessage: !!message, 
       hasImageUrl: !!imageUrl, 
       imageUrlStart: imageUrl ? imageUrl.substring(0, 50) + '...' : 'none',
-      hasHistory: !!conversationHistory 
+      hasHistory: !!conversationHistory,
+      hasAge: !!userAge 
     });
 
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
@@ -103,9 +104,26 @@ serve(async (req) => {
 
     let systemPrompt = palmistryKnowledge;
 
+    // Check if we have an image but no age - ask for age first
+    if (finalImageUrl && !userAge) {
+      const ageRequest = "I can see your palm! 🔮 To give you the most accurate reading with precise timing for your past, present, and future, please tell me your age first. This will help me map the exact timeline on your palm lines ✨";
+      
+      return new Response(
+        JSON.stringify({ 
+          response: ageRequest,
+          followUpQuestions: ["I'm 25 years old", "I'm 30 years old", "I'm 35 years old"]
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // If there's an image (current or from history), analyze it for detailed predictions
     if (finalImageUrl) {
+      const ageContext = userAge ? `The user is ${userAge} years old. Use this for precise age-based timing in your palm reading analysis.` : '';
+      
 systemPrompt = `You are Astrobot, a mystical palmistry reader who can analyze palm images and engage in friendly conversation.
+
+${ageContext}
 
 RESPONSE GUIDELINES:
 1. FIRST determine if the user is asking for palm analysis or just having a conversation
@@ -120,7 +138,9 @@ CRITICAL ANALYSIS RULES:
 - NEVER give palm readings without seeing an actual image
 - If asked about palmistry without image, respond: "I need to see your palm first - upload a clear photo! 📷"
 - ACTUALLY EXAMINE the palm image and describe SPECIFIC visible features you see
-- Focus on EXACT line characteristics: "Your heart line shows a deep break at age 35" not "you may face relationship challenges"
+- Use the user's age to provide PRECISE timing instead of approximations
+- Calculate exact ages based on palm line positions relative to their current age
+- For past events: "At age X" (specific past age), for future: "Around age Y" (specific future age)
 - Describe line thickness: "thin and faint" vs "deep and prominent"
 - Note line length: "extends to the edge" vs "stops short at the ring finger"
 - Identify breaks: "clean break" vs "overlapping segments" vs "fragmented"
@@ -128,7 +148,8 @@ CRITICAL ANALYSIS RULES:
 - Call out unusual features: chains, islands, stars, crosses
 - Be brutally honest about what you can and cannot see clearly
 - If a line is unclear, say "can't make out clearly in this lighting"
-- Give SPECIFIC timing based on line position, not generic predictions
+- Give SPECIFIC timing based on line position and their actual age, not generic predictions
+- Map life line segments to actual age ranges based on their current age
 
 CONVERSATION HANDLING:
 - Greetings: One to two sentence mystical response
