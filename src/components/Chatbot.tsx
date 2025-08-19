@@ -69,6 +69,30 @@ export const Chatbot: React.FC = () => {
   const hasLoadedHistoryRef = useRef(false);
   const loadingHistoryRef = useRef(false);
 
+  // Local cache helpers to prevent history loss if DB fails
+  const getCacheKey = () => `astrobot:history:${user?.id ?? 'anon'}`;
+  const loadFromCache = (): boolean => {
+    try {
+      const raw = localStorage.getItem(getCacheKey());
+      if (!raw) return false;
+      const parsed = JSON.parse(raw) as { messages: Array<{ id: string; content: string; sender: 'user'|'astrobot'; timestamp: string; imageUrl?: string; followUpQuestions?: string[] }>; sessionId?: string };
+      if (parsed.messages && parsed.messages.length) {
+        const cachedMessages: Message[] = parsed.messages.map(m => ({
+          ...m,
+          timestamp: new Date(m.timestamp),
+          isTyping: false
+        }));
+        setMessages(cachedMessages);
+        if (parsed.sessionId) setSessionId(parsed.sessionId);
+        // Avoid spinner if we have cache
+        setIsLoadingHistory(false);
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  };
   const scrollToBottom = () => {
     if (scrollAreaRef.current) {
       const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
@@ -80,21 +104,26 @@ export const Chatbot: React.FC = () => {
 
   // Load chat history on component mount (run only when user ID changes)
   useEffect(() => {
+    // Always try local cache first to avoid empty UI if DB is slow/unavailable
+    const hadCache = loadFromCache();
+
     if (user?.id) {
       hasLoadedHistoryRef.current = false; // allow fresh load for this user
       loadChatHistory();
     } else {
-      // If not authenticated, show welcome message once and avoid flicker
-      if (!hasLoadedHistoryRef.current) {
-        setMessages([{
-          id: '1',
-          content: "Hello! I'm Astrobot, your AI palmistry guide. I can help you understand your palm lines and what they reveal about your life, relationships, and future. Feel free to ask me any questions or upload a palm image for analysis!",
-          sender: 'astrobot',
-          timestamp: new Date()
-        }]);
-        hasLoadedHistoryRef.current = true;
+      // If not authenticated and no cache, show welcome message once and avoid flicker
+      if (!hadCache) {
+        if (!hasLoadedHistoryRef.current) {
+          setMessages([{
+            id: '1',
+            content: "Hello! I'm Astrobot, your AI palmistry guide. I can help you understand your palm lines and what they reveal about your life, relationships, and future. Feel free to ask me any questions or upload a palm image for analysis!",
+            sender: 'astrobot',
+            timestamp: new Date()
+          }]);
+          hasLoadedHistoryRef.current = true;
+        }
+        setIsLoadingHistory(false);
       }
-      setIsLoadingHistory(false);
     }
   }, [user?.id]);
 
@@ -143,6 +172,16 @@ export const Chatbot: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Persist to local cache whenever messages/session change (exclude typing)
+  useEffect(() => {
+    try {
+      const toSave = messages
+        .filter(m => !m.isTyping)
+        .map(m => ({ ...m, timestamp: m.timestamp.toISOString() }));
+      localStorage.setItem(getCacheKey(), JSON.stringify({ messages: toSave, sessionId }));
+    } catch {}
+  }, [messages, sessionId, user?.id]);
 
   const loadChatHistory = async () => {
     if (!user) return;
