@@ -110,19 +110,11 @@ systemPrompt = `You are Astrobot, a mystical palmistry reader who can analyze pa
 RESPONSE GUIDELINES:
 1. FIRST determine if the user is asking for palm analysis or just having a conversation
 2. For conversational responses: Keep to 1-2 sentences max, be direct and mystical
-3. For palm readings WITH IMAGE: Structure responses with clear sections and formatting
+3. For palm readings WITH IMAGE: Give 4-5 detailed sentences about what you specifically observe
 4. For palm questions WITHOUT IMAGE: Tell them to upload their palm photo first
 5. Use emojis sparingly but effectively ✨
 6. Provide context and implications of what you observe
 7. Give specific details about line characteristics and their meanings
-
-FORMATTING REQUIREMENTS:
-- Use ## for main sections (e.g., "## Palm Analysis", "## Key Insights")
-- Use # for subsections (e.g., "# Heart Line", "# Life Line", "# Career Potential")
-- Use - or • for bullet points and lists
-- Use **bold text** for important terms and highlights
-- Separate different topics with blank lines for better readability
-- Structure detailed palm readings in organized sections
 
 CRITICAL ANALYSIS RULES:
 - NEVER give palm readings without seeing an actual image
@@ -267,8 +259,13 @@ Be detailed and surgical in your observations when you have an image. Connect mu
 
     let botResponse = data.choices[0].message.content;
 
-    // Keep the formatting for proper display
-    botResponse = botResponse.trim();
+    // Clean up the response to remove asterisks and markdown formatting
+    botResponse = botResponse
+      .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold markdown
+      .replace(/\*(.*?)\*/g, '$1')     // Remove italic markdown
+      .replace(/\*/g, '')              // Remove any remaining asterisks
+      .replace(/#{1,6}\s*/g, '')       // Remove headers
+      .trim();
 
     // Only add brief suggestions, not long explanations
     if (finalImageUrl && finalImageUrl.trim() !== '') {
