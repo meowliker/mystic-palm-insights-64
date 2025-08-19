@@ -786,13 +786,8 @@ export const Chatbot: React.FC = () => {
 
           {/* Chat messages */}
           <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
-            {isLoadingHistory && messages.length === 0 ? (
-              <div className="flex items-center justify-center h-full">
-                <div className="animate-pulse">Loading chat history...</div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {messages.map((message, index) => {
+            <div className="space-y-4">
+              {messages.map((message, index) => {
                   // Check if we need to show a date separator
                   const showDateSeparator = index === 0 || 
                     message.timestamp.toDateString() !== messages[index - 1].timestamp.toDateString();
@@ -989,9 +984,18 @@ export const Chatbot: React.FC = () => {
                     </div>
                   );
                 })}
+                
+                {/* Loading history indicator at bottom */}
+                {isLoadingHistory && (
+                  <div className="flex items-center justify-center py-4">
+                    <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                      Loading chat history...
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </ScrollArea>
+            </ScrollArea>
 
           {/* Fixed input area at bottom */}
           <div className="border-t bg-background p-4 space-y-4">
