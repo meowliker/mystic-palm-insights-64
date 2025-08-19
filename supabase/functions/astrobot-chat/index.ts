@@ -52,13 +52,15 @@ serve(async (req) => {
   }
 
   try {
-    const { message, imageUrl, conversationHistory } = await req.json();
+    const { message, imageUrl, conversationHistory, userAge, lastQuestion } = await req.json();
     
-    console.log('Request received:', { 
-      hasMessage: !!message, 
-      hasImageUrl: !!imageUrl, 
+    console.log('Request received:', {
+      hasMessage: !!message,
+      hasImageUrl: !!imageUrl,
       imageUrlStart: imageUrl ? imageUrl.substring(0, 50) + '...' : 'none',
-      hasHistory: !!conversationHistory 
+      hasHistory: !!conversationHistory,
+      userAge,
+      lastQuestion
     });
 
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
@@ -101,7 +103,19 @@ serve(async (req) => {
         .join('\n');
     }
 
+    // Build enhanced system prompt
     let systemPrompt = palmistryKnowledge;
+    
+    if (userAge && lastQuestion) {
+      systemPrompt += `
+
+IMPORTANT CONTEXT FOR THIS READING:
+- User's current age: ${userAge} years old
+- Original question they asked: "${lastQuestion}"
+- Since they provided their age after asking about timing, you MUST give specific age-based predictions for their original question
+- Calculate timing relative to their current age (${userAge}) and provide exact age ranges
+- Example: If they asked about marriage and they're 25, say "25-27" not "mid twenties"`;
+    }
 
     // If there's an image (current or from history), analyze it for detailed predictions
     if (finalImageUrl) {
