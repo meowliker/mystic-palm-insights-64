@@ -148,22 +148,51 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
     }
   };
 
-  const handleShareReading = (reading: any) => {
-    if (navigator.share) {
-      navigator.share({
-        title: 'My Palm Reading',
-        text: `Check out my palm reading insights: ${reading.overall_insight?.substring(0, 100)}...`,
-        url: window.location.href
-      });
-    } else {
-      // Fallback for browsers that don't support Web Share API
-      navigator.clipboard.writeText(
-        `My Palm Reading:\n${reading.overall_insight}\n\nGenerated on ${new Date(reading.scan_date).toLocaleDateString()}`
-      );
-      toast({
-        title: "Copied to clipboard",
-        description: "Your palm reading has been copied to clipboard"
-      });
+  const handleShareReading = async (reading: any) => {
+    try {
+      if (navigator.share && window.isSecureContext) {
+        await navigator.share({
+          title: 'My Palm Reading',
+          text: `Check out my palm reading insights: ${reading.overall_insight?.substring(0, 100)}...`,
+          url: window.location.href
+        });
+        toast({
+          title: "Shared successfully",
+          description: "Your palm reading has been shared"
+        });
+      } else {
+        // Fallback for browsers that don't support Web Share API
+        await navigator.clipboard.writeText(
+          `My Palm Reading:\n${reading.overall_insight}\n\nGenerated on ${new Date(reading.scan_date).toLocaleDateString()}`
+        );
+        toast({
+          title: "Copied to clipboard", 
+          description: "Your palm reading has been copied to clipboard"
+        });
+      }
+    } catch (error) {
+      // Handle errors gracefully
+      if ((error as Error).name === 'AbortError') {
+        // User cancelled the share - do nothing
+        return;
+      }
+      
+      // For any other error, try clipboard as fallback
+      try {
+        await navigator.clipboard.writeText(
+          `My Palm Reading:\n${reading.overall_insight}\n\nGenerated on ${new Date(reading.scan_date).toLocaleDateString()}`
+        );
+        toast({
+          title: "Copied to clipboard",
+          description: "Your palm reading has been copied to clipboard"
+        });
+      } catch (clipboardError) {
+        toast({
+          title: "Share failed",
+          description: "Unable to share or copy to clipboard",
+          variant: "destructive"
+        });
+      }
     }
   };
 
