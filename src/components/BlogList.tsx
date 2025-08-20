@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useBlogs, type Blog } from "@/hooks/useBlogs";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { Share } from '@capacitor/share';
 
 interface BlogListProps {
   blogs: Blog[];
@@ -18,20 +19,20 @@ export const BlogList = ({ blogs, onLike }: BlogListProps) => {
   const handleShare = async (blog: Blog) => {
     const url = `${window.location.origin}/blog/${blog.id}`;
     
-    if (navigator.share) {
+    try {
+      await Share.share({
+        title: blog.title,
+        text: `Check out this astrology blog: ${blog.title}`,
+        url: url
+      });
+    } catch (err) {
+      // Fallback to clipboard if sharing fails
       try {
-        await navigator.share({
-          title: blog.title,
-          text: `Check out this astrology blog: ${blog.title}`,
-          url: url
-        });
-      } catch (err) {
-        // User cancelled sharing
+        await navigator.clipboard.writeText(url);
+        toast.success("Link copied to clipboard!");
+      } catch (clipboardErr) {
+        toast.error("Failed to share or copy link");
       }
-    } else {
-      // Fallback to clipboard
-      await navigator.clipboard.writeText(url);
-      toast.success("Link copied to clipboard!");
     }
   };
 

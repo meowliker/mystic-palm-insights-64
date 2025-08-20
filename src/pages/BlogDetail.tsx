@@ -12,6 +12,7 @@ import { useBlogs, type Blog, type BlogComment } from "@/hooks/useBlogs";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Share } from '@capacitor/share';
 
 export const BlogDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -115,28 +116,17 @@ export const BlogDetail = () => {
       url: url
     };
     
-    // Check if we're in a secure context and share is available
-    if (navigator.share && window.isSecureContext) {
-      try {
-        await navigator.share(shareData);
-        return; // Successfully shared
-      } catch (err) {
-        // Handle user cancellation gracefully
-        if (err.name === 'AbortError') {
-          return; // User cancelled, don't show any message
-        }
-        // For any other error, fall through to clipboard
-        console.log('Native share failed, using clipboard:', err.name);
-      }
-    }
-    
-    // Clipboard fallback - always show success message
     try {
-      await navigator.clipboard.writeText(url);
-      toast.success("Link copied to clipboard!");
+      await Share.share(shareData);
     } catch (err) {
-      console.error('Clipboard failed:', err);
-      toast.error("Failed to copy link");
+      // Fallback to clipboard if sharing fails
+      try {
+        await navigator.clipboard.writeText(url);
+        toast.success("Link copied to clipboard!");
+      } catch (clipboardErr) {
+        console.error('Clipboard failed:', clipboardErr);
+        toast.error("Failed to copy link");
+      }
     }
   };
 

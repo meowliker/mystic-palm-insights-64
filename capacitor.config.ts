@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.1702666ecc3547af92d2210bcde05e9f',
+  appId: 'com.palmcosmic.app',
   appName: 'PalmCosmic - AI Palm Reading',
   webDir: 'dist',
   server: {

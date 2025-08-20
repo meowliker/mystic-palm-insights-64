@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Share } from '@capacitor/share';
 import { 
   Scan, 
   Calendar, 
@@ -167,18 +168,16 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
     });
 
     try {
-      // Try Web Share API first (mainly for mobile)
-      if (supportsWebShare) {
-        await navigator.share(shareData);
-        toast({
-          title: "Shared successfully",
-          description: "Your palm reading has been shared"
-        });
-        return;
-      }
-
-      // For desktop or unsupported browsers, create a share popup
-      if (!isMobile) {
+      // Try Capacitor Share API first
+      await Share.share(shareData);
+      toast({
+        title: "Shared successfully",
+        description: "Your palm reading has been shared"
+      });
+      return;
+    } catch (shareErr) {
+      // Fallback for desktop or when sharing is not available
+      try {
         const shareText = `🔮 My Palm Reading\n\n${reading.overall_insight}\n\nGenerated on ${new Date(reading.scan_date).toLocaleDateString()}\n\nGet your own reading at: ${window.location.origin}`;
         
         // Try opening share options for common platforms
@@ -209,18 +208,16 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
             description: "Choose your preferred app to share your reading"
           });
         }
-        return;
+      } catch (fallbackErr) {
+        // Final fallback
+        const shareText = `🔮 My Palm Reading\n\n${reading.overall_insight}\n\nGenerated on ${new Date(reading.scan_date).toLocaleDateString()}\n\nGet your own reading at: ${window.location.origin}`;
+        
+        await navigator.clipboard.writeText(shareText);
+        toast({
+          title: "Copied to clipboard",
+          description: "Palm reading copied! You can now share it anywhere."
+        });
       }
-
-      // Fallback for mobile without Web Share API
-      const shareText = `🔮 My Palm Reading\n\n${reading.overall_insight}\n\nGenerated on ${new Date(reading.scan_date).toLocaleDateString()}\n\nGet your own reading at: ${window.location.origin}`;
-      
-      await navigator.clipboard.writeText(shareText);
-      toast({
-        title: "Copied to clipboard",
-        description: "Palm reading copied! You can now share it anywhere."
-      });
-
     } catch (error) {
       console.error('Share error:', error);
       
