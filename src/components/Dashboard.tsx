@@ -149,21 +149,26 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
   };
 
   const handleShareReading = async (reading: any) => {
-    console.log('Share attempt:', {
-      hasNavigatorShare: !!navigator.share,
-      isSecureContext: window.isSecureContext,
-      protocol: window.location.protocol
-    });
-
     const shareData = {
       title: 'My Palm Reading',
       text: `Check out my palm reading insights: ${reading.overall_insight?.substring(0, 100)}...`,
       url: window.location.href
     };
 
+    // Check if we're on mobile and Web Share API is supported
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const supportsWebShare = 'share' in navigator && window.isSecureContext;
+
+    console.log('Share environment:', {
+      isMobile,
+      supportsWebShare,
+      isSecureContext: window.isSecureContext,
+      protocol: window.location.protocol
+    });
+
     try {
-      // Check if Web Share API is available and we're in a secure context
-      if (navigator.share && window.isSecureContext) {
+      // Try Web Share API first (mainly for mobile)
+      if (supportsWebShare) {
         await navigator.share(shareData);
         toast({
           title: "Shared successfully",
@@ -171,24 +176,43 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
         });
         return;
       }
-      
-      // For non-secure contexts or unsupported browsers, try different sharing methods
-      
-      // Method 1: Try opening a share menu if possible (for mobile)
-      if (navigator.share) {
-        try {
-          await navigator.share(shareData);
+
+      // For desktop or unsupported browsers, create a share popup
+      if (!isMobile) {
+        const shareText = `🔮 My Palm Reading\n\n${reading.overall_insight}\n\nGenerated on ${new Date(reading.scan_date).toLocaleDateString()}\n\nGet your own reading at: ${window.location.origin}`;
+        
+        // Try opening share options for common platforms
+        const shareUrls = {
+          twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`,
+          facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}&quote=${encodeURIComponent(shareText)}`,
+          whatsapp: `https://wa.me/?text=${encodeURIComponent(shareText)}`,
+          telegram: `https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(shareText)}`
+        };
+
+        // Create a simple share menu
+        const shareChoice = confirm(
+          "Choose how to share your palm reading:\n\nOK = Copy to clipboard\nCancel = Open share options"
+        );
+
+        if (shareChoice) {
+          // Copy to clipboard
+          await navigator.clipboard.writeText(shareText);
           toast({
-            title: "Shared successfully", 
-            description: "Your palm reading has been shared"
+            title: "Copied to clipboard",
+            description: "Palm reading copied! You can now paste it anywhere."
           });
-          return;
-        } catch (shareError) {
-          console.log('Native share failed:', shareError);
+        } else {
+          // Open WhatsApp share (most universal)
+          window.open(shareUrls.whatsapp, '_blank');
+          toast({
+            title: "Opening share",
+            description: "Choose your preferred app to share your reading"
+          });
         }
+        return;
       }
-      
-      // Method 2: Fallback to clipboard
+
+      // Fallback for mobile without Web Share API
       const shareText = `🔮 My Palm Reading\n\n${reading.overall_insight}\n\nGenerated on ${new Date(reading.scan_date).toLocaleDateString()}\n\nGet your own reading at: ${window.location.origin}`;
       
       await navigator.clipboard.writeText(shareText);
@@ -196,7 +220,7 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
         title: "Copied to clipboard",
         description: "Palm reading copied! You can now share it anywhere."
       });
-      
+
     } catch (error) {
       console.error('Share error:', error);
       
@@ -205,18 +229,11 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
         return;
       }
       
-      // Final fallback: Try a simple text selection approach
+      // Final fallback
+      const shareText = `🔮 My Palm Reading\n\n${reading.overall_insight}\n\nGenerated on ${new Date(reading.scan_date).toLocaleDateString()}\n\nGet your own reading at: ${window.location.origin}`;
+      
       try {
-        const shareText = `🔮 My Palm Reading\n\n${reading.overall_insight}\n\nGenerated on ${new Date(reading.scan_date).toLocaleDateString()}\n\nGet your own reading at: ${window.location.origin}`;
-        
-        // Create a temporary textarea to select and copy
-        const textArea = document.createElement('textarea');
-        textArea.value = shareText;
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
-        
+        await navigator.clipboard.writeText(shareText);
         toast({
           title: "Copied to clipboard",
           description: "Palm reading copied! You can now share it anywhere."
@@ -224,7 +241,7 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
       } catch (finalError) {
         toast({
           title: "Share failed",
-          description: "Unable to share. Try refreshing the page and trying again.",
+          description: "Unable to share. Please try refreshing the page.",
           variant: "destructive"
         });
       }
