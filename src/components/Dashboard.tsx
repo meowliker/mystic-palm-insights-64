@@ -149,47 +149,82 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
   };
 
   const handleShareReading = async (reading: any) => {
+    console.log('Share attempt:', {
+      hasNavigatorShare: !!navigator.share,
+      isSecureContext: window.isSecureContext,
+      protocol: window.location.protocol
+    });
+
+    const shareData = {
+      title: 'My Palm Reading',
+      text: `Check out my palm reading insights: ${reading.overall_insight?.substring(0, 100)}...`,
+      url: window.location.href
+    };
+
     try {
+      // Check if Web Share API is available and we're in a secure context
       if (navigator.share && window.isSecureContext) {
-        await navigator.share({
-          title: 'My Palm Reading',
-          text: `Check out my palm reading insights: ${reading.overall_insight?.substring(0, 100)}...`,
-          url: window.location.href
-        });
+        await navigator.share(shareData);
         toast({
           title: "Shared successfully",
           description: "Your palm reading has been shared"
         });
-      } else {
-        // Fallback for browsers that don't support Web Share API
-        await navigator.clipboard.writeText(
-          `My Palm Reading:\n${reading.overall_insight}\n\nGenerated on ${new Date(reading.scan_date).toLocaleDateString()}`
-        );
-        toast({
-          title: "Copied to clipboard", 
-          description: "Your palm reading has been copied to clipboard"
-        });
-      }
-    } catch (error) {
-      // Handle errors gracefully
-      if ((error as Error).name === 'AbortError') {
-        // User cancelled the share - do nothing
         return;
       }
       
-      // For any other error, try clipboard as fallback
+      // For non-secure contexts or unsupported browsers, try different sharing methods
+      
+      // Method 1: Try opening a share menu if possible (for mobile)
+      if (navigator.share) {
+        try {
+          await navigator.share(shareData);
+          toast({
+            title: "Shared successfully", 
+            description: "Your palm reading has been shared"
+          });
+          return;
+        } catch (shareError) {
+          console.log('Native share failed:', shareError);
+        }
+      }
+      
+      // Method 2: Fallback to clipboard
+      const shareText = `🔮 My Palm Reading\n\n${reading.overall_insight}\n\nGenerated on ${new Date(reading.scan_date).toLocaleDateString()}\n\nGet your own reading at: ${window.location.origin}`;
+      
+      await navigator.clipboard.writeText(shareText);
+      toast({
+        title: "Copied to clipboard",
+        description: "Palm reading copied! You can now share it anywhere."
+      });
+      
+    } catch (error) {
+      console.error('Share error:', error);
+      
+      // Handle user cancellation gracefully
+      if ((error as Error).name === 'AbortError') {
+        return;
+      }
+      
+      // Final fallback: Try a simple text selection approach
       try {
-        await navigator.clipboard.writeText(
-          `My Palm Reading:\n${reading.overall_insight}\n\nGenerated on ${new Date(reading.scan_date).toLocaleDateString()}`
-        );
+        const shareText = `🔮 My Palm Reading\n\n${reading.overall_insight}\n\nGenerated on ${new Date(reading.scan_date).toLocaleDateString()}\n\nGet your own reading at: ${window.location.origin}`;
+        
+        // Create a temporary textarea to select and copy
+        const textArea = document.createElement('textarea');
+        textArea.value = shareText;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
         toast({
           title: "Copied to clipboard",
-          description: "Your palm reading has been copied to clipboard"
+          description: "Palm reading copied! You can now share it anywhere."
         });
-      } catch (clipboardError) {
+      } catch (finalError) {
         toast({
           title: "Share failed",
-          description: "Unable to share or copy to clipboard",
+          description: "Unable to share. Try refreshing the page and trying again.",
           variant: "destructive"
         });
       }
