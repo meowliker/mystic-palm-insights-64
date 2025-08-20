@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useBlogs, type Blog } from "@/hooks/useBlogs";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Share } from '@capacitor/share';
+import { Share as CapacitorShare } from '@capacitor/share';
 
 interface BlogListProps {
   blogs: Blog[];
@@ -20,7 +20,7 @@ export const BlogList = ({ blogs, onLike }: BlogListProps) => {
     const url = `${window.location.origin}/blog/${blog.id}`;
     
     try {
-      await Share.share({
+      await CapacitorShare.share({
         title: blog.title,
         text: `Check out this astrology blog: ${blog.title}`,
         url: url

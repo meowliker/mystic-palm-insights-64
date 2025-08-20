@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Share } from '@capacitor/share';
+import { Share as CapacitorShare } from '@capacitor/share';
 import { 
   Scan, 
   Calendar, 
@@ -169,77 +169,44 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
 
     try {
       // Try Capacitor Share API first
-      await Share.share(shareData);
+      await CapacitorShare.share(shareData);
       toast({
         title: "Shared successfully",
         description: "Your palm reading has been shared"
       });
-      return;
     } catch (shareErr) {
       // Fallback for desktop or when sharing is not available
-      try {
-        const shareText = `🔮 My Palm Reading\n\n${reading.overall_insight}\n\nGenerated on ${new Date(reading.scan_date).toLocaleDateString()}\n\nGet your own reading at: ${window.location.origin}`;
-        
-        // Try opening share options for common platforms
-        const shareUrls = {
-          twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`,
-          facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}&quote=${encodeURIComponent(shareText)}`,
-          whatsapp: `https://wa.me/?text=${encodeURIComponent(shareText)}`,
-          telegram: `https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(shareText)}`
-        };
-
-        // Create a simple share menu
-        const shareChoice = confirm(
-          "Choose how to share your palm reading:\n\nOK = Copy to clipboard\nCancel = Open share options"
-        );
-
-        if (shareChoice) {
-          // Copy to clipboard
-          await navigator.clipboard.writeText(shareText);
-          toast({
-            title: "Copied to clipboard",
-            description: "Palm reading copied! You can now paste it anywhere."
-          });
-        } else {
-          // Open WhatsApp share (most universal)
-          window.open(shareUrls.whatsapp, '_blank');
-          toast({
-            title: "Opening share",
-            description: "Choose your preferred app to share your reading"
-          });
-        }
-      } catch (fallbackErr) {
-        // Final fallback
-        const shareText = `🔮 My Palm Reading\n\n${reading.overall_insight}\n\nGenerated on ${new Date(reading.scan_date).toLocaleDateString()}\n\nGet your own reading at: ${window.location.origin}`;
-        
-        await navigator.clipboard.writeText(shareText);
-        toast({
-          title: "Copied to clipboard",
-          description: "Palm reading copied! You can now share it anywhere."
-        });
-      }
-    } catch (error) {
-      console.error('Share error:', error);
+      console.log('Capacitor share failed, using fallback:', shareErr);
       
-      // Handle user cancellation gracefully
-      if ((error as Error).name === 'AbortError') {
-        return;
-      }
-      
-      // Final fallback
       const shareText = `🔮 My Palm Reading\n\n${reading.overall_insight}\n\nGenerated on ${new Date(reading.scan_date).toLocaleDateString()}\n\nGet your own reading at: ${window.location.origin}`;
       
       try {
+        // Try clipboard as fallback
         await navigator.clipboard.writeText(shareText);
         toast({
           title: "Copied to clipboard",
           description: "Palm reading copied! You can now share it anywhere."
         });
-      } catch (finalError) {
+      } catch (clipboardErr) {
+        // Final fallback - show share options
+        const shareUrls = {
+          twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`,
+          whatsapp: `https://wa.me/?text=${encodeURIComponent(shareText)}`
+        };
+        
+        const shareChoice = confirm(
+          "Choose how to share your palm reading:\n\nOK = Open WhatsApp\nCancel = Try Twitter"
+        );
+        
+        if (shareChoice) {
+          window.open(shareUrls.whatsapp, '_blank');
+        } else {
+          window.open(shareUrls.twitter, '_blank');
+        }
+        
         toast({
-          title: "Share failed",
-          description: "Unable to share. Please try refreshing the page.",
-          variant: "destructive"
+          title: "Opening share",
+          description: "Choose your preferred app to share your reading"
         });
       }
     }

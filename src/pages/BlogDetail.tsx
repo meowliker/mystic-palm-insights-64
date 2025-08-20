@@ -12,7 +12,7 @@ import { useBlogs, type Blog, type BlogComment } from "@/hooks/useBlogs";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Share } from '@capacitor/share';
+import { Share as CapacitorShare } from '@capacitor/share';
 
 export const BlogDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -117,7 +117,7 @@ export const BlogDetail = () => {
     };
     
     try {
-      await Share.share(shareData);
+      await CapacitorShare.share(shareData);
     } catch (err) {
       // Fallback to clipboard if sharing fails
       try {
