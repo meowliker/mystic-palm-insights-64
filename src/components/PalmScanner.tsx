@@ -6,6 +6,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Camera, Hand, CheckCircle, AlertCircle, RefreshCw, Sparkles, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { CameraService } from '@/services/cameraService';
+import { Capacitor } from '@capacitor/core';
 
 type ScanState = 'ready' | 'detecting' | 'scanning' | 'capturing' | 'analyzing' | 'complete' | 'error';
 
@@ -51,19 +53,26 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
 
   const initializeCamera = async () => {
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { 
-          facingMode: 'user',
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+      if (Capacitor.isNativePlatform()) {
+        // For native platforms, we'll use a button to trigger native camera
+        setCameraActive(true);
+        setCameraError(null);
+      } else {
+        // Web fallback
+        const mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: { 
+            facingMode: 'user',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        });
+        setStream(mediaStream);
+        setCameraActive(true);
+        if (videoRef.current) {
+          videoRef.current.srcObject = mediaStream;
         }
-      });
-      setStream(mediaStream);
-      setCameraActive(true);
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
+        setCameraError(null);
       }
-      setCameraError(null);
     } catch (error) {
       setCameraError('Camera access denied. Please enable camera permissions.');
       console.error('Camera error:', error);
@@ -178,27 +187,73 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
     }
   };
 
-  const startScan = () => {
+  const startScan = async () => {
     if (cameraError) return;
     
-    setScanState('detecting');
-    setProgress(0);
-    setCountdown(null);
-    
-    // Enhanced alignment detection - more forgiving
-    alignmentIntervalRef.current = setInterval(() => {
-      // More forgiving palm detection
-      const isAligned = Math.random() > 0.2; // 80% chance of good alignment
-      setAlignment(isAligned ? 'good' : 'poor');
-    }, 500);
+    try {
+      if (Capacitor.isNativePlatform()) {
+        // Use native camera directly
+        setScanState('capturing');
+        const result = await CameraService.takePicture();
+        
+        if (result.dataUrl) {
+          setCapturedImage(result.dataUrl);
+          setScanState('analyzing');
+          setProcessingStage('Uploading to secure storage...');
+          
+          // Upload and analyze
+          const imageUrl = await uploadImageToStorage(result.dataUrl);
+          if (!imageUrl) {
+            throw new Error("Failed to save palm image");
+          }
 
-    // Move to scanning phase after detection
-    setTimeout(() => {
-      if (scanState === 'detecting' || scanState === 'ready') {
-        setScanState('scanning');
-        startCountdownTimer();
+          setProcessingStage('Analyzing cosmic patterns...');
+          const palmReading = await generatePalmReading(imageUrl);
+          if (!palmReading) {
+            throw new Error("Failed to generate palm reading");
+          }
+
+          setProcessingStage('Generating insights...');
+          setScanState('complete');
+          
+          const scanData = {
+            ...palmReading,
+            palm_image_url: imageUrl,
+            capturedImage: result.dataUrl
+          };
+          
+          setTimeout(() => onScanComplete(scanData), 1500);
+        }
+      } else {
+        // Web workflow
+        setScanState('detecting');
+        setProgress(0);
+        setCountdown(null);
+        
+        // Enhanced alignment detection - more forgiving
+        alignmentIntervalRef.current = setInterval(() => {
+          // More forgiving palm detection
+          const isAligned = Math.random() > 0.2; // 80% chance of good alignment
+          setAlignment(isAligned ? 'good' : 'poor');
+        }, 500);
+
+        // Move to scanning phase after detection
+        setTimeout(() => {
+          if (scanState === 'detecting' || scanState === 'ready') {
+            setScanState('scanning');
+            startCountdownTimer();
+          }
+        }, DETECTION_DURATION);
       }
-    }, DETECTION_DURATION);
+    } catch (error) {
+      console.error('Camera error:', error);
+      setScanState('error');
+      toast({
+        title: "Camera Error",
+        description: error instanceof Error ? error.message : "Failed to access camera. Please check permissions.",
+        variant: "destructive"
+      });
+    }
   };
 
   const startCountdownTimer = () => {
