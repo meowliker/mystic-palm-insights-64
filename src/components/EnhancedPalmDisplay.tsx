@@ -93,11 +93,11 @@ const EnhancedPalmDisplay = ({ palmData }: EnhancedPalmDisplayProps) => {
         </Card>
       ) : (
         <Tabs defaultValue="age-predictions" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
-          <TabsTrigger value="age-predictions" className="text-xs">Age Timeline</TabsTrigger>
-          <TabsTrigger value="wealth" className="text-xs">Wealth</TabsTrigger>
-          <TabsTrigger value="mounts" className="text-xs">Mounts</TabsTrigger>
-          <TabsTrigger value="relationships" className="text-xs">Love</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 gap-1">
+          <TabsTrigger value="age-predictions" className="text-xs px-2 py-1.5">Age Timeline</TabsTrigger>
+          <TabsTrigger value="wealth" className="text-xs px-2 py-1.5">Wealth</TabsTrigger>
+          <TabsTrigger value="mounts" className="text-xs px-2 py-1.5">Mounts</TabsTrigger>
+          <TabsTrigger value="relationships" className="text-xs px-2 py-1.5">Love</TabsTrigger>
         </TabsList>
 
         <TabsContent value="age-predictions" className="mt-6">

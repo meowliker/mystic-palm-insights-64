@@ -245,8 +245,8 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-3 sm:px-6 py-3 sm:py-4">
+      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50 safe-area-inset-top">
+        <div className="container mx-auto px-3 sm:px-6 py-3 sm:py-4 pt-safe-offset-3">
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
               <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground truncate">Welcome back, {user?.user_metadata?.full_name || 'Cosmic Explorer'}</h1>
