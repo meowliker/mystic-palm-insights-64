@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { CameraService } from '@/services/cameraService';
 import { Capacitor } from '@capacitor/core';
-
+import { CameraPreview } from '@capacitor-community/camera-preview';
 type ScanState = 'ready' | 'detecting' | 'scanning' | 'capturing' | 'analyzing' | 'complete' | 'error';
 
 // Configuration constants for timing
@@ -54,8 +54,25 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
   const initializeCamera = async () => {
     try {
       if (Capacitor.isNativePlatform()) {
-        // For native platforms, just set camera as active without web camera API
-        // We'll use file input or direct camera capture
+        // Request permissions using Capacitor Camera service
+        const permissions = await CameraService.checkPermissions();
+        if (permissions.camera !== 'granted') {
+          const req = await CameraService.requestPermissions();
+          if (req.camera !== 'granted') {
+            setCameraError('Camera permission not granted. Please enable it in Settings.');
+            return;
+          }
+        }
+        // Start native in-app camera preview
+        await CameraPreview.start({
+          position: 'rear',
+          parent: 'native-camera',
+          className: 'native-camera-preview',
+          toBack: false,
+          disableAudio: true,
+          width: window.innerWidth,
+          height: window.innerHeight,
+        });
         setCameraActive(true);
         setCameraError(null);
       } else {
@@ -70,7 +87,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
         setStream(mediaStream);
         setCameraActive(true);
         if (videoRef.current) {
-          videoRef.current.srcObject = mediaStream;
+          (videoRef.current as any).srcObject = mediaStream;
         }
         setCameraError(null);
       }
@@ -80,7 +97,16 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
     }
   };
 
-  const stopCamera = () => {
+  const stopCamera = async () => {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await CameraPreview.stop();
+      } catch (e) {
+        // ignore
+      }
+      setCameraActive(false);
+      return;
+    }
     if (stream) {
       stream.getTracks().forEach(track => {
         track.stop();
@@ -89,7 +115,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
       setStream(null);
       setCameraActive(false);
       if (videoRef.current) {
-        videoRef.current.srcObject = null;
+        (videoRef.current as any).srcObject = null;
       }
     }
   };
@@ -192,76 +218,24 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
     if (cameraError) return;
     
     try {
-      if (Capacitor.isNativePlatform()) {
-        // For native platforms, use file input instead of redirecting to camera app
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.capture = 'environment'; // Use rear camera
-        
-        input.onchange = async (event) => {
-          const file = (event.target as HTMLInputElement).files?.[0];
-          if (file) {
-            setScanState('analyzing');
-            setProcessingStage('Processing image...');
-            
-            // Convert file to data URL
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-              const dataUrl = e.target?.result as string;
-              setCapturedImage(dataUrl);
-              
-              setProcessingStage('Uploading to secure storage...');
-              
-              // Upload and analyze
-              const imageUrl = await uploadImageToStorage(dataUrl);
-              if (!imageUrl) {
-                throw new Error("Failed to save palm image");
-              }
+      // Unified in-app scanning UX on all platforms
+      setScanState('detecting');
+      setProgress(0);
+      setCountdown(null);
+      
+      // Enhanced alignment detection - more forgiving
+      alignmentIntervalRef.current = setInterval(() => {
+        const isAligned = Math.random() > 0.2; // 80% chance of good alignment
+        setAlignment(isAligned ? 'good' : 'poor');
+      }, 500);
 
-              setProcessingStage('Analyzing cosmic patterns...');
-              const palmReading = await generatePalmReading(imageUrl);
-              if (!palmReading) {
-                throw new Error("Failed to generate palm reading");
-              }
-
-              setProcessingStage('Generating insights...');
-              setScanState('complete');
-              
-              const scanData = {
-                ...palmReading,
-                palm_image_url: imageUrl,
-                capturedImage: dataUrl
-              };
-              
-              setTimeout(() => onScanComplete(scanData), 1500);
-            };
-            reader.readAsDataURL(file);
-          }
-        };
-        
-        input.click();
-      } else {
-        // Web workflow with camera stream
-        setScanState('detecting');
-        setProgress(0);
-        setCountdown(null);
-        
-        // Enhanced alignment detection - more forgiving
-        alignmentIntervalRef.current = setInterval(() => {
-          // More forgiving palm detection
-          const isAligned = Math.random() > 0.2; // 80% chance of good alignment
-          setAlignment(isAligned ? 'good' : 'poor');
-        }, 500);
-
-        // Move to scanning phase after detection
-        setTimeout(() => {
-          if (scanState === 'detecting' || scanState === 'ready') {
-            setScanState('scanning');
-            startCountdownTimer();
-          }
-        }, DETECTION_DURATION);
-      }
+      // Move to scanning phase after detection
+      setTimeout(() => {
+        if (scanState === 'detecting' || scanState === 'ready') {
+          setScanState('scanning');
+          startCountdownTimer();
+        }
+      }, DETECTION_DURATION);
     } catch (error) {
       console.error('Camera error:', error);
       setScanState('error');
@@ -301,7 +275,13 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
     
     try {
       // Capture the palm image immediately
-      const imageDataUrl = await captureImage();
+      let imageDataUrl: string | null = null;
+      if (Capacitor.isNativePlatform()) {
+        const result = await CameraPreview.capture({ quality: 90 });
+        imageDataUrl = result?.value ? `data:image/jpeg;base64,${result.value}` : null;
+      } else {
+        imageDataUrl = await captureImage();
+      }
       if (!imageDataUrl) {
         throw new Error("Failed to capture palm image");
       }
@@ -309,7 +289,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
       setCapturedImage(imageDataUrl);
       
       // Stop camera immediately for privacy after capture
-      stopCamera();
+      await stopCamera();
 
       // Background processing - upload and analyze
       setProcessingStage('Uploading to secure storage...');
@@ -435,13 +415,17 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
           ) : (
             <>
               {/* Camera Feed */}
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="absolute inset-0 w-full h-full object-cover"
-              />
+              {Capacitor.isNativePlatform() ? (
+                <div id="native-camera" className="absolute inset-0 w-full h-full" />
+              ) : (
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              )}
               
               {/* Hidden canvas for image capture */}
               <canvas ref={canvasRef} className="hidden" />
