@@ -193,38 +193,54 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
     
     try {
       if (Capacitor.isNativePlatform()) {
-        // Use native camera for capturing
-        setScanState('capturing');
-        const result = await CameraService.takePicture();
+        // For native platforms, use file input instead of redirecting to camera app
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.capture = 'environment'; // Use rear camera
         
-        if (result.dataUrl) {
-          setCapturedImage(result.dataUrl);
-          setScanState('analyzing');
-          setProcessingStage('Uploading to secure storage...');
-          
-          // Upload and analyze
-          const imageUrl = await uploadImageToStorage(result.dataUrl);
-          if (!imageUrl) {
-            throw new Error("Failed to save palm image");
-          }
+        input.onchange = async (event) => {
+          const file = (event.target as HTMLInputElement).files?.[0];
+          if (file) {
+            setScanState('analyzing');
+            setProcessingStage('Processing image...');
+            
+            // Convert file to data URL
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+              const dataUrl = e.target?.result as string;
+              setCapturedImage(dataUrl);
+              
+              setProcessingStage('Uploading to secure storage...');
+              
+              // Upload and analyze
+              const imageUrl = await uploadImageToStorage(dataUrl);
+              if (!imageUrl) {
+                throw new Error("Failed to save palm image");
+              }
 
-          setProcessingStage('Analyzing cosmic patterns...');
-          const palmReading = await generatePalmReading(imageUrl);
-          if (!palmReading) {
-            throw new Error("Failed to generate palm reading");
-          }
+              setProcessingStage('Analyzing cosmic patterns...');
+              const palmReading = await generatePalmReading(imageUrl);
+              if (!palmReading) {
+                throw new Error("Failed to generate palm reading");
+              }
 
-          setProcessingStage('Generating insights...');
-          setScanState('complete');
-          
-          const scanData = {
-            ...palmReading,
-            palm_image_url: imageUrl,
-            capturedImage: result.dataUrl
-          };
-          
-          setTimeout(() => onScanComplete(scanData), 1500);
-        }
+              setProcessingStage('Generating insights...');
+              setScanState('complete');
+              
+              const scanData = {
+                ...palmReading,
+                palm_image_url: imageUrl,
+                capturedImage: dataUrl
+              };
+              
+              setTimeout(() => onScanComplete(scanData), 1500);
+            };
+            reader.readAsDataURL(file);
+          }
+        };
+        
+        input.click();
       } else {
         // Web workflow with camera stream
         setScanState('detecting');
