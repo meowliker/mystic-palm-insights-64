@@ -53,7 +53,19 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
 
   const initializeCamera = async () => {
     try {
-      // Use web API for both native and web platforms to show in-app camera
+      if (Capacitor.isNativePlatform()) {
+        // For native platforms, check and request camera permissions first
+        const permissions = await CameraService.checkPermissions();
+        if (permissions.camera !== 'granted') {
+          const requestResult = await CameraService.requestPermissions();
+          if (requestResult.camera !== 'granted') {
+            setCameraError('Camera access denied. Please enable camera permissions in your device settings.');
+            return;
+          }
+        }
+      }
+
+      // Use web API for camera preview (works on both native and web after permissions)
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { 
           facingMode: 'user',
