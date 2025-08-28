@@ -159,7 +159,7 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
       <div className="container mx-auto px-4 sm:px-6 py-8">
         <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8">
           {/* Overall Insight - This contains all the palm line details */}
-          <Card className="p-8 bg-card/80 backdrop-blur-sm border-primary/20">
+          <Card className="p-4 sm:p-6 bg-card/80 backdrop-blur-sm border-primary/20">
             <div className="text-center space-y-4">
               <h2 className="text-2xl font-bold text-foreground">Your Cosmic Palm Reading</h2>
               <div className="text-lg text-muted-foreground leading-relaxed whitespace-pre-line text-center max-w-4xl mx-auto">
