@@ -808,17 +808,17 @@ export const Chatbot: React.FC = () => {
         <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
           {/* Pre-built questions */}
           <div className="p-4 border-b bg-muted/20">
-            <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-wrap gap-2">
               {prebuiltQuestions.slice(0, 3).map((question, index) => {
                 const icons = ['💍', '💰', '💕']; // Icons for each question
                 return (
                   <Badge
                     key={index}
                     variant="outline"
-                    className="cursor-pointer hover:bg-primary/10 transition-colors text-xs px-3 py-1 bg-background/50 border-primary/30 justify-start"
+                    className="cursor-pointer hover:bg-primary/10 transition-colors text-xs px-2 py-1 bg-background/50 border-primary/30 text-[10px]"
                     onClick={() => handleQuickResponse(question)}
                   >
-                    <span className="mr-1.5">{icons[index]}</span>
+                    <span className="mr-1">{icons[index]}</span>
                     {question}
                   </Badge>
                 );
