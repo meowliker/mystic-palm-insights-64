@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Upload, Send, Sparkles, Camera, Image, HelpCircle, Book, Copy, MessageSquare, Heart, ThumbsUp, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -807,14 +808,14 @@ export const Chatbot: React.FC = () => {
         <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
           {/* Pre-built questions */}
           <div className="p-4 border-b bg-muted/20">
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {prebuiltQuestions.slice(0, 3).map((question, index) => {
                 const icons = ['💍', '💰', '💕']; // Icons for each question
                 return (
                   <Badge
                     key={index}
                     variant="outline"
-                    className="cursor-pointer hover:bg-primary/10 transition-colors text-xs px-3 py-1 bg-background/50 border-primary/30"
+                    className="cursor-pointer hover:bg-primary/10 transition-colors text-xs px-3 py-1 bg-background/50 border-primary/30 justify-start"
                     onClick={() => handleQuickResponse(question)}
                   >
                     <span className="mr-1.5">{icons[index]}</span>
@@ -1088,50 +1089,45 @@ export const Chatbot: React.FC = () => {
                 />
                 
                 {/* Upload options in a plus menu */}
-                <div className="relative">
-                  <Dialog>
-                    <DialogTrigger asChild>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      disabled={isLoading}
+                      title="Upload Image"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-56 p-3" side="top" align="end">
+                    <div className="space-y-2">
+                      <div className="text-sm font-medium text-foreground mb-3">Upload Palm Image</div>
                       <Button
-                        variant="outline"
-                        size="icon"
+                        variant="ghost"
+                        className="w-full justify-start gap-3 h-auto py-2"
+                        onClick={() => {
+                          cameraInputRef.current?.click();
+                        }}
                         disabled={isLoading}
-                        title="Upload Image"
                       >
-                        <Plus className="h-4 w-4" />
+                        <Camera className="h-4 w-4" />
+                        <span className="text-sm">Take Photo</span>
                       </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-sm">
-                      <DialogTitle>Upload Palm Image</DialogTitle>
-                      <DialogDescription>
-                        Choose how you'd like to capture your palm image
-                      </DialogDescription>
-                      <div className="space-y-3 pt-4">
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start gap-3"
-                          onClick={() => {
-                            cameraInputRef.current?.click();
-                          }}
-                          disabled={isLoading}
-                        >
-                          <Camera className="h-5 w-5" />
-                          Take Photo
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start gap-3"
-                          onClick={() => {
-                            libraryInputRef.current?.click();
-                          }}
-                          disabled={isLoading}
-                        >
-                          <Image className="h-5 w-5" />
-                          Choose from Gallery
-                        </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </div>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start gap-3 h-auto py-2"
+                        onClick={() => {
+                          libraryInputRef.current?.click();
+                        }}
+                        disabled={isLoading}
+                      >
+                        <Image className="h-4 w-4" />
+                        <span className="text-sm">Choose from Gallery</span>
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
                 
                 <Button
                   onClick={sendMessage}
