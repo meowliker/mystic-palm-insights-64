@@ -276,11 +276,12 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
                 <Button 
                   variant="outline" 
                   onClick={onStartUpload}
-                  className="gap-1 sm:gap-2 hidden sm:flex"
+                  className="gap-1 sm:gap-2"
                   size="sm"
+                  aria-label="Upload your palm image"
                 >
                   <Upload className="h-4 w-4" />
-                  <span className="hidden lg:inline">Upload your Palm</span>
+                  <span className="sr-only sm:not-sr-only sm:inline">Upload your Palm</span>
                 </Button>
               )}
               {/* Mobile Settings */}
@@ -297,14 +298,28 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
                       <Card className="p-4 bg-card/80 backdrop-blur-sm text-center">
                         <ProfilePicture userId={user?.id} />
                         <h3 className="font-semibold text-foreground mb-4">{user?.user_metadata?.full_name || 'Cosmic Explorer'}</h3>
-                        <div className="space-y-2">
-                          <EditProfileDialog>
-                            <Button variant="outline" size="sm" className="w-full">
-                              <User className="h-4 w-4 mr-2" />
-                              Edit Profile
-                            </Button>
-                          </EditProfileDialog>
-                        </div>
+                         <div className="space-y-2">
+                           <EditProfileDialog>
+                             <Button variant="outline" size="sm" className="w-full">
+                               <User className="h-4 w-4 mr-2" />
+                               Edit Profile
+                             </Button>
+                           </EditProfileDialog>
+                           {onStartUpload && (
+                             <Button 
+                               variant="outline" 
+                               onClick={() => {
+                                 onStartUpload();
+                                 setSidebarOpen(false);
+                               }}
+                               className="w-full"
+                               size="sm"
+                             >
+                               <Upload className="h-4 w-4 mr-2" />
+                               Upload Your Palm
+                             </Button>
+                           )}
+                         </div>
                       </Card>
 
                       {/* Mobile Daily Insight */}
