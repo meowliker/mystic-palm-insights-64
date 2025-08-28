@@ -9,6 +9,7 @@ import { Blogs } from "./pages/Blogs";
 import { BlogDetail } from "./pages/BlogDetail";
 import { CreateBlog } from "./pages/CreateBlog";
 import ChatbotPage from "./pages/ChatbotPage";
+import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
 
 const queryClient = new QueryClient();
 
@@ -17,6 +18,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <PWAInstallPrompt />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
