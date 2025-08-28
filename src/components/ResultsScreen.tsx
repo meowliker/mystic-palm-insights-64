@@ -195,11 +195,11 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
                     variant="outline"
                     size="lg"
                     onClick={() => handleQuestionClick(question)}
-                    className="w-full text-left justify-start hover:bg-primary/10 hover:border-primary/30 transition-all duration-300 group"
+                    className="w-full text-left justify-start hover:bg-primary/10 hover:border-primary/30 transition-all duration-300 group h-auto py-3 px-4"
                   >
-                    <MessageCircle className="h-4 w-4 mr-3 text-primary group-hover:scale-110 transition-transform" />
-                    <span className="flex-1">{question}</span>
-                    <ArrowRight className="h-4 w-4 ml-2 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                    <MessageCircle className="h-4 w-4 mr-3 text-primary group-hover:scale-110 transition-transform flex-shrink-0" />
+                    <span className="flex-1 text-sm leading-relaxed break-words">{question}</span>
+                    <ArrowRight className="h-4 w-4 ml-2 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all flex-shrink-0" />
                   </Button>
                 ))}
               </div>
