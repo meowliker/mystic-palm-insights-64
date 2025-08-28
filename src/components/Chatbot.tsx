@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Upload, Send, Sparkles, Camera, Image, HelpCircle, Book, Copy, MessageSquare, Heart, ThumbsUp } from 'lucide-react';
+import { Upload, Send, Sparkles, Camera, Image, HelpCircle, Book, Copy, MessageSquare, Heart, ThumbsUp, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { PalmGuide } from '@/components/PalmGuide';
@@ -782,9 +782,25 @@ export const Chatbot: React.FC = () => {
     <div className="h-full w-full flex flex-col">
       <Card className="h-full flex flex-col overflow-hidden shadow-lg">
         <CardHeader className="pb-4 border-b">
-          <CardTitle className="flex items-center gap-2">
-            <Sparkles className="h-6 w-6 text-primary" />
-            Astrobot - Your AI Palmistry Guide
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-6 w-6 text-primary" />
+              Astrobot - Your AI Palmistry Guide
+            </div>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  title="Palm Photo Guide"
+                >
+                  <HelpCircle className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <PalmGuide />
+              </DialogContent>
+            </Dialog>
           </CardTitle>
         </CardHeader>
         
@@ -792,16 +808,16 @@ export const Chatbot: React.FC = () => {
           {/* Pre-built questions */}
           <div className="p-4 border-b bg-muted/20">
             <div className="flex flex-wrap gap-2">
-              {prebuiltQuestions.slice(0, 4).map((question, index) => {
-                const icons = ['💍', '💰', '💕', '✨']; // Icons for each question
+              {prebuiltQuestions.slice(0, 3).map((question, index) => {
+                const icons = ['💍', '💰', '💕']; // Icons for each question
                 return (
                   <Badge
                     key={index}
                     variant="outline"
-                    className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-all duration-300 hover:scale-105 hover:shadow-md flex items-center gap-1"
-                    onClick={() => handleQuestionClick(question)}
+                    className="cursor-pointer hover:bg-primary/10 transition-colors text-xs px-3 py-1 bg-background/50 border-primary/30"
+                    onClick={() => handleQuickResponse(question)}
                   >
-                    <span>{icons[index]}</span>
+                    <span className="mr-1.5">{icons[index]}</span>
                     {question}
                   </Badge>
                 );
@@ -1071,41 +1087,51 @@ export const Chatbot: React.FC = () => {
                   className="hidden"
                 />
                 
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      disabled={isLoading}
-                      title="Palm Photo Guide"
-                    >
-                      <HelpCircle className="h-4 w-4" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                    <PalmGuide />
-                  </DialogContent>
-                </Dialog>
-                
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => libraryInputRef.current?.click()}
-                  disabled={isLoading}
-                  title="Select from Library"
-                >
-                  <Image className="h-4 w-4" />
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={startCamera}
-                  disabled={isLoading}
-                  title="Capture Image"
-                >
-                  <Camera className="h-4 w-4" />
-                </Button>
+                {/* Upload options in a plus menu */}
+                <div className="relative">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        disabled={isLoading}
+                        title="Upload Image"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-sm">
+                      <DialogTitle>Upload Palm Image</DialogTitle>
+                      <DialogDescription>
+                        Choose how you'd like to capture your palm image
+                      </DialogDescription>
+                      <div className="space-y-3 pt-4">
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start gap-3"
+                          onClick={() => {
+                            cameraInputRef.current?.click();
+                          }}
+                          disabled={isLoading}
+                        >
+                          <Camera className="h-5 w-5" />
+                          Take Photo
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start gap-3"
+                          onClick={() => {
+                            libraryInputRef.current?.click();
+                          }}
+                          disabled={isLoading}
+                        >
+                          <Image className="h-5 w-5" />
+                          Choose from Gallery
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
                 
                 <Button
                   onClick={sendMessage}
