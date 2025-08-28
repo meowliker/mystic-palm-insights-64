@@ -179,7 +179,7 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
           <EnhancedPalmDisplay palmData={palmResults} />
 
           {/* Palmistry Questions */}
-          <Card className="p-6 sm:p-8 bg-card/80 backdrop-blur-sm">
+          <Card className="p-6 sm:p-8 bg-card/80 backdrop-blur-sm overflow-hidden max-w-full">
             <div className="text-center space-y-6">
               <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/20 rounded-full mb-2">
                 <Zap className="h-6 w-6 text-primary" />
@@ -195,10 +195,12 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
                     variant="outline"
                     size="lg"
                     onClick={() => handleQuestionClick(question)}
-                    className="w-full text-left justify-start hover:bg-primary/10 hover:border-primary/30 transition-all duration-300 group h-auto py-3 px-3"
+                    className="w-full max-w-full text-left justify-start hover:bg-primary/10 hover:border-primary/30 transition-all duration-300 group h-auto py-3 px-3 whitespace-normal overflow-hidden"
                   >
                     <MessageCircle className="h-3 w-3 mr-2 text-primary group-hover:scale-110 transition-transform flex-shrink-0" />
-                    <span className="flex-1 text-xs leading-relaxed break-words overflow-hidden">{question}</span>
+                    <span className="flex-1 min-w-0 text-xs leading-snug break-words">
+                      {question}
+                    </span>
                     <ArrowRight className="h-3 w-3 ml-1 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all flex-shrink-0" />
                   </Button>
                 ))}
