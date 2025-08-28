@@ -26,7 +26,8 @@ import {
   Share,
   AlertTriangle,
   Upload,
-  MessageCircle
+  MessageCircle,
+  Menu
 } from 'lucide-react';
 import constellationPattern from '@/assets/constellation-pattern.jpg';
 import { useScans } from '@/hooks/useScans';
@@ -108,6 +109,7 @@ const ProfilePicture = ({ userId, onUpdate }: { userId?: string; onUpdate?: () =
 const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; onStartUpload?: () => void }) => {
   const [activeTab, setActiveTab] = useState<'readings' | 'horoscope' | 'blog'>('readings');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [navMenuOpen, setNavMenuOpen] = useState(false);
   const [userBlogs, setUserBlogs] = useState<any[]>([]);
   const [blogsLoading, setBlogsLoading] = useState(false);
   const [horoscope, setHoroscope] = useState<any>(null);
@@ -253,38 +255,63 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
               <p className="text-muted-foreground hidden sm:block text-sm">Ready to explore your cosmic destiny?</p>
             </div>
             <div className="flex items-center gap-1 sm:gap-2">
-              <Link to="/chatbot">
-                <Button 
-                  variant="outline" 
-                  className="gap-1 sm:gap-2"
-                  size="sm"
-                >
-                  <MessageCircle className="h-4 w-4" />
-                  <span className="hidden md:inline">Astrobot</span>
-                </Button>
-              </Link>
-              <Button 
-                variant="glow" 
-                onClick={onStartScan}
-                className="gap-1 sm:gap-2"
-                size="sm"
-              >
-                <Scan className="h-4 w-4" />
-                <span className="hidden md:inline">Scan Your Palm</span>
-              </Button>
-              {onStartUpload && (
-                <Button 
-                  variant="outline" 
-                  onClick={onStartUpload}
-                  className="gap-1 sm:gap-2"
-                  size="sm"
-                  aria-label="Upload your palm image"
-                >
-                  <Upload className="h-4 w-4" />
-                  <span className="sr-only sm:not-sr-only sm:inline">Upload your Palm</span>
-                </Button>
-              )}
-              {/* Mobile Settings */}
+              {/* Navigation Menu for Actions */}
+              <Sheet open={navMenuOpen} onOpenChange={setNavMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Menu className="h-4 w-4" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-80">
+                  <div className="space-y-4 pt-6">
+                    <h3 className="font-semibold text-lg mb-4">Actions</h3>
+                    
+                    <div className="space-y-3">
+                      <Button 
+                        variant="glow" 
+                        onClick={() => {
+                          onStartScan();
+                          setNavMenuOpen(false);
+                        }}
+                        className="w-full justify-start gap-3"
+                        size="lg"
+                      >
+                        <Scan className="h-5 w-5" />
+                        Scan Your Palm
+                      </Button>
+                      
+                      {onStartUpload && (
+                        <Button 
+                          variant="outline" 
+                          onClick={() => {
+                            onStartUpload();
+                            setNavMenuOpen(false);
+                          }}
+                          className="w-full justify-start gap-3"
+                          size="lg"
+                        >
+                          <Upload className="h-5 w-5" />
+                          Upload your Palm
+                        </Button>
+                      )}
+                      
+                      <Link to="/chatbot">
+                        <Button 
+                          variant="outline" 
+                          className="w-full justify-start gap-3"
+                          size="lg"
+                          onClick={() => setNavMenuOpen(false)}
+                        >
+                          <MessageCircle className="h-5 w-5" />
+                          Chat with Astrobot
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
+
+              {/* Settings Menu */}
               <div className="lg:hidden">
                 <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
                   <SheetTrigger asChild>
