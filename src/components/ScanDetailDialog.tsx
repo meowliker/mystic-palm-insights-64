@@ -128,7 +128,7 @@ const ScanDetailDialog = ({ scan, children, onScanDeleted }: ScanDetailDialogPro
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-foreground leading-relaxed whitespace-pre-line">
+              <div className="text-foreground leading-relaxed whitespace-pre-line text-center">
                 {cleanupMarkdown(scan.overall_insight)}
               </div>
             </CardContent>
