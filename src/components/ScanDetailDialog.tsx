@@ -79,7 +79,7 @@ const ScanDetailDialog = ({ scan, children, onScanDeleted }: ScanDetailDialogPro
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between pr-8">
             <DialogTitle className="flex items-center gap-2">
               <Star className="h-5 w-5 text-primary" />
               Palm Reading Details
