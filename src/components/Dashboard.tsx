@@ -281,6 +281,20 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
                       </Button>
                       
                       
+                      {onStartUpload && (
+                        <Button 
+                          variant="outline" 
+                          onClick={() => {
+                            onStartUpload();
+                            setNavMenuOpen(false);
+                          }}
+                          className="w-full justify-start gap-3"
+                          size="lg"
+                        >
+                          <Upload className="h-5 w-5" />
+                          Upload your Palm
+                        </Button>
+                      )}
                       <Link to="/chatbot">
                         <Button 
                           variant="outline" 
@@ -646,6 +660,20 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
                     Edit Profile
                   </Button>
                 </EditProfileDialog>
+                {onStartUpload && (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      onStartUpload();
+                      setSidebarOpen(false);
+                    }}
+                    className="w-full"
+                    size="sm"
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload Your Palm
+                  </Button>
+                )}
               </div>
             </Card>
 
