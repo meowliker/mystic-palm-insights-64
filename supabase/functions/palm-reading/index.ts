@@ -17,11 +17,11 @@ serve(async (req) => {
   }
 
   try {
-    const { imageUrl } = await req.json();
-    console.log('Request received with image URL:', { imageUrl });
+    const { imageUrl, imageDataUrl } = await req.json();
+    console.log('Request received with image params:', { hasImageUrl: !!imageUrl, hasImageDataUrl: !!imageDataUrl });
 
-    if (!imageUrl) {
-      throw new Error('Palm image URL is required');
+    if (!imageUrl && !imageDataUrl) {
+      throw new Error('Palm image is required (imageUrl or imageDataUrl)');
     }
 
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
@@ -29,28 +29,40 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
-    // Convert image to base64 (same approach as astrobot)
-    console.log('Fetching image for base64 conversion:', imageUrl);
-    
-    const imageResponse = await fetch(imageUrl);
-    if (!imageResponse.ok) {
-      throw new Error(`Failed to fetch image: ${imageResponse.status}`);
+    let mimeType = 'image/jpeg';
+    let imageBase64 = '';
+
+    if (imageDataUrl && imageDataUrl.startsWith('data:')) {
+      console.log('Using provided data URL');
+      const match = imageDataUrl.match(/^data:(.*?);base64,(.*)$/);
+      if (!match) {
+        throw new Error('Invalid imageDataUrl format');
+      }
+      mimeType = match[1] || 'image/jpeg';
+      imageBase64 = match[2];
+    } else if (imageUrl) {
+      // Convert image to base64 (same approach as astrobot)
+      console.log('Fetching image for base64 conversion:', imageUrl);
+      const imageResponse = await fetch(imageUrl);
+      if (!imageResponse.ok) {
+        throw new Error(`Failed to fetch image: ${imageResponse.status}`);
+      }
+      const imageBuffer = await imageResponse.arrayBuffer();
+      const uint8Array = new Uint8Array(imageBuffer);
+      mimeType = imageResponse.headers.get('content-type') || 'image/jpeg';
+      // Convert to base64 safely for large images
+      let binary = '';
+      const chunkSize = 8192;
+      for (let i = 0; i < uint8Array.length; i += chunkSize) {
+        const chunk = uint8Array.subarray(i, i + chunkSize);
+        binary += String.fromCharCode.apply(null, Array.from(chunk));
+      }
+      imageBase64 = btoa(binary);
+    } else {
+      throw new Error('No image provided');
     }
-    
-    const imageBuffer = await imageResponse.arrayBuffer();
-    const uint8Array = new Uint8Array(imageBuffer);
-    const mimeType = imageResponse.headers.get('content-type') || 'image/jpeg';
-    
-    // Convert to base64 safely for large images
-    let binary = '';
-    const chunkSize = 8192;
-    for (let i = 0; i < uint8Array.length; i += chunkSize) {
-      const chunk = uint8Array.subarray(i, i + chunkSize);
-      binary += String.fromCharCode.apply(null, Array.from(chunk));
-    }
-    const imageBase64 = btoa(binary);
-    
-    console.log('Image converted to base64, size:', imageBase64.length);
+
+    console.log('Image prepared, base64 size:', imageBase64.length);
 
     // Enhanced palmistry analysis with age predictions, wealth analysis, and more
     const messages = [

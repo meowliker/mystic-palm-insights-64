@@ -214,6 +214,32 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
     }
   };
 
+  // New: call Edge Function directly with in-memory image data (works without auth)
+  const generatePalmReadingDirect = async (imageDataUrl: string) => {
+    try {
+      console.log('Calling palm reading function with inline image data');
+      const { data, error } = await supabase.functions.invoke('palm-reading', {
+        body: { imageDataUrl }
+      });
+
+      console.log('Palm reading response:', { data, error });
+
+      if (error) {
+        console.error('Error from palm reading function:', error);
+        throw new Error(error.message || 'Failed to generate palm reading');
+      }
+
+      if (!data) {
+        throw new Error('No data received from palm analysis');
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error generating reading (direct):', error);
+      throw error;
+    }
+  };
+
   const startScan = async () => {
     if (cameraError) return;
     
@@ -291,7 +317,24 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
       // Stop camera immediately for privacy after capture
       await stopCamera();
 
-      // Background processing - upload and analyze
+      // Prefer direct analysis with in-memory data to avoid storage issues
+      try {
+        setProcessingStage('Analyzing your palm...');
+        const palmReading = await generatePalmReadingDirect(imageDataUrl);
+        setProcessingStage('Generating insights...');
+        setScanState('complete');
+        const scanData = {
+          ...palmReading,
+          palm_image_url: null,
+          capturedImage: imageDataUrl
+        };
+        setTimeout(() => onScanComplete(scanData), 1500);
+        return; // Done
+      } catch (e) {
+        console.warn('Direct analysis failed, falling back to storage upload:', e);
+      }
+
+      // Fallback: upload then analyze via public URL
       setProcessingStage('Uploading to secure storage...');
       const imageUrl = await uploadImageToStorage(imageDataUrl);
       if (!imageUrl) {
