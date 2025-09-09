@@ -79,7 +79,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
         // Web platforms use getUserMedia
         const mediaStream = await navigator.mediaDevices.getUserMedia({
           video: { 
-            facingMode: 'user',
+            facingMode: 'environment', // Use rear camera for palm scanning
             width: { ideal: 1280 },
             height: { ideal: 720 }
           }
