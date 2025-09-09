@@ -68,7 +68,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
           position: 'rear',
           parent: 'native-camera',
           className: 'native-camera-preview',
-          toBack: false,
+          toBack: true, // ensure web UI stays on top and remains clickable
           disableAudio: true,
           width: window.innerWidth,
           height: window.innerHeight,
@@ -244,6 +244,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
     if (cameraError) return;
     
     try {
+      console.log('[PalmScanner] startScan clicked');
       // Unified in-app scanning UX on all platforms
       setScanState('detecting');
       setProgress(0);
@@ -257,10 +258,9 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
 
       // Move to scanning phase after detection
       setTimeout(() => {
-        if (scanState === 'detecting' || scanState === 'ready') {
-          setScanState('scanning');
-          startCountdownTimer();
-        }
+        console.log('[PalmScanner] detection phase complete, moving to scanning');
+        setScanState('scanning');
+        startCountdownTimer();
       }, DETECTION_DURATION);
     } catch (error) {
       console.error('Camera error:', error);
@@ -274,8 +274,10 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
   };
 
   const startCountdownTimer = () => {
+    console.log('[PalmScanner] scanning phase started');
     // Remove countdown, just wait for the scanning duration
     setTimeout(() => {
+      console.log('[PalmScanner] capturing frame');
       setScanState('capturing');
       setCountdown(null);
       // Immediate capture after scanning duration
@@ -296,6 +298,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
   }, [scanState]);
 
   const handleScanComplete = async () => {
+    console.log('[PalmScanner] handleScanComplete invoked');
     setScanState('analyzing');
     setProcessingStage('Analyzing cosmic patterns...');
     
@@ -459,7 +462,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
             <>
               {/* Camera Feed */}
               {Capacitor.isNativePlatform() ? (
-                <div id="native-camera" className="absolute inset-0 w-full h-full" />
+                <div id="native-camera" className="absolute inset-0 w-full h-full pointer-events-none" />
               ) : (
                 <video
                   ref={videoRef}
