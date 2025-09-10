@@ -146,4 +146,13 @@ All colors MUST be HSL.
   .pt-safe-offset-3 {
     padding-top: max(0.75rem, env(safe-area-inset-top));
   }
+
+  /* Safe area utilities for close buttons */
+  .top-safe {
+    top: calc(1rem + env(safe-area-inset-top));
+  }
+
+  .pt-safe {
+    padding-top: calc(1rem + env(safe-area-inset-top));
+  }
 }
