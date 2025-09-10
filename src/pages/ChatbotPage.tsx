@@ -13,7 +13,7 @@ const ChatbotPage: React.FC = () => {
 
   return (
     <div className="h-screen bg-gradient-to-br from-cosmic-purple/20 to-cosmic-blue/20 flex flex-col overflow-hidden">
-      <div className="flex-shrink-0 p-4 border-b border-border/20">
+      <div className="flex-shrink-0 pt-safe p-4 border-b border-border/20">
         <div className="flex items-center justify-between w-full px-4">
           <Button 
             variant="ghost" 
