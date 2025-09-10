@@ -74,6 +74,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
           height: window.innerHeight,
         });
         setCameraActive(true);
+        document.body.classList.add('camera-active');
         setCameraError(null);
       } else {
         // Web platforms use getUserMedia
@@ -89,6 +90,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
         if (videoRef.current) {
           (videoRef.current as any).srcObject = mediaStream;
         }
+        document.body.classList.add('camera-active');
         setCameraError(null);
       }
     } catch (error) {
@@ -105,6 +107,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
         // ignore
       }
       setCameraActive(false);
+      document.body.classList.remove('camera-active');
       return;
     }
     if (stream) {
@@ -117,6 +120,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
       if (videoRef.current) {
         (videoRef.current as any).srcObject = null;
       }
+      document.body.classList.remove('camera-active');
     }
   };
 
@@ -399,7 +403,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
   };
 
   return (
-    <div className="min-h-screen bg-background relative">
+    <div className="min-h-screen bg-transparent relative">
       {/* Full Screen Analysis Animation */}
       {scanState === 'analyzing' && (
         <div className="fixed inset-0 bg-gradient-to-br from-purple-900 via-black to-purple-900 z-50 flex flex-col items-center justify-center">
@@ -448,7 +452,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
       {/* Mobile: Fullscreen camera view */}
       <div className="sm:hidden">
         {/* Fullscreen Camera Area */}
-        <div className="fixed inset-0 bg-black z-10">
+        <div className="fixed inset-0 bg-transparent z-10">
           {cameraError ? (
             <div className="flex flex-col items-center justify-center h-full space-y-4 text-center p-8">
               <AlertCircle className="h-12 w-12 text-destructive" />
