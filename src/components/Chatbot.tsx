@@ -1067,7 +1067,7 @@ export const Chatbot: React.FC = () => {
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Ask about your palm lines or upload an image..."
+                  placeholder="Ask me anything"
                   disabled={isLoading}
                   className="flex-1"
                 />
