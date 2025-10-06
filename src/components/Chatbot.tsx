@@ -1040,7 +1040,7 @@ export const Chatbot: React.FC = () => {
             </ScrollArea>
 
           {/* Fixed input area at bottom */}
-          <div className="border-t bg-background p-4 space-y-4">
+          <div className="border-t bg-background p-4 space-y-4 flex-shrink-0">
             {/* Image preview */}
             {imagePreview && (
               <div className="relative w-fit">
