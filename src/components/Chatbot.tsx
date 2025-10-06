@@ -780,7 +780,7 @@ export const Chatbot: React.FC = () => {
   };
 
   return (
-    <div className="h-screen w-full flex flex-col">
+    <div className="h-full max-h-full w-full flex flex-col">
       <Card className="h-full flex flex-col overflow-hidden shadow-lg">
         <CardHeader className="pb-4 border-b">
           <CardTitle className="flex items-center justify-between">
