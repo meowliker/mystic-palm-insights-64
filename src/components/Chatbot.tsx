@@ -815,7 +815,7 @@ export const Chatbot: React.FC = () => {
                   <Badge
                     key={index}
                     variant="outline"
-                    className="cursor-pointer hover:bg-primary/10 transition-colors text-xs px-2 py-1 bg-background/50 border-primary/30 text-[10px]"
+                    className="cursor-pointer hover:bg-primary/10 transition-colors text-sm px-3 py-2 bg-background/50 border-primary/30"
                     onClick={() => handleQuickResponse(question)}
                   >
                     <span className="mr-1">{icons[index]}</span>
@@ -963,7 +963,7 @@ export const Chatbot: React.FC = () => {
                                     onClick={() => handleFollowUpQuestion(question)}
                                     variant="outline"
                                     size="sm"
-                                    className="bg-background/50 border-primary/30 text-foreground hover:bg-primary/10 hover:border-primary/50 text-xs px-3 py-1 h-auto rounded-full transition-all duration-200 hover:scale-105"
+                                    className="bg-background/50 border-primary/30 text-foreground hover:bg-primary/10 hover:border-primary/50 text-sm md:text-xs px-4 py-2 h-auto rounded-full transition-all duration-200 hover:scale-105"
                                   >
                                     {question}
                                   </Button>
