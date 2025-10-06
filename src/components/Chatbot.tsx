@@ -805,9 +805,9 @@ export const Chatbot: React.FC = () => {
           </CardTitle>
         </CardHeader>
         
-        <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
+        <CardContent className="flex-1 flex flex-col p-0 overflow-hidden min-h-0">
           {/* Pre-built questions */}
-          <div className="p-4 border-b bg-muted/20">
+          <div className="p-4 border-b bg-muted/20 flex-shrink-0">
             <div className="flex flex-wrap gap-2">
               {prebuiltQuestions.slice(0, 3).map((question, index) => {
                 const icons = ['💍', '💰', '💕']; // Icons for each question
@@ -827,7 +827,7 @@ export const Chatbot: React.FC = () => {
           </div>
 
           {/* Chat messages */}
-          <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
+          <ScrollArea className="flex-1 min-h-0 p-4" ref={scrollAreaRef}>
             <div className="space-y-4">
               {messages.map((message, index) => {
                   // Check if we need to show a date separator
