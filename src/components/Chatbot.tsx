@@ -977,7 +977,7 @@ export const Chatbot: React.FC = () => {
                            message.followUpQuestions && 
                            message.followUpQuestions.length > 0 && 
                            index === messages.length - 1 && (
-                            <div ref={followUpQuestionsRef} className="mt-4 space-y-2">
+                            <div ref={followUpQuestionsRef} className="mt-2 space-y-2">
                               <div className="flex flex-wrap gap-2">
                                 {message.followUpQuestions.map((question, qIndex) => (
                                   <Button
