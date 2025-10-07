@@ -59,6 +59,7 @@ export const Chatbot: React.FC = () => {
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [hasProcessedNavigation, setHasProcessedNavigation] = useState(false);
   const [lastQuestion, setLastQuestion] = useState<string | null>(null);
+  const [currentFollowUpQuestions, setCurrentFollowUpQuestions] = useState<string[]>([]);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const libraryInputRef = useRef<HTMLInputElement>(null);
@@ -426,9 +427,10 @@ export const Chatbot: React.FC = () => {
       imageUrl: imagePreviewToSend || undefined
     };
 
-    // Clear input immediately
+    // Clear input and follow-up questions immediately
     setInputMessage('');
     removeImage();
+    setCurrentFollowUpQuestions([]);
     setIsLoading(true);
     
     // Add user message first and save to database
@@ -542,6 +544,11 @@ export const Chatbot: React.FC = () => {
         const messagesWithoutTyping = prevMessages.filter(msg => !msg.id.startsWith('typing-'));
         return [...messagesWithoutTyping, botResponse];
       });
+      
+      // Update follow-up questions if present
+      if (data.followUpQuestions && data.followUpQuestions.length > 0) {
+        setCurrentFollowUpQuestions(data.followUpQuestions);
+      }
 
       // Save bot response to history (don't await to avoid blocking UI)
       if (user) {
@@ -599,6 +606,9 @@ export const Chatbot: React.FC = () => {
 
   const handleFollowUpQuestion = async (question: string) => {
     if (isLoading) return; // Prevent multiple simultaneous requests
+    
+    // Clear follow-up questions when clicked
+    setCurrentFollowUpQuestions([]);
     
     // Create user message for the follow-up question
     const userMessage: Message = {
@@ -669,6 +679,11 @@ export const Chatbot: React.FC = () => {
         const messagesWithoutTyping = prevMessages.filter(msg => !msg.id.startsWith('typing-'));
         return [...messagesWithoutTyping, botResponse];
       });
+      
+      // Update follow-up questions if present
+      if (data.followUpQuestions && data.followUpQuestions.length > 0) {
+        setCurrentFollowUpQuestions(data.followUpQuestions);
+      }
 
       // Save bot response to history (don't await to avoid blocking UI)
       if (user) {
@@ -954,28 +969,6 @@ export const Chatbot: React.FC = () => {
                             })}
                           </div>
                           
-                          {/* Follow-up Questions - Show only for the most recent astrobot message */}
-                          {message.sender === 'astrobot' && 
-                           !message.isTyping && 
-                           message.followUpQuestions && 
-                           message.followUpQuestions.length > 0 && 
-                           index === messages.length - 1 && (
-                            <div className="mt-3 mb-4 space-y-2">
-                              <div className="flex flex-wrap gap-2">
-                                {message.followUpQuestions.map((question, qIndex) => (
-                                  <Button
-                                    key={qIndex}
-                                    onClick={() => handleFollowUpQuestion(question)}
-                                    variant="outline"
-                                    size="sm"
-                                    className="bg-background/50 border-primary/30 text-foreground hover:bg-primary/10 hover:border-primary/50 text-sm md:text-xs px-4 py-2 h-auto rounded-full transition-all duration-200 hover:scale-105"
-                                  >
-                                    {question}
-                                  </Button>
-                                ))}
-                              </div>
-                            </div>
-                           )}
                           
                            {/* Interactive buttons for bot messages */}
                           {message.sender === 'astrobot' && !message.isTyping && (
@@ -1043,6 +1036,29 @@ export const Chatbot: React.FC = () => {
                 )}
               </div>
             </ScrollArea>
+
+          {/* Follow-up Questions - Fixed section above input */}
+          {currentFollowUpQuestions.length > 0 && (
+            <div className="border-t bg-muted/30 p-3 flex-shrink-0">
+              <p className="text-xs text-muted-foreground mb-2 font-medium">Suggested questions:</p>
+              <div className="flex flex-wrap gap-2">
+                {currentFollowUpQuestions.map((question, qIndex) => (
+                  <Button
+                    key={qIndex}
+                    onClick={() => {
+                      handleFollowUpQuestion(question);
+                      setCurrentFollowUpQuestions([]);
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="bg-background/50 border-primary/30 text-foreground hover:bg-primary/10 hover:border-primary/50 text-sm md:text-xs px-4 py-2 h-auto rounded-full transition-all duration-200 hover:scale-105"
+                  >
+                    {question}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Fixed input area at bottom */}
           <div className="border-t bg-background p-4 space-y-4 flex-shrink-0">
