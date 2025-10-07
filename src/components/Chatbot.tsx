@@ -849,7 +849,7 @@ export const Chatbot: React.FC = () => {
 
           {/* Chat messages */}
           <ScrollArea className="flex-1 min-h-0 p-4" ref={scrollAreaRef}>
-            <div className="space-y-4 pb-32">
+            <div className="space-y-4 pb-6">
               {messages.map((message, index) => {
                   // Check if we need to show a date separator
                   const showDateSeparator = index === 0 || 
