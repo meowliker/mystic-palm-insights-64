@@ -58,7 +58,6 @@ export const Chatbot: React.FC = () => {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [hasProcessedNavigation, setHasProcessedNavigation] = useState(false);
-  const [userAge, setUserAge] = useState<number | null>(null);
   const [lastQuestion, setLastQuestion] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const libraryInputRef = useRef<HTMLInputElement>(null);
@@ -485,19 +484,22 @@ export const Chatbot: React.FC = () => {
         imageUrl: imageUrl ? imageUrl.substring(0, 50) : 'none'
       });
 
-      // Detect age capture and save it
-      const ageMatch = messageToSend.match(/\b(\d{1,2})\b/);
-      if (ageMatch && !userAge && lastQuestion) {
+      // Detect if user provided age - update their profile birthdate
+      const ageMatch = messageToSend.match(/\b(\d{2})\b/);
+      if (ageMatch && user) {
         const detectedAge = parseInt(ageMatch[1]);
         if (detectedAge >= 10 && detectedAge <= 99) {
-          setUserAge(detectedAge);
+          const currentYear = new Date().getFullYear();
+          const birthYear = currentYear - detectedAge;
+          const birthdate = `${birthYear}-01-01`;
+          
+          await supabase
+            .from('profiles')
+            .update({ birthdate })
+            .eq('id', user.id);
+          
+          console.log('Updated user birthdate based on age:', detectedAge);
         }
-      }
-
-      // If uploading a new image, reset age and last question
-      if (imageToSend) {
-        setUserAge(null);
-        setLastQuestion(null);
       }
 
       // If this is a question about timing, store it
@@ -512,7 +514,6 @@ export const Chatbot: React.FC = () => {
           message: messageToSend,
           imageUrl,
           conversationHistory: messages.slice(-10), // Send last 10 messages for context
-          userAge,
           lastQuestion
         }
       });

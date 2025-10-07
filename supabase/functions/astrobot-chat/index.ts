@@ -52,7 +52,42 @@ serve(async (req) => {
   }
 
   try {
-    const { message, imageUrl, conversationHistory, userAge, lastQuestion } = await req.json();
+    const { message, imageUrl, conversationHistory, lastQuestion } = await req.json();
+    
+    // Get user from authorization header
+    const authHeader = req.headers.get('authorization');
+    let userId = null;
+    if (authHeader) {
+      const token = authHeader.replace('Bearer ', '');
+      const supabaseClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+        { global: { headers: { Authorization: authHeader } } }
+      );
+      const { data: { user } } = await supabaseClient.auth.getUser(token);
+      userId = user?.id;
+    }
+
+    // Fetch user's birthdate and calculate age
+    let userAge = null;
+    if (userId) {
+      const supabaseClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+      );
+      const { data: profile } = await supabaseClient
+        .from('profiles')
+        .select('birthdate')
+        .eq('id', userId)
+        .single();
+      
+      if (profile?.birthdate) {
+        const birthYear = new Date(profile.birthdate).getFullYear();
+        const currentYear = new Date().getFullYear();
+        userAge = currentYear - birthYear;
+        console.log('Calculated age from profile:', userAge);
+      }
+    }
     
     console.log('Request received:', {
       hasMessage: !!message,
@@ -60,7 +95,8 @@ serve(async (req) => {
       imageUrlStart: imageUrl ? imageUrl.substring(0, 50) + '...' : 'none',
       hasHistory: !!conversationHistory,
       userAge,
-      lastQuestion
+      lastQuestion,
+      userId
     });
 
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
