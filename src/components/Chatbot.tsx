@@ -100,12 +100,14 @@ export const Chatbot: React.FC = () => {
     if (scrollAreaRef.current) {
       const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
       if (scrollContainer) {
-        // Wait for DOM updates and animations to complete
+        // Multiple RAF calls to ensure all DOM updates and CSS animations complete
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
-            setTimeout(() => {
-              scrollContainer.scrollTop = scrollContainer.scrollHeight;
-            }, 200);
+            requestAnimationFrame(() => {
+              setTimeout(() => {
+                scrollContainer.scrollTop = scrollContainer.scrollHeight;
+              }, 400);
+            });
           });
         });
       }
@@ -843,7 +845,7 @@ export const Chatbot: React.FC = () => {
 
           {/* Chat messages */}
           <ScrollArea className="flex-1 min-h-0 p-4" ref={scrollAreaRef}>
-            <div className="space-y-4 pb-40">
+            <div className="space-y-4 pb-56">
               {messages.map((message, index) => {
                   // Check if we need to show a date separator
                   const showDateSeparator = index === 0 || 
