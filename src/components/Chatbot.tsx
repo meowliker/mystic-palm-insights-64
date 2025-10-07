@@ -829,7 +829,7 @@ export const Chatbot: React.FC = () => {
 
           {/* Chat messages */}
           <ScrollArea className="flex-1 min-h-0 p-4" ref={scrollAreaRef}>
-            <div className="space-y-4">
+            <div className="space-y-4 pb-24">
               {messages.map((message, index) => {
                   // Check if we need to show a date separator
                   const showDateSeparator = index === 0 || 
@@ -956,7 +956,7 @@ export const Chatbot: React.FC = () => {
                            message.followUpQuestions && 
                            message.followUpQuestions.length > 0 && 
                            index === messages.length - 1 && (
-                            <div className="mt-3 space-y-2">
+                            <div className="mt-3 mb-4 space-y-2">
                               <div className="flex flex-wrap gap-2">
                                 {message.followUpQuestions.map((question, qIndex) => (
                                   <Button
