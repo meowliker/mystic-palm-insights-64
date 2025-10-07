@@ -978,14 +978,14 @@ export const Chatbot: React.FC = () => {
                            message.followUpQuestions.length > 0 && 
                            index === messages.length - 1 && (
                             <div ref={followUpQuestionsRef} className="mt-4 space-y-2">
-                              <div className="flex flex-wrap gap-2">
+                              <div className="flex flex-wrap gap-2 max-h-[5rem] overflow-hidden">
                                 {message.followUpQuestions.map((question, qIndex) => (
                                   <Button
                                     key={qIndex}
                                     onClick={() => handleFollowUpQuestion(question)}
                                     variant="outline"
                                     size="sm"
-                                    className="bg-background/50 border-primary/30 text-foreground hover:bg-primary/10 hover:border-primary/50 text-sm md:text-xs px-4 py-2 h-auto rounded-full transition-all duration-200 hover:scale-105"
+                                    className="bg-background/50 border-primary/30 text-foreground hover:bg-primary/10 hover:border-primary/50 text-xs px-3 py-1.5 h-auto rounded-full transition-all duration-200 hover:scale-105 whitespace-nowrap"
                                   >
                                     {question}
                                   </Button>
