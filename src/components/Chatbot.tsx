@@ -60,6 +60,7 @@ export const Chatbot: React.FC = () => {
   const [hasProcessedNavigation, setHasProcessedNavigation] = useState(false);
   const [lastQuestion, setLastQuestion] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const lastMessageRef = useRef<HTMLDivElement>(null);
   const libraryInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -96,15 +97,14 @@ export const Chatbot: React.FC = () => {
     }
   };
   const scrollToBottom = () => {
-    if (scrollAreaRef.current) {
-      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-      if (scrollContainer) {
-        // Use setTimeout to ensure DOM has updated with follow-up buttons
-        setTimeout(() => {
-          scrollContainer.scrollTop = scrollContainer.scrollHeight;
-        }, 100);
-      }
-    }
+    // Use requestAnimationFrame to ensure DOM is fully updated
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        if (lastMessageRef.current) {
+          lastMessageRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+      }, 150);
+    });
   };
 
   // Load chat history on component mount (run only when user ID changes)
@@ -832,14 +832,15 @@ export const Chatbot: React.FC = () => {
 
           {/* Chat messages */}
           <ScrollArea className="flex-1 min-h-0 p-4" ref={scrollAreaRef}>
-            <div className="space-y-4 pb-24">
+            <div className="space-y-4 pb-32">
               {messages.map((message, index) => {
                   // Check if we need to show a date separator
                   const showDateSeparator = index === 0 || 
                     message.timestamp.toDateString() !== messages[index - 1].timestamp.toDateString();
+                  const isLastMessage = index === messages.length - 1;
                   
                   return (
-                    <div key={message.id}>
+                    <div key={message.id} ref={isLastMessage ? lastMessageRef : null}>
                       {showDateSeparator && (
                         <div className="flex justify-center my-4">
                           <div className="bg-muted/80 px-3 py-1 rounded-full text-xs text-muted-foreground">
