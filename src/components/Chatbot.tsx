@@ -61,6 +61,7 @@ export const Chatbot: React.FC = () => {
   const [lastQuestion, setLastQuestion] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const lastMessageRef = useRef<HTMLDivElement>(null);
+  const followUpQuestionsRef = useRef<HTMLDivElement>(null);
   const libraryInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -97,19 +98,22 @@ export const Chatbot: React.FC = () => {
     }
   };
   const scrollToBottom = () => {
-    if (scrollAreaRef.current) {
+    // First try to scroll to follow-up questions if they exist
+    if (followUpQuestionsRef.current) {
+      setTimeout(() => {
+        followUpQuestionsRef.current?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'end',
+          inline: 'nearest'
+        });
+      }, 100);
+    } else if (scrollAreaRef.current) {
+      // Otherwise scroll to bottom normally
       const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
       if (scrollContainer) {
-        // Multiple RAF calls to ensure all DOM updates and CSS animations complete
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              setTimeout(() => {
-                scrollContainer.scrollTop = scrollContainer.scrollHeight;
-              }, 400);
-            });
-          });
-        });
+        setTimeout(() => {
+          scrollContainer.scrollTop = scrollContainer.scrollHeight;
+        }, 100);
       }
     }
   };
@@ -845,7 +849,7 @@ export const Chatbot: React.FC = () => {
 
           {/* Chat messages */}
           <ScrollArea className="flex-1 min-h-0 p-4" ref={scrollAreaRef}>
-            <div className="space-y-4 pb-56">
+            <div className="space-y-4 pb-32">
               {messages.map((message, index) => {
                   // Check if we need to show a date separator
                   const showDateSeparator = index === 0 || 
@@ -973,7 +977,7 @@ export const Chatbot: React.FC = () => {
                            message.followUpQuestions && 
                            message.followUpQuestions.length > 0 && 
                            index === messages.length - 1 && (
-                            <div className="mt-4 space-y-2">
+                            <div ref={followUpQuestionsRef} className="mt-4 space-y-2">
                               <div className="flex flex-wrap gap-2">
                                 {message.followUpQuestions.map((question, qIndex) => (
                                   <Button
