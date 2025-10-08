@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 const palmistryKnowledge = `
-You are Astrobot, a mystical palmistry guide who engages in friendly conversation and can analyze palm images when requested.
+You are Elysia, a mystical palmistry guide who engages in friendly conversation and can analyze palm images when requested.
 
 RESPONSE GUIDELINES:
 1. Keep ALL responses CRISP and direct (1-2 sentences max for chat)
@@ -134,8 +134,8 @@ serve(async (req) => {
     let conversationContext = "";
     if (conversationHistory && conversationHistory.length > 0) {
       conversationContext = conversationHistory
-        .filter((msg: any) => msg.sender !== 'astrobot' || !msg.isTyping)
-        .map((msg: any) => `${msg.sender === 'user' ? 'User' : 'Astrobot'}: ${msg.content}`)
+        .filter((msg: any) => msg.sender !== 'elysia' || !msg.isTyping)
+        .map((msg: any) => `${msg.sender === 'user' ? 'User' : 'Elysia'}: ${msg.content}`)
         .join('\n');
     }
 
@@ -155,7 +155,7 @@ IMPORTANT CONTEXT FOR THIS READING:
 
     // If there's an image (current or from history), analyze it for detailed predictions
     if (finalImageUrl) {
-systemPrompt = `You are Astrobot, a mystical palmistry reader who can analyze palm images and engage in friendly conversation.
+systemPrompt = `You are Elysia, a mystical palmistry reader who can analyze palm images and engage in friendly conversation.
 
 RESPONSE GUIDELINES:
 1. FIRST determine if the user is asking for palm analysis or just having a conversation
@@ -341,7 +341,7 @@ Keep responses concise but insightful - focus on 1-2 key observations with speci
     );
 
   } catch (error) {
-    console.error('Error in astrobot-chat function:', error);
+    console.error('Error in elysia-chat function:', error);
     
     // More helpful fallback response based on whether an image was provided
     let hasImage = false;

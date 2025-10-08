@@ -303,7 +303,7 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
                           onClick={() => setNavMenuOpen(false)}
                         >
                           <MessageCircle className="h-5 w-5" />
-                          Chat with Astrobot
+                          Chat with Elysia
                         </Button>
                       </Link>
                     </div>

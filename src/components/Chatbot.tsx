@@ -17,7 +17,7 @@ import { useLocation } from 'react-router-dom';
 interface Message {
   id: string;
   content: string;
-  sender: 'user' | 'astrobot';
+  sender: 'user' | 'elysia';
   timestamp: Date;
   imageUrl?: string;
   isTyping?: boolean;
@@ -74,12 +74,12 @@ export const Chatbot: React.FC = () => {
   const loadingHistoryRef = useRef(false);
 
   // Local cache helpers to prevent history loss if DB fails
-  const getCacheKey = () => `astrobot:history:${user?.id ?? 'anon'}`;
+  const getCacheKey = () => `elysia:history:${user?.id ?? 'anon'}`;
   const loadFromCache = (): boolean => {
     try {
       const raw = localStorage.getItem(getCacheKey());
       if (!raw) return false;
-      const parsed = JSON.parse(raw) as { messages: Array<{ id: string; content: string; sender: 'user'|'astrobot'; timestamp: string; imageUrl?: string; followUpQuestions?: string[] }>; sessionId?: string };
+      const parsed = JSON.parse(raw) as { messages: Array<{ id: string; content: string; sender: 'user'|'elysia'; timestamp: string; imageUrl?: string; followUpQuestions?: string[] }>; sessionId?: string };
       if (parsed.messages && parsed.messages.length) {
         const cachedMessages: Message[] = parsed.messages.map(m => ({
           ...m,
@@ -132,8 +132,8 @@ export const Chatbot: React.FC = () => {
         if (!hasLoadedHistoryRef.current) {
           setMessages([{
             id: '1',
-            content: "Hello! I'm Astrobot, your AI palmistry guide. I can help you understand your palm lines and what they reveal about your life, relationships, and future. Feel free to ask me any questions or upload a palm image for analysis!",
-            sender: 'astrobot',
+            content: "Hello! I'm Elysia, your AI palmistry guide. I can help you understand your palm lines and what they reveal about your life, relationships, and future. Feel free to ask me any questions or upload a palm image for analysis!",
+            sender: 'elysia',
             timestamp: new Date()
           }]);
           hasLoadedHistoryRef.current = true;
@@ -234,7 +234,7 @@ export const Chatbot: React.FC = () => {
             const loadedMessages: Message[] = messages.map(msg => ({
               id: msg.id,
               content: msg.content,
-              sender: msg.sender as 'user' | 'astrobot',
+              sender: msg.sender as 'user' | 'elysia',
               timestamp: new Date(msg.created_at),
               imageUrl: msg.image_url || undefined,
               followUpQuestions: Array.isArray(msg.follow_up_questions) ? msg.follow_up_questions.filter((q): q is string => typeof q === 'string') : undefined
@@ -250,11 +250,11 @@ export const Chatbot: React.FC = () => {
       } else {
         // Create a new session only if none exists
         try {
-          const { data: newSession, error: createError } = await supabase
+            const { data: newSession, error: createError } = await supabase
             .from('chat_sessions')
             .insert({
               user_id: user.id,
-              session_name: 'Astrobot Chat'
+              session_name: 'Elysia Chat'
             })
             .select()
             .single();
@@ -272,8 +272,8 @@ export const Chatbot: React.FC = () => {
       // Default welcome message if no messages loaded
       const welcomeMessage = {
         id: 'welcome-' + Date.now(),
-        content: "Hello! I'm Astrobot, your AI palmistry guide. I can help you understand your palm lines and what they reveal about your life, relationships, and future. Feel free to ask me any questions or upload a palm image for analysis!",
-        sender: 'astrobot' as const,
+        content: "Hello! I'm Elysia, your AI palmistry guide. I can help you understand your palm lines and what they reveal about your life, relationships, and future. Feel free to ask me any questions or upload a palm image for analysis!",
+        sender: 'elysia' as const,
         timestamp: new Date()
       };
       
@@ -287,8 +287,8 @@ export const Chatbot: React.FC = () => {
       // Show welcome message on error and continue functionality
       const welcomeMessage = {
         id: 'welcome-error-' + Date.now(),
-        content: "Hello! I'm Astrobot, your AI palmistry guide. I can help you understand your palm lines and what they reveal about your life, relationships, and future. Feel free to ask me any questions or upload a palm image for analysis!",
-        sender: 'astrobot' as const,
+        content: "Hello! I'm Elysia, your AI palmistry guide. I can help you understand your palm lines and what they reveal about your life, relationships, and future. Feel free to ask me any questions or upload a palm image for analysis!",
+        sender: 'elysia' as const,
         timestamp: new Date()
       };
       setMessages([welcomeMessage]);
@@ -460,8 +460,8 @@ export const Chatbot: React.FC = () => {
     // Add typing indicator
     const typingMessage: Message = {
       id: 'typing-' + Date.now(),
-      content: 'Astrobot is analyzing...',
-      sender: 'astrobot',
+      content: 'Elysia is analyzing...',
+      sender: 'elysia',
       timestamp: new Date(),
       isTyping: true
     };
@@ -492,7 +492,7 @@ export const Chatbot: React.FC = () => {
         console.log('Image uploaded successfully:', imageUrl);
       }
 
-      console.log('Sending message to astrobot-chat:', { 
+      console.log('Sending message to elysia-chat:', { 
         message: messageToSend, 
         hasImage: !!imageUrl,
         imageUrl: imageUrl ? imageUrl.substring(0, 50) : 'none'
@@ -523,7 +523,7 @@ export const Chatbot: React.FC = () => {
       }
 
       // Send to chatbot API
-      const { data, error } = await supabase.functions.invoke('astrobot-chat', {
+      const { data, error } = await supabase.functions.invoke('elysia-chat', {
         body: {
           message: messageToSend,
           imageUrl,
@@ -532,10 +532,10 @@ export const Chatbot: React.FC = () => {
         }
       });
 
-      console.log('Astrobot response:', { data, error });
+      console.log('Elysia response:', { data, error });
 
       if (error) {
-        console.error('Astrobot function error:', error);
+        console.error('Elysia function error:', error);
         throw error;
       }
 
@@ -543,7 +543,7 @@ export const Chatbot: React.FC = () => {
       const botResponse: Message = {
         id: 'bot-' + Date.now(),
         content: data.response,
-        sender: 'astrobot',
+        sender: 'elysia',
         timestamp: new Date(),
         followUpQuestions: data.followUpQuestions || []
       };
@@ -642,8 +642,8 @@ export const Chatbot: React.FC = () => {
     // Add typing indicator
     const typingMessage: Message = {
       id: 'typing-followup-' + Date.now(),
-      content: 'Astrobot is analyzing...',
-      sender: 'astrobot',
+      content: 'Elysia is analyzing...',
+      sender: 'elysia',
       timestamp: new Date(),
       isTyping: true
     };
@@ -651,10 +651,10 @@ export const Chatbot: React.FC = () => {
     setMessages(prevMessages => [...prevMessages, typingMessage]);
 
     try {
-      console.log('Sending follow-up question to astrobot-chat:', question);
+      console.log('Sending follow-up question to elysia-chat:', question);
 
       // Send to chatbot API
-      const { data, error } = await supabase.functions.invoke('astrobot-chat', {
+      const { data, error } = await supabase.functions.invoke('elysia-chat', {
         body: {
           message: question,
           imageUrl: null,
@@ -662,10 +662,10 @@ export const Chatbot: React.FC = () => {
         }
       });
 
-      console.log('Astrobot response:', { data, error });
+      console.log('Elysia response:', { data, error });
 
       if (error) {
-        console.error('Astrobot function error:', error);
+        console.error('Elysia function error:', error);
         throw error;
       }
 
@@ -673,7 +673,7 @@ export const Chatbot: React.FC = () => {
       const botResponse: Message = {
         id: 'bot-followup-' + Date.now(),
         content: data.response,
-        sender: 'astrobot',
+        sender: 'elysia',
         timestamp: new Date(),
         followUpQuestions: data.followUpQuestions || []
       };
@@ -738,8 +738,8 @@ export const Chatbot: React.FC = () => {
     // Add typing indicator
     const typingMessage: Message = {
       id: 'typing-quick-' + Date.now(),
-      content: 'Astrobot is analyzing...',
-      sender: 'astrobot',
+      content: 'Elysia is analyzing...',
+      sender: 'elysia',
       timestamp: new Date(),
       isTyping: true
     };
@@ -747,10 +747,10 @@ export const Chatbot: React.FC = () => {
     setMessages(prevMessages => [...prevMessages, typingMessage]);
 
     try {
-      console.log('Sending quick response to astrobot-chat:', response);
+      console.log('Sending quick response to elysia-chat:', response);
 
       // Send to chatbot API
-      const { data, error } = await supabase.functions.invoke('astrobot-chat', {
+      const { data, error } = await supabase.functions.invoke('elysia-chat', {
         body: {
           message: response,
           imageUrl: null,
@@ -758,10 +758,10 @@ export const Chatbot: React.FC = () => {
         }
       });
 
-      console.log('Astrobot response:', { data, error });
+      console.log('Elysia response:', { data, error });
 
       if (error) {
-        console.error('Astrobot function error:', error);
+        console.error('Elysia function error:', error);
         throw error;
       }
 
@@ -769,7 +769,7 @@ export const Chatbot: React.FC = () => {
       const botResponse: Message = {
         id: 'bot-quick-' + Date.now(),
         content: data.response,
-        sender: 'astrobot',
+        sender: 'elysia',
         timestamp: new Date(),
         followUpQuestions: data.followUpQuestions || []
       };
@@ -807,7 +807,7 @@ export const Chatbot: React.FC = () => {
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="h-6 w-6 text-primary" />
-              Astrobot - Your AI Palmistry Guide
+              Elysia - Your AI Palmistry Guide
             </div>
             <Dialog>
               <DialogTrigger asChild>
@@ -875,7 +875,7 @@ export const Chatbot: React.FC = () => {
                           message.sender === 'user' ? 'justify-end' : 'justify-start'
                         }`}
                       >
-                        {message.sender === 'astrobot' && (
+                        {message.sender === 'elysia' && (
                           <Avatar className="h-6 w-6 flex-shrink-0">
                             <AvatarFallback className="bg-primary text-primary-foreground">
                               <Sparkles className="h-3 w-3" />
@@ -971,8 +971,8 @@ export const Chatbot: React.FC = () => {
                             })}
                           </div>
                           
-                          {/* Follow-up Questions - Show only for the most recent astrobot message */}
-                          {message.sender === 'astrobot' && 
+                          {/* Follow-up Questions - Show only for the most recent elysia message */}
+                          {message.sender === 'elysia' && 
                            !message.isTyping && 
                            message.followUpQuestions && 
                            message.followUpQuestions.length > 0 && 
@@ -997,7 +997,7 @@ export const Chatbot: React.FC = () => {
                           
                           
                            {/* Interactive buttons for bot messages */}
-                          {message.sender === 'astrobot' && !message.isTyping && (
+                          {message.sender === 'elysia' && !message.isTyping && (
                             <div className="flex items-center justify-between mt-3 pt-2 border-t border-muted-foreground/20">
                               <span className="text-xs opacity-70">
                                 {message.timestamp.toLocaleTimeString('en-US', { 

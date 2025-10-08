@@ -186,7 +186,7 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
               </div>
               <h3 className="text-xl font-bold text-foreground">Get to Know More</h3>
               <p className="text-muted-foreground mb-6">
-                Dive Deeper with Astrobot
+                Dive Deeper with Elysia
               </p>
               <div className="grid gap-3 sm:gap-4">
                 {selectedQuestions.map((question, index) => (

@@ -1,4 +1,7 @@
 project_id = "klustrtcwdgjacdezoih"
 
+[functions.elysia-chat]
+verify_jwt = true
+
 [functions.generate-horoscope]
 verify_jwt = false
