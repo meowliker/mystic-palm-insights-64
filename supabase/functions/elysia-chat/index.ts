@@ -88,6 +88,22 @@ serve(async (req) => {
         console.log('Calculated age from profile:', userAge);
       }
     }
+
+    // Also extract age from conversation history if mentioned
+    if (!userAge && conversationHistory && conversationHistory.length > 0) {
+      for (let i = conversationHistory.length - 1; i >= 0; i--) {
+        const msg = conversationHistory[i];
+        if (msg.sender === 'user' && msg.content) {
+          // Look for patterns like "I'm 25", "I am 25", "my age is 25", etc.
+          const ageMatch = msg.content.match(/(?:I'm|I am|my age is|age is)\s*(\d{1,3})/i);
+          if (ageMatch) {
+            userAge = parseInt(ageMatch[1]);
+            console.log('Extracted age from conversation:', userAge);
+            break;
+          }
+        }
+      }
+    }
     
     console.log('Request received:', {
       hasMessage: !!message,
@@ -139,21 +155,31 @@ serve(async (req) => {
         .join('\n');
     }
 
-    // Build enhanced system prompt
-    let systemPrompt = palmistryKnowledge;
-    
-    if (userAge && lastQuestion) {
-      systemPrompt += `
+    // Build age context that will be appended to any prompt
+    let ageContext = '';
+    if (userAge) {
+      ageContext = `
 
 IMPORTANT CONTEXT FOR THIS READING:
-- User's current age: ${userAge} years old
+- User's current age: ${userAge} years old`;
+      
+      if (lastQuestion) {
+        ageContext += `
 - Original question they asked: "${lastQuestion}"
-- Since they provided their age after asking about timing, you MUST give specific age-based predictions for their original question
+- Since you know their age, provide specific age-based predictions for their question
 - Calculate timing relative to their current age (${userAge}) and provide exact age ranges
-- Example: If they asked about marriage and they're 25, say "25-27" not "mid twenties"`;
+- Example: If they asked about marriage and they're ${userAge}, say "${userAge}-${userAge + 2}" not "mid twenties"`;
+      } else {
+        ageContext += `
+- When discussing timing for life events, use their current age (${userAge}) as reference
+- Provide exact age ranges instead of vague terms: "${userAge + 2}-${userAge + 5}" not "in a few years"`;
+      }
     }
 
-    // If there's an image (current or from history), analyze it for detailed predictions
+    // Build enhanced system prompt
+    let systemPrompt = palmistryKnowledge;
+
+    // If there's an image (current or from history), use palm reading prompt and APPEND age context
     if (finalImageUrl) {
 systemPrompt = `You are Elysia, a mystical palmistry reader who can analyze palm images and engage in friendly conversation.
 
@@ -203,6 +229,12 @@ WITHOUT IMAGE: "I need to see your palm first - upload a clear photo! 📷"
 WITH IMAGE: "Your **heart line** curves deeply with chain patterns in the first third, indicating intense early relationships around ages 18-25. The line then strengthens toward your pinky, suggesting lasting partnership after age 30 💫"
 
 Keep responses concise but insightful - focus on 1-2 key observations with specific timing.`;
+      
+      // Append age context if available
+      systemPrompt += ageContext;
+    } else {
+      // No image - append age context to base prompt
+      systemPrompt += ageContext;
     }
 
     const messages = [
