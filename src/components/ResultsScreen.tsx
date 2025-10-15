@@ -158,6 +158,40 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
 
       <div className="container mx-auto px-4 sm:px-6 py-8">
         <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8">
+          {/* Palm Images */}
+          {(scanData.palm_image_url || scanData.right_palm_image_url) && (
+            <Card className="p-4 sm:p-6 bg-card/80 backdrop-blur-sm border-primary/20">
+              <div className="flex flex-col items-center gap-4">
+                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  Your Palm Image
+                </h3>
+                <div className="flex flex-wrap justify-center gap-4">
+                  {scanData.palm_image_url && (
+                    <div className="text-center">
+                      <img
+                        src={scanData.palm_image_url}
+                        alt="Left Palm"
+                        className="w-full max-w-xs sm:max-w-sm rounded-lg border-2 border-primary/20 shadow-lg"
+                      />
+                      <Badge className="mt-2" variant="secondary">Left Palm</Badge>
+                    </div>
+                  )}
+                  {scanData.right_palm_image_url && (
+                    <div className="text-center">
+                      <img
+                        src={scanData.right_palm_image_url}
+                        alt="Right Palm"
+                        className="w-full max-w-xs sm:max-w-sm rounded-lg border-2 border-primary/20 shadow-lg"
+                      />
+                      <Badge className="mt-2" variant="secondary">Right Palm</Badge>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Card>
+          )}
+
           {/* Overall Insight - This contains all the palm line details */}
           <Card className="p-4 sm:p-6 bg-card/80 backdrop-blur-sm border-primary/20">
             <div className="text-center space-y-4">

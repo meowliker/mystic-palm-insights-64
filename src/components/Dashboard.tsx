@@ -471,39 +471,6 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
                   {scans.length > 0 ? scans.map((scan) => (
                     <Card key={scan.id} className="p-4 sm:p-6 bg-card/80 backdrop-blur-sm hover:shadow-mystical transition-all">
                       <div className="flex flex-col sm:flex-row gap-4">
-                        {/* Palm Image Thumbnails */}
-                        <div className="flex gap-2 sm:flex-shrink-0">
-                          {scan.palm_image_url && (
-                            <div className="relative group">
-                              <img 
-                                src={scan.palm_image_url} 
-                                alt="Left palm"
-                                className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-lg border border-border/50 group-hover:border-primary/50 transition-all"
-                              />
-                              <Badge className="absolute bottom-1 left-1 text-xs bg-background/80 backdrop-blur-sm">
-                                Left
-                              </Badge>
-                            </div>
-                          )}
-                          {scan.right_palm_image_url && (
-                            <div className="relative group">
-                              <img 
-                                src={scan.right_palm_image_url} 
-                                alt="Right palm"
-                                className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-lg border border-border/50 group-hover:border-primary/50 transition-all"
-                              />
-                              <Badge className="absolute bottom-1 left-1 text-xs bg-background/80 backdrop-blur-sm">
-                                Right
-                              </Badge>
-                            </div>
-                          )}
-                          {!scan.palm_image_url && !scan.right_palm_image_url && (
-                            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg border border-border/50 bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
-                              <Hand className="h-8 w-8 text-muted-foreground/50" />
-                            </div>
-                          )}
-                        </div>
-
                         {/* Reading Content */}
                         <div className="flex-1 min-w-0 space-y-3">
                           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">

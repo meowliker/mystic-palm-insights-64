@@ -118,25 +118,37 @@ const ScanDetailDialog = ({ scan, children, onScanDeleted }: ScanDetailDialogPro
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Palm Image */}
-          {scan.palm_image_url && (
+          {/* Palm Images */}
+          {(scan.palm_image_url || scan.right_palm_image_url) && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Eye className="h-5 w-5" />
-                  Captured Palm Image
+                  Captured Palm Image{(scan.palm_image_url && scan.right_palm_image_url) ? 's' : ''}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex justify-center">
-                  <div className="text-center">
-                    <img
-                      src={scan.palm_image_url}
-                      alt="Palm"
-                      className="max-w-sm max-h-64 object-contain rounded-lg border border-border/50"
-                    />
-                    <p className="text-sm text-muted-foreground mt-2">Your Palm</p>
-                  </div>
+                <div className="flex flex-wrap justify-center gap-6">
+                  {scan.palm_image_url && (
+                    <div className="text-center">
+                      <img
+                        src={scan.palm_image_url}
+                        alt="Left Palm"
+                        className="max-w-xs sm:max-w-sm rounded-lg border-2 border-primary/20 shadow-lg"
+                      />
+                      <Badge className="mt-2" variant="secondary">Left Palm</Badge>
+                    </div>
+                  )}
+                  {scan.right_palm_image_url && (
+                    <div className="text-center">
+                      <img
+                        src={scan.right_palm_image_url}
+                        alt="Right Palm"
+                        className="max-w-xs sm:max-w-sm rounded-lg border-2 border-primary/20 shadow-lg"
+                      />
+                      <Badge className="mt-2" variant="secondary">Right Palm</Badge>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
