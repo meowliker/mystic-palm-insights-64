@@ -452,7 +452,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
       {/* Mobile: Fullscreen camera view */}
       <div className="sm:hidden">
         {/* Fullscreen Camera Area */}
-        <div className="fixed inset-0 bg-transparent z-10">
+        <div className="fixed inset-0 bg-gradient-to-br from-purple-900 via-indigo-900 to-purple-950 z-10">
           {cameraError ? (
             <div className="flex flex-col items-center justify-center h-full space-y-4 text-center p-8">
               <AlertCircle className="h-12 w-12 text-destructive" />
@@ -490,7 +490,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
           )}
           
           {/* Overlapping Controls for Mobile */}
-          <div className="absolute bottom-0 left-0 right-0 z-30 p-4 bg-gradient-to-t from-black/95 via-black/90 to-black/60">
+          <div className="absolute bottom-0 left-0 right-0 z-30 p-4 bg-gradient-to-t from-purple-950/95 via-purple-900/90 to-purple-900/60">
             {/* Back Button */}
             {onGoBack && (
               <div className="absolute top-4 left-4">
@@ -498,7 +498,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
                   variant="outline" 
                   onClick={onGoBack}
                   size="sm"
-                  className="bg-black/80 backdrop-blur-md border-white/20 text-white hover:bg-black/90 shadow-lg"
+                  className="bg-purple-900/80 backdrop-blur-md border-purple-400/30 text-white hover:bg-purple-800/90 shadow-lg"
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
@@ -535,7 +535,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
             {/* Camera Privacy Controls */}
             <div className="flex items-center justify-center gap-2 mb-4">
               <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm backdrop-blur-md shadow-lg ${
-                cameraActive ? 'bg-red-500/30 text-red-100 border border-red-400/40' : 'bg-green-500/30 text-green-100 border border-green-400/40'
+                cameraActive ? 'bg-purple-900/50 text-red-100 border border-red-400/50' : 'bg-purple-900/50 text-green-100 border border-green-400/50'
               }`}>
                 <div className={`w-2 h-2 rounded-full ${cameraActive ? 'bg-red-400 animate-pulse' : 'bg-green-400'}`} />
                 <span className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">Camera {cameraActive ? 'Active' : 'Off'}</span>
@@ -545,7 +545,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
                   variant="outline" 
                   size="sm" 
                   onClick={stopCamera}
-                  className="text-red-100 border-red-400/30 hover:bg-red-400/20 bg-black/80 backdrop-blur-md shadow-lg"
+                  className="text-red-100 border-red-400/30 hover:bg-red-400/20 bg-purple-900/80 backdrop-blur-md shadow-lg"
                 >
                   Stop Camera
                 </Button>
@@ -555,7 +555,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
                   variant="outline" 
                   size="sm" 
                   onClick={initializeCamera}
-                  className="text-green-100 border-green-400/30 hover:bg-green-400/20 bg-black/80 backdrop-blur-md shadow-lg"
+                  className="text-green-100 border-green-400/30 hover:bg-green-400/20 bg-purple-900/80 backdrop-blur-md shadow-lg"
                 >
                   Start Camera
                 </Button>
