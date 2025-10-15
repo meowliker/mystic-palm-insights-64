@@ -59,7 +59,8 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
         fate_line_strength: scanData.fate_line_strength || 'Unknown',
         overall_insight: scanData.overall_insight || '',
         traits: scanData.traits || {},
-        palm_image_url: scanData.palm_image_url || null,
+        // Use capturedImage if palm_image_url is null (direct analysis case)
+        palm_image_url: scanData.palm_image_url || scanData.capturedImage || null,
         right_palm_image_url: scanData.right_palm_image_url || null,
         // Enhanced palmistry fields - these are what make the detailed view work
         age_predictions: scanData.age_predictions || null,
@@ -131,6 +132,12 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
 
   const palmResults = scanData;
 
+  // Debug: Log palm image URLs
+  console.log('=== ResultsScreen Palm Image Debug ===');
+  console.log('scanData:', scanData);
+  console.log('palm_image_url:', scanData?.palm_image_url);
+  console.log('right_palm_image_url:', scanData?.right_palm_image_url);
+
   const handleQuestionClick = (question: string) => {
     navigate('/chatbot', { 
       state: { 
@@ -159,7 +166,7 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
       <div className="container mx-auto px-4 sm:px-6 py-8">
         <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8">
           {/* Palm Images */}
-          {(scanData.palm_image_url || scanData.right_palm_image_url) && (
+          {(scanData.palm_image_url || scanData.right_palm_image_url || scanData.capturedImage) && (
             <Card className="p-4 sm:p-6 bg-card/80 backdrop-blur-sm border-primary/20">
               <div className="flex flex-col items-center gap-4">
                 <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
@@ -167,14 +174,16 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
                   Your Palm Image
                 </h3>
                 <div className="flex flex-wrap justify-center gap-4">
-                  {scanData.palm_image_url && (
+                  {(scanData.palm_image_url || scanData.capturedImage) && (
                     <div className="text-center">
                       <img
-                        src={scanData.palm_image_url}
+                        src={scanData.palm_image_url || scanData.capturedImage}
                         alt="Left Palm"
                         className="w-full max-w-xs sm:max-w-sm rounded-lg border-2 border-primary/20 shadow-lg"
                       />
-                      <Badge className="mt-2" variant="secondary">Left Palm</Badge>
+                      <Badge className="mt-2" variant="secondary">
+                        {scanData.palm_image_url ? 'Left Palm' : 'Your Palm'}
+                      </Badge>
                     </div>
                   )}
                   {scanData.right_palm_image_url && (
