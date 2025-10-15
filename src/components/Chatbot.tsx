@@ -160,8 +160,8 @@ export const Chatbot: React.FC = () => {
     const navigationState = location.state as any;
     console.log('=== Navigation State Debug ===', navigationState);
     
-    if (navigationState?.question && navigationState?.autoSend && !hasProcessedNavigation) {
-      console.log('✅ Processing navigation auto-send');
+    if (navigationState?.question && !hasProcessedNavigation) {
+      console.log('✅ Pre-filling question and palm image');
       setHasProcessedNavigation(true);
       
       console.log('Processing navigation:', {
@@ -190,35 +190,17 @@ export const Chatbot: React.FC = () => {
             console.log('✅ Palm image blob loaded:', blob.size, 'bytes');
             const file = new File([blob], 'palm-reading.jpg', { type: 'image/jpeg' });
             
-            // Set image preview and selected image
+            // Set image preview and selected image (don't auto-send)
             setImagePreview(palmImageUrl);
             setSelectedImage(file);
-            
-            console.log('📤 Triggering send button click in 500ms');
-            // Trigger send button click after a short delay
-            setTimeout(() => {
-              console.log('🖱️ Clicking send button');
-              sendButtonRef.current?.click();
-            }, 500);
           })
           .catch(err => {
             console.error('❌ Error loading palm image:', err);
-            // Send message without image if loading fails
-            setTimeout(() => {
-              sendButtonRef.current?.click();
-            }, 500);
           });
-      } else {
-        console.log('No palm image provided, sending text only');
-        // Send message without image
-        setTimeout(() => {
-          sendButtonRef.current?.click();
-        }, 500);
       }
     } else {
       console.log('❌ Not processing navigation:', {
         hasQuestion: !!navigationState?.question,
-        autoSend: navigationState?.autoSend,
         hasProcessedNavigation
       });
     }
