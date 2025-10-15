@@ -28,6 +28,7 @@ import {
   Upload,
   MessageCircle,
   Menu,
+  Hand,
   Pencil
 } from 'lucide-react';
 import constellationPattern from '@/assets/constellation-pattern.jpg';
@@ -469,80 +470,118 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
                   
                   {scans.length > 0 ? scans.map((scan) => (
                     <Card key={scan.id} className="p-4 sm:p-6 bg-card/80 backdrop-blur-sm hover:shadow-mystical transition-all">
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-4 gap-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Clock className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm text-muted-foreground">
-                              {new Date(scan.scan_date).toLocaleDateString()} at {new Date(scan.scan_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-foreground">
-                              {scan.reading_name || 'Palm Reading'}
-                            </h3>
-                            {scan.reading_name && (
-                              <Badge variant="secondary" className="bg-primary/10 text-primary text-xs">
-                                Custom
+                      <div className="flex flex-col sm:flex-row gap-4">
+                        {/* Palm Image Thumbnails */}
+                        <div className="flex gap-2 sm:flex-shrink-0">
+                          {scan.palm_image_url && (
+                            <div className="relative group">
+                              <img 
+                                src={scan.palm_image_url} 
+                                alt="Left palm"
+                                className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-lg border border-border/50 group-hover:border-primary/50 transition-all"
+                              />
+                              <Badge className="absolute bottom-1 left-1 text-xs bg-background/80 backdrop-blur-sm">
+                                Left
                               </Badge>
-                            )}
-                            <RenameScanDialog
-                              currentName={scan.reading_name || null}
-                              scanDate={scan.scan_date}
-                              onRename={async (newName) => {
-                                await updateScanName(scan.id, newName);
-                                toast({
-                                  title: "Reading renamed",
-                                  description: "Your palm reading has been renamed successfully.",
-                                });
-                              }}
-                            >
-                              <Button variant="ghost" size="icon" className="h-6 w-6">
-                                <Pencil className="h-3 w-3" />
+                            </div>
+                          )}
+                          {scan.right_palm_image_url && (
+                            <div className="relative group">
+                              <img 
+                                src={scan.right_palm_image_url} 
+                                alt="Right palm"
+                                className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-lg border border-border/50 group-hover:border-primary/50 transition-all"
+                              />
+                              <Badge className="absolute bottom-1 left-1 text-xs bg-background/80 backdrop-blur-sm">
+                                Right
+                              </Badge>
+                            </div>
+                          )}
+                          {!scan.palm_image_url && !scan.right_palm_image_url && (
+                            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg border border-border/50 bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
+                              <Hand className="h-8 w-8 text-muted-foreground/50" />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Reading Content */}
+                        <div className="flex-1 min-w-0 space-y-3">
+                          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Clock className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-sm text-muted-foreground">
+                                  {new Date(scan.scan_date).toLocaleDateString()} at {new Date(scan.scan_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-semibold text-foreground">
+                                  {scan.reading_name || 'Palm Reading'}
+                                </h3>
+                                {scan.reading_name && (
+                                  <Badge variant="secondary" className="bg-primary/10 text-primary text-xs">
+                                    Custom
+                                  </Badge>
+                                )}
+                                <RenameScanDialog
+                                  currentName={scan.reading_name || null}
+                                  scanDate={scan.scan_date}
+                                  onRename={async (newName) => {
+                                    await updateScanName(scan.id, newName);
+                                    toast({
+                                      title: "Reading renamed",
+                                      description: "Your palm reading has been renamed successfully.",
+                                    });
+                                  }}
+                                >
+                                  <Button variant="ghost" size="icon" className="h-6 w-6">
+                                    <Pencil className="h-3 w-3" />
+                                  </Button>
+                                </RenameScanDialog>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleShareReading(scan)}
+                                className="flex-1 sm:flex-none"
+                              >
+                                <Share className="h-4 w-4 sm:mr-2" />
+                                <span className="hidden sm:inline">Share</span>
                               </Button>
-                            </RenameScanDialog>
+                               <ScanDetailDialog scan={scan} onScanDeleted={fetchScans}>
+                                 <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+                                   <Eye className="h-4 w-4 sm:mr-2" />
+                                   <span className="hidden sm:inline">View Details</span>
+                                 </Button>
+                               </ScanDetailDialog>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-3">
+                            <div className="flex flex-wrap gap-2">
+                              {[
+                                scan.life_line_strength && `Life Line (${scan.life_line_strength})`,
+                                scan.heart_line_strength && `Heart Line (${scan.heart_line_strength})`,
+                                scan.head_line_strength && `Head Line (${scan.head_line_strength})`,
+                                scan.fate_line_strength && `Fate Line (${scan.fate_line_strength})`
+                              ].filter(Boolean).map((line) => (
+                                <Badge key={line} variant="secondary" className="bg-primary/10 text-primary">
+                                  {line}
+                                </Badge>
+                              ))}
+                            </div>
+                            <p className="text-muted-foreground line-clamp-3">
+                              {(() => {
+                                const cleanedText = cleanupMarkdown(scan.overall_insight);
+                                return cleanedText.length > 150 
+                                  ? `${cleanedText.substring(0, 150)}...` 
+                                  : cleanedText;
+                              })()}
+                            </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleShareReading(scan)}
-                            className="flex-1 sm:flex-none"
-                          >
-                            <Share className="h-4 w-4 sm:mr-2" />
-                            <span className="hidden sm:inline">Share</span>
-                          </Button>
-                           <ScanDetailDialog scan={scan} onScanDeleted={fetchScans}>
-                             <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
-                               <Eye className="h-4 w-4 sm:mr-2" />
-                               <span className="hidden sm:inline">View Details</span>
-                             </Button>
-                           </ScanDetailDialog>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-3">
-                        <div className="flex flex-wrap gap-2">
-                          {[
-                            scan.life_line_strength && `Life Line (${scan.life_line_strength})`,
-                            scan.heart_line_strength && `Heart Line (${scan.heart_line_strength})`,
-                            scan.head_line_strength && `Head Line (${scan.head_line_strength})`,
-                            scan.fate_line_strength && `Fate Line (${scan.fate_line_strength})`
-                          ].filter(Boolean).map((line) => (
-                            <Badge key={line} variant="secondary" className="bg-primary/10 text-primary">
-                              {line}
-                            </Badge>
-                          ))}
-                        </div>
-                        <p className="text-muted-foreground line-clamp-3">
-                          {(() => {
-                            const cleanedText = cleanupMarkdown(scan.overall_insight);
-                            return cleanedText.length > 150 
-                              ? `${cleanedText.substring(0, 150)}...` 
-                              : cleanedText;
-                          })()}
-                        </p>
                       </div>
                     </Card>
                   )) : (
