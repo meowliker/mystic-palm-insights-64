@@ -175,27 +175,27 @@ export const Chatbot: React.FC = () => {
       // Set the input message
       setInputMessage(questionText);
       
-      // If palm image is provided, convert it to the expected format
+      // If palm image is provided, set it directly
       if (navigationState.palmImage) {
         console.log('Loading palm image from URL:', navigationState.palmImage);
         const palmImageUrl = navigationState.palmImage;
         
-        // Create a file object from the palm image
+        // Set the preview directly
+        setImagePreview(palmImageUrl);
+        
+        // Create a file object from the palm image URL
         fetch(palmImageUrl)
-          .then(res => {
-            console.log('✅ Palm image fetch response:', res.status);
-            return res.blob();
-          })
+          .then(res => res.blob())
           .then(blob => {
-            console.log('✅ Palm image blob loaded:', blob.size, 'bytes');
-            const file = new File([blob], 'palm-reading.jpg', { type: 'image/jpeg' });
-            
-            // Set image preview and selected image (don't auto-send)
-            setImagePreview(palmImageUrl);
+            const file = new File([blob], 'palm-reading.jpg', { type: blob.type || 'image/jpeg' });
             setSelectedImage(file);
+            console.log('✅ Palm image loaded and ready');
           })
           .catch(err => {
-            console.error('❌ Error loading palm image:', err);
+            console.error('❌ Error loading palm image blob:', err);
+            // Even if fetch fails, we still have the preview URL
+            // Create a placeholder file so the image URL can be used
+            setSelectedImage(new File([], 'palm-reading.jpg', { type: 'image/jpeg' }));
           });
       }
     } else {
@@ -491,7 +491,7 @@ export const Chatbot: React.FC = () => {
       imagePreviewToSend: imagePreviewToSend?.substring(0, 50)
     });
     
-    if (!messageToSend.trim() && !imageToSend) {
+    if (!messageToSend.trim() && !imageToSend && !imagePreviewToSend) {
       console.log('❌ Aborting: No message or image to send');
       return;
     }
@@ -543,8 +543,14 @@ export const Chatbot: React.FC = () => {
     try {
       let imageUrl = null;
       
-      // Upload image if selected
-      if (imageToSend) {
+      // If we have imagePreview but no imageToSend file, it might be a pre-existing URL (e.g., from ResultsScreen)
+      // Check if imagePreview is already a Supabase public URL
+      if (imagePreviewToSend && (!imageToSend || imageToSend.size === 0)) {
+        console.log('Using existing image URL:', imagePreviewToSend);
+        imageUrl = imagePreviewToSend;
+      }
+      // Upload image if we have an actual file to upload
+      else if (imageToSend && imageToSend.size > 0) {
         console.log('Uploading image:', imageToSend.name);
         const fileName = `chat-${Date.now()}-${imageToSend.name}`;
         const { data: uploadData, error: uploadError } = await supabase.storage
