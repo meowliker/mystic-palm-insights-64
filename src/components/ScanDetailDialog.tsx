@@ -3,9 +3,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Heart, Brain, TrendingUp, Star, Eye, Trash2, Calendar, Loader2 } from 'lucide-react';
+import { Heart, Brain, TrendingUp, Star, Eye, Trash2, Calendar, Loader2, Pencil } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useScans } from '@/hooks/useScans';
+import { RenameScanDialog } from '@/components/RenameScanDialog';
 import { format } from 'date-fns';
 import { cleanupMarkdown } from '@/utils/cleanupMarkdown';
 import EnhancedPalmDisplay from '@/components/EnhancedPalmDisplay';
@@ -17,7 +18,7 @@ interface ScanDetailDialogProps {
 }
 
 const ScanDetailDialog = ({ scan, children, onScanDeleted }: ScanDetailDialogProps) => {
-  const { deleteScan, fetchScans } = useScans();
+  const { deleteScan, updateScanName, fetchScans } = useScans();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -80,10 +81,32 @@ const ScanDetailDialog = ({ scan, children, onScanDeleted }: ScanDetailDialogPro
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between pr-8">
-            <DialogTitle className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-1">
               <Star className="h-5 w-5 text-primary" />
-              Palm Reading Details
-            </DialogTitle>
+              <DialogTitle className="flex items-center gap-2">
+                {scan.reading_name || 'Palm Reading'}
+                {scan.reading_name && (
+                  <Badge variant="secondary" className="bg-primary/10 text-primary text-xs">
+                    Custom
+                  </Badge>
+                )}
+              </DialogTitle>
+              <RenameScanDialog
+                currentName={scan.reading_name || null}
+                scanDate={scan.scan_date}
+                onRename={async (newName) => {
+                  await updateScanName(scan.id, newName);
+                  toast({
+                    title: "Reading renamed",
+                    description: "Your palm reading has been renamed successfully.",
+                  });
+                }}
+              >
+                <Button variant="ghost" size="icon" className="h-7 w-7">
+                  <Pencil className="h-3 w-3" />
+                </Button>
+              </RenameScanDialog>
+            </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Calendar className="h-4 w-4" />
               {format(new Date(scan.created_at), 'PPP')}

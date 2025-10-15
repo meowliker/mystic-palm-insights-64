@@ -27,7 +27,8 @@ import {
   AlertTriangle,
   Upload,
   MessageCircle,
-  Menu
+  Menu,
+  Pencil
 } from 'lucide-react';
 import constellationPattern from '@/assets/constellation-pattern.jpg';
 import { useScans } from '@/hooks/useScans';
@@ -40,6 +41,7 @@ import { supabase } from '@/integrations/supabase/client';
 import HoroscopeForm from '@/components/HoroscopeForm';
 import { HoroscopeResultDialog } from '@/components/HoroscopeResultDialog';
 import ScanDetailDialog from '@/components/ScanDetailDialog';
+import { RenameScanDialog } from '@/components/RenameScanDialog';
 import { useUserStats } from '@/hooks/useUserStats';
 
 const ProfilePicture = ({ userId, onUpdate }: { userId?: string; onUpdate?: () => void }) => {
@@ -114,7 +116,7 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
   const [blogsLoading, setBlogsLoading] = useState(false);
   const [horoscope, setHoroscope] = useState<any>(null);
   const [showHoroscopeDialog, setShowHoroscopeDialog] = useState(false);
-  const { scans, clearAllScans, fetchScans } = useScans();
+  const { scans, updateScanName, clearAllScans, fetchScans } = useScans();
   const { user } = useAuth();
   const { fetchUserBlogs, publishDraft, deleteBlog } = useBlogs();
   const { toast } = useToast();
@@ -475,7 +477,31 @@ const Dashboard = ({ onStartScan, onStartUpload }: { onStartScan: () => void; on
                               {new Date(scan.scan_date).toLocaleDateString()} at {new Date(scan.scan_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
                           </div>
-                          <h3 className="font-semibold text-foreground">Palm Reading</h3>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-foreground">
+                              {scan.reading_name || 'Palm Reading'}
+                            </h3>
+                            {scan.reading_name && (
+                              <Badge variant="secondary" className="bg-primary/10 text-primary text-xs">
+                                Custom
+                              </Badge>
+                            )}
+                            <RenameScanDialog
+                              currentName={scan.reading_name || null}
+                              scanDate={scan.scan_date}
+                              onRename={async (newName) => {
+                                await updateScanName(scan.id, newName);
+                                toast({
+                                  title: "Reading renamed",
+                                  description: "Your palm reading has been renamed successfully.",
+                                });
+                              }}
+                            >
+                              <Button variant="ghost" size="icon" className="h-6 w-6">
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                            </RenameScanDialog>
+                          </div>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <Button 

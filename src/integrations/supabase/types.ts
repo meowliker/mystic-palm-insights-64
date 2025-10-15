@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -257,6 +257,7 @@ export type Database = {
           overall_insight: string | null
           palm_image_url: string | null
           partnership_predictions: Json | null
+          reading_name: string | null
           right_palm_image_url: string | null
           scan_date: string
           traits: Json | null
@@ -278,6 +279,7 @@ export type Database = {
           overall_insight?: string | null
           palm_image_url?: string | null
           partnership_predictions?: Json | null
+          reading_name?: string | null
           right_palm_image_url?: string | null
           scan_date?: string
           traits?: Json | null
@@ -299,6 +301,7 @@ export type Database = {
           overall_insight?: string | null
           palm_image_url?: string | null
           partnership_predictions?: Json | null
+          reading_name?: string | null
           right_palm_image_url?: string | null
           scan_date?: string
           traits?: Json | null
@@ -362,26 +365,26 @@ export type Database = {
       get_safe_blog_comment_data: {
         Args: { comment_blog_id: string }
         Returns: {
-          id: string
-          blog_id: string
-          parent_comment_id: string
-          content: string
-          created_at: string
-          updated_at: string
           author_name: string
           author_profile_picture: string
+          blog_id: string
+          content: string
+          created_at: string
+          id: string
           like_count: number
-          user_has_liked: boolean
+          parent_comment_id: string
           replies: Json
+          updated_at: string
+          user_has_liked: boolean
         }[]
       }
       get_safe_profile_data: {
         Args: { profile_user_id: string }
         Returns: {
+          created_at: string
+          full_name: string
           id: string
           profile_picture_url: string
-          full_name: string
-          created_at: string
         }[]
       }
     }

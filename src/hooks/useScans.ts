@@ -6,6 +6,7 @@ interface ScanData {
   id: string;
   user_id: string;
   scan_date: string;
+  reading_name?: string;
   life_line_strength: string;
   heart_line_strength: string;
   head_line_strength: string;
@@ -141,92 +142,137 @@ export const useScans = () => {
     }
   };
 
+  const updateScanName = async (scanId: string, newName: string) => {
+    try {
+      const { error } = await supabase
+        .from('palm_scans')
+        .update({ reading_name: newName.trim() || null })
+        .eq('id', scanId);
+
+      if (error) throw error;
+
+      await fetchScans();
+    } catch (error) {
+      console.error('Error updating scan name:', error);
+      throw error;
+    }
+  };
+
   const deleteScan = async (scanId: string) => {
-    if (!user) return false;
+    if (!user) {
+      console.error('Cannot delete scan: user not authenticated');
+      return false;
+    }
 
     try {
-      // First get the scan to find the image URL
+      console.log('Deleting scan:', scanId);
+      
+      // First, get the scan to delete associated images
       const { data: scan } = await supabase
         .from('palm_scans')
-        .select('palm_image_url')
+        .select('palm_image_url, right_palm_image_url')
         .eq('id', scanId)
-        .eq('user_id', user.id)
-        .maybeSingle();
+        .single();
+
+      if (scan) {
+        // Delete associated images from storage
+        const imagesToDelete = [];
+        if (scan.palm_image_url) {
+          const palmImagePath = scan.palm_image_url.split('/').pop();
+          if (palmImagePath) {
+            imagesToDelete.push(palmImagePath);
+          }
+        }
+        if (scan.right_palm_image_url) {
+          const rightPalmImagePath = scan.right_palm_image_url.split('/').pop();
+          if (rightPalmImagePath) {
+            imagesToDelete.push(rightPalmImagePath);
+          }
+        }
+
+        if (imagesToDelete.length > 0) {
+          console.log('Deleting associated images:', imagesToDelete);
+          await supabase.storage
+            .from('palm-images')
+            .remove(imagesToDelete);
+        }
+      }
 
       // Delete the scan record
       const { error } = await supabase
         .from('palm_scans')
         .delete()
-        .eq('id', scanId)
-        .eq('user_id', user.id);
+        .eq('id', scanId);
 
       if (error) {
         console.error('Error deleting scan:', error);
         return false;
       }
 
-      // Delete the associated image if it exists
-      if (scan?.palm_image_url) {
-        try {
-          const fileName = scan.palm_image_url.split('/').pop();
-          if (fileName) {
-            await supabase.storage
-              .from('palm-images')
-              .remove([`${user.id}/${fileName}`]);
-          }
-        } catch (imageError) {
-          console.error('Error deleting image:', imageError);
-          // Don't fail the whole operation if image deletion fails
-        }
-      }
-
-      // Refresh scans after deletion
+      console.log('Scan deleted successfully');
       await fetchScans();
       return true;
     } catch (error) {
-      console.error('Error deleting scan:', error);
+      console.error('Exception while deleting scan:', error);
       return false;
     }
   };
 
-  const clearAllScans = async (): Promise<boolean> => {
-    if (!user) return false;
+  const clearAllScans = async () => {
+    if (!user) {
+      console.error('Cannot clear scans: user not authenticated');
+      return false;
+    }
 
     try {
-      // Get file paths before deleting database records
-      const { data: scansWithImages } = await supabase
+      // First, get all scans to delete associated images
+      const { data: scans } = await supabase
         .from('palm_scans')
-        .select('palm_image_url')
-        .eq('user_id', user.id)
-        .not('palm_image_url', 'is', null);
+        .select('palm_image_url, right_palm_image_url')
+        .eq('user_id', user.id);
 
-      // Prepare file paths for batch deletion
-      const filePaths = scansWithImages
-        ?.map(scan => {
+      if (scans && scans.length > 0) {
+        // Collect all image paths
+        const imagesToDelete: string[] = [];
+        scans.forEach(scan => {
           if (scan.palm_image_url) {
-            const fileName = scan.palm_image_url.split('/').pop();
-            return fileName ? `${user.id}/${fileName}` : null;
+            const palmImagePath = scan.palm_image_url.split('/').pop();
+            if (palmImagePath) {
+              imagesToDelete.push(palmImagePath);
+            }
           }
-          return null;
-        })
-        .filter(Boolean) as string[] || [];
+          if (scan.right_palm_image_url) {
+            const rightPalmImagePath = scan.right_palm_image_url.split('/').pop();
+            if (rightPalmImagePath) {
+              imagesToDelete.push(rightPalmImagePath);
+            }
+          }
+        });
 
-      // Delete database records and storage files in parallel
-      const [deleteResult] = await Promise.allSettled([
-        supabase.from('palm_scans').delete().eq('user_id', user.id),
-        filePaths.length > 0 ? supabase.storage.from('palm-images').remove(filePaths) : Promise.resolve()
-      ]);
+        // Delete all images from storage
+        if (imagesToDelete.length > 0) {
+          console.log('Deleting all associated images:', imagesToDelete);
+          await supabase.storage
+            .from('palm-images')
+            .remove(imagesToDelete);
+        }
+      }
 
-      if (deleteResult.status === 'rejected' || deleteResult.value.error) {
-        console.error('Error clearing all scans:', deleteResult);
+      // Delete all scan records
+      const { error } = await supabase
+        .from('palm_scans')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error clearing scans:', error);
         return false;
       }
 
-      // Refresh the scans list
       await fetchScans();
       return true;
     } catch (error) {
-      console.error('Error clearing all scans:', error);
+      console.error('Exception while clearing scans:', error);
       return false;
     }
   };
@@ -267,6 +313,7 @@ export const useScans = () => {
     scans,
     loading,
     saveScan,
+    updateScanName,
     deleteScan,
     clearAllScans,
     hasScans,
