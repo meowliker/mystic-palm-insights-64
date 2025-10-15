@@ -23,6 +23,18 @@ const ScanDetailDialog = ({ scan, children, onScanDeleted }: ScanDetailDialogPro
   const [open, setOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Debug: Log scan data
+  React.useEffect(() => {
+    console.log('=== ScanDetailDialog Debug ===', {
+      scan_id: scan.id,
+      palm_image_url: scan.palm_image_url,
+      right_palm_image_url: scan.right_palm_image_url,
+      has_image: !!(scan.palm_image_url || scan.right_palm_image_url),
+      palm_url_type: typeof scan.palm_image_url,
+      palm_url_length: scan.palm_image_url?.length
+    });
+  }, [scan]);
+
   const handleDelete = async () => {
     setIsDeleting(true);
     console.log('Deleting scan:', scan.id);
