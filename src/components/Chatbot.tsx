@@ -302,7 +302,7 @@ export const Chatbot: React.FC = () => {
               session_name: 'Elysia Chat'
             })
             .select()
-            .single();
+            .maybeSingle();
 
           if (!createError) {
             currentSessionId = newSession.id;
@@ -345,23 +345,47 @@ export const Chatbot: React.FC = () => {
   };
 
   const saveMessageToHistory = async (message: Message) => {
-    if (!sessionId || !user) return;
+    if (!sessionId || !user) {
+      console.log('❌ Cannot save message - missing sessionId or user:', { sessionId, hasUser: !!user });
+      return;
+    }
+
+    console.log('💾 Attempting to save message to database:', {
+      messageId: message.id,
+      sender: message.sender,
+      contentLength: message.content.length,
+      sessionId,
+      hasImageUrl: !!message.imageUrl,
+      hasFollowUpQuestions: !!message.followUpQuestions
+    });
 
     try {
-      await Promise.race([
+      const messageData = {
+        session_id: sessionId,
+        content: message.content,
+        sender: message.sender,
+        image_url: message.imageUrl || null,
+        follow_up_questions: message.followUpQuestions || null
+      };
+
+      console.log('📤 Inserting message data:', messageData);
+
+      const { data, error } = await Promise.race([
         supabase
           .from('chat_messages')
-          .insert({
-            session_id: sessionId,
-            content: message.content,
-            sender: message.sender,
-            image_url: message.imageUrl || null,
-            follow_up_questions: message.followUpQuestions || null
-          }),
+          .insert(messageData)
+          .select(),
         new Promise((_, reject) => 
           setTimeout(() => reject(new Error('Save timeout')), 5000)
         )
-      ]);
+      ]) as any;
+
+      if (error) {
+        console.error('❌ Failed to save message:', error);
+        throw error;
+      }
+
+      console.log('✅ Message saved successfully:', data);
 
       // Optimistically append to history in memory (do not reload)
       // Update session timestamp with timeout protection
@@ -635,7 +659,12 @@ export const Chatbot: React.FC = () => {
 
       // Save bot response to history (don't await to avoid blocking UI)
       if (user) {
-        saveMessageToHistory(botResponse).catch(console.error);
+        console.log('🔄 Attempting to save bot response. SessionId:', sessionId);
+        saveMessageToHistory(botResponse).catch((err) => {
+          console.error('❌ Error saving bot response:', err);
+        });
+      } else {
+        console.log('⚠️ User not logged in, skipping save');
       }
       
       // Scroll after message is added
