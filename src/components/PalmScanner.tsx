@@ -464,28 +464,29 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
             </div>
           ) : (
             <>
-              {/* Camera Feed */}
-              {Capacitor.isNativePlatform() ? (
-                <div id="native-camera" className="absolute inset-0 w-full h-full pointer-events-none" />
-              ) : (
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-              )}
+              {/* Camera Feed Container with purple card background */}
+              <div className="absolute inset-x-4 top-20 bottom-32 bg-gradient-to-br from-purple-900/50 via-indigo-900/50 to-purple-950/50 rounded-2xl overflow-hidden border border-purple-400/20 shadow-2xl backdrop-blur-sm">
+                {/* Camera Feed */}
+                {Capacitor.isNativePlatform() ? (
+                  <div id="native-camera" className="absolute inset-0 w-full h-full pointer-events-none rounded-2xl" />
+                ) : (
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="absolute inset-0 w-full h-full object-cover rounded-2xl"
+                  />
+                )}
+                
+                {/* Scanning Progress Overlay - Don't show during analyzing */}
+                {(scanState === 'scanning' || scanState === 'capturing') && (
+                  <div className="absolute inset-0 bg-primary/10 animate-pulse z-15 rounded-2xl" />
+                )}
+              </div>
               
               {/* Hidden canvas for image capture */}
               <canvas ref={canvasRef} className="hidden" />
-              
-              {/* Palm Outline Overlay - COMPLETELY REMOVED */}
-              
-              {/* Scanning Progress Overlay - Don't show during analyzing */}
-              {(scanState === 'scanning' || scanState === 'capturing') && (
-                <div className="absolute inset-0 bg-primary/10 animate-pulse z-15" />
-              )}
             </>
           )}
           
