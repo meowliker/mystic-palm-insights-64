@@ -59,6 +59,7 @@ export const Chatbot: React.FC = () => {
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [hasProcessedNavigation, setHasProcessedNavigation] = useState(false);
   const [lastQuestion, setLastQuestion] = useState<string | null>(null);
+  const sendButtonRef = useRef<HTMLButtonElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const followUpQuestionsRef = useRef<HTMLDivElement>(null);
@@ -145,12 +146,22 @@ export const Chatbot: React.FC = () => {
 
   // Handle navigation state from ResultsScreen - only after history is loaded
   useEffect(() => {
-    if (isLoadingHistory) return; // Don't process navigation until history is loaded
+    console.log('🔄 Navigation useEffect triggered', { 
+      isLoadingHistory, 
+      hasProcessedNavigation,
+      hasNavigationState: !!location.state 
+    });
+
+    if (isLoadingHistory) {
+      console.log('⏳ Waiting for history to load...');
+      return; // Don't process navigation until history is loaded
+    }
     
     const navigationState = location.state as any;
     console.log('=== Navigation State Debug ===', navigationState);
     
     if (navigationState?.question && navigationState?.autoSend && !hasProcessedNavigation) {
+      console.log('✅ Processing navigation auto-send');
       setHasProcessedNavigation(true);
       
       console.log('Processing navigation:', {
@@ -161,6 +172,9 @@ export const Chatbot: React.FC = () => {
       
       const questionText = navigationState.question;
       
+      // Set the input message
+      setInputMessage(questionText);
+      
       // If palm image is provided, convert it to the expected format
       if (navigationState.palmImage) {
         console.log('Loading palm image from URL:', navigationState.palmImage);
@@ -168,31 +182,45 @@ export const Chatbot: React.FC = () => {
         
         // Create a file object from the palm image
         fetch(palmImageUrl)
-          .then(res => res.blob())
+          .then(res => {
+            console.log('✅ Palm image fetch response:', res.status);
+            return res.blob();
+          })
           .then(blob => {
-            console.log('Palm image blob loaded:', blob.size, 'bytes');
+            console.log('✅ Palm image blob loaded:', blob.size, 'bytes');
             const file = new File([blob], 'palm-reading.jpg', { type: 'image/jpeg' });
             
-            console.log('Sending message with image and question');
-            // Send message directly with the image and question
+            // Set image preview and selected image
+            setImagePreview(palmImageUrl);
+            setSelectedImage(file);
+            
+            console.log('📤 Triggering send button click in 500ms');
+            // Trigger send button click after a short delay
             setTimeout(() => {
-              sendMessage(questionText, file, palmImageUrl);
+              console.log('🖱️ Clicking send button');
+              sendButtonRef.current?.click();
             }, 500);
           })
           .catch(err => {
-            console.error('Error loading palm image:', err);
+            console.error('❌ Error loading palm image:', err);
             // Send message without image if loading fails
             setTimeout(() => {
-              sendMessage(questionText);
+              sendButtonRef.current?.click();
             }, 500);
           });
       } else {
         console.log('No palm image provided, sending text only');
         // Send message without image
         setTimeout(() => {
-          sendMessage(questionText);
+          sendButtonRef.current?.click();
         }, 500);
       }
+    } else {
+      console.log('❌ Not processing navigation:', {
+        hasQuestion: !!navigationState?.question,
+        autoSend: navigationState?.autoSend,
+        hasProcessedNavigation
+      });
     }
   }, [location.state, hasProcessedNavigation, isLoadingHistory]);
 
@@ -1199,6 +1227,7 @@ export const Chatbot: React.FC = () => {
                 </Popover>
                 
                 <Button
+                  ref={sendButtonRef}
                   onClick={() => sendMessage()}
                   disabled={isLoading || (!inputMessage.trim() && !selectedImage)}
                   size="icon"
