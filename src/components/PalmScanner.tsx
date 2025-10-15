@@ -490,7 +490,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
           )}
           
           {/* Overlapping Controls for Mobile */}
-          <div className="absolute bottom-0 left-0 right-0 z-30 p-4 bg-gradient-to-t from-black/80 to-transparent">
+          <div className="absolute bottom-0 left-0 right-0 z-30 p-4 bg-gradient-to-t from-black/95 via-black/90 to-black/60">
             {/* Back Button */}
             {onGoBack && (
               <div className="absolute top-4 left-4">
@@ -498,7 +498,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
                   variant="outline" 
                   onClick={onGoBack}
                   size="sm"
-                  className="bg-black/50 backdrop-blur-sm border-white/20 text-white hover:bg-black/70"
+                  className="bg-black/80 backdrop-blur-md border-white/20 text-white hover:bg-black/90 shadow-lg"
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
@@ -507,26 +507,26 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
             
             {/* Header Text */}
             <div className="text-center mb-4">
-              <h1 className="text-xl font-bold text-white flex items-center justify-center gap-2 mb-2">
-                <Sparkles className="h-5 w-5 text-primary" />
+              <h1 className="text-xl font-bold text-white flex items-center justify-center gap-2 mb-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                <Sparkles className="h-5 w-5 text-primary drop-shadow-[0_0_8px_rgba(139,92,246,0.6)]" />
                 Palm Reading
               </h1>
               {scanState === 'analyzing' ? (
                 <div className="text-center">
-                  <p className="text-white text-lg font-semibold animate-pulse mb-2">
+                  <p className="text-white text-lg font-semibold animate-pulse mb-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
                     Analyzing Your Palm
                   </p>
-                  <p className="text-white/70 text-sm">
+                  <p className="text-white/90 text-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
                     Reading cosmic patterns...
                   </p>
                 </div>
               ) : (
-                <p className="text-white/80 text-sm">
+                <p className="text-white/90 text-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
                   {getStatusMessage()}
                 </p>
               )}
               {scanState === 'ready' && (
-                <p className="text-xs text-white/60 mt-1">
+                <p className="text-xs text-white/80 mt-1 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
                   Please use the flashlight for better scans in dark backgrounds
                 </p>
               )}
@@ -534,18 +534,18 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
             
             {/* Camera Privacy Controls */}
             <div className="flex items-center justify-center gap-2 mb-4">
-              <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
-                cameraActive ? 'bg-red-500/20 text-red-400 border border-red-400/20' : 'bg-green-500/20 text-green-400 border border-green-400/20'
+              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm backdrop-blur-md shadow-lg ${
+                cameraActive ? 'bg-red-500/30 text-red-100 border border-red-400/40' : 'bg-green-500/30 text-green-100 border border-green-400/40'
               }`}>
                 <div className={`w-2 h-2 rounded-full ${cameraActive ? 'bg-red-400 animate-pulse' : 'bg-green-400'}`} />
-                Camera {cameraActive ? 'Active' : 'Off'}
+                <span className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">Camera {cameraActive ? 'Active' : 'Off'}</span>
               </div>
               {cameraActive && scanState === 'ready' && (
                 <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={stopCamera}
-                  className="text-red-400 border-red-400/20 hover:bg-red-400/10 bg-black/50 backdrop-blur-sm"
+                  className="text-red-100 border-red-400/30 hover:bg-red-400/20 bg-black/80 backdrop-blur-md shadow-lg"
                 >
                   Stop Camera
                 </Button>
@@ -555,7 +555,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
                   variant="outline" 
                   size="sm" 
                   onClick={initializeCamera}
-                  className="text-green-400 border-green-400/20 hover:bg-green-400/10 bg-black/50 backdrop-blur-sm"
+                  className="text-green-100 border-green-400/30 hover:bg-green-400/20 bg-black/80 backdrop-blur-md shadow-lg"
                 >
                   Start Camera
                 </Button>
@@ -567,13 +567,13 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
               <div className="mb-4">
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-white/80">
+                    <span className="text-white/90 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
                       {scanState === 'scanning' && countdown ? `Hold steady... ${countdown}s` : 
                        scanState === 'capturing' ? 'Capturing...' :
                        scanState === 'analyzing' ? processingStage || 'Analyzing...' : 'Processing...'}
                     </span>
                     {scanState === 'scanning' && countdown && (
-                      <span className="text-primary font-bold">{countdown}</span>
+                      <span className="text-primary font-bold drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">{countdown}</span>
                     )}
                   </div>
                   <Progress 
@@ -587,7 +587,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
             {/* Controls for Mobile - Hide message during scanning and analysis */}
             <div className="text-center space-y-3">
               {scanState !== 'analyzing' && scanState !== 'scanning' && (
-                <div className="flex items-center justify-center gap-2 text-sm text-white/70">
+                <div className="flex items-center justify-center gap-2 text-sm text-white/90 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
                   <Camera className="h-4 w-4 flex-shrink-0" />
                   <span className="text-center">
                     {alignment === 'good' ? 
@@ -603,7 +603,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
                   onClick={startScan}
                   variant="glow"
                   size="lg"
-                  className="w-full"
+                  className="w-full shadow-xl"
                 >
                   <Hand className="h-5 w-5 mr-2" />
                   Start Palm Scan
@@ -612,9 +612,9 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
               
               {scanState === 'complete' && (
                 <div className="text-center space-y-2">
-                  <CheckCircle className="h-8 w-8 text-green-400 mx-auto" />
-                  <p className="text-white font-medium">Scan Complete!</p>
-                  <p className="text-white/70 text-sm">Preparing your cosmic insights...</p>
+                  <CheckCircle className="h-8 w-8 text-green-400 mx-auto drop-shadow-[0_0_12px_rgba(74,222,128,0.6)]" />
+                  <p className="text-white font-medium drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">Scan Complete!</p>
+                  <p className="text-white/90 text-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">Preparing your cosmic insights...</p>
                 </div>
               )}
             </div>
