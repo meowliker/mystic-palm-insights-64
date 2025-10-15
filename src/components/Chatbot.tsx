@@ -148,39 +148,50 @@ export const Chatbot: React.FC = () => {
     if (isLoadingHistory) return; // Don't process navigation until history is loaded
     
     const navigationState = location.state as any;
+    console.log('=== Navigation State Debug ===', navigationState);
+    
     if (navigationState?.question && navigationState?.autoSend && !hasProcessedNavigation) {
       setHasProcessedNavigation(true);
       
-      // Set the question in input
-      setInputMessage(navigationState.question);
+      console.log('Processing navigation:', {
+        question: navigationState.question,
+        palmImage: navigationState.palmImage,
+        hasPalmImage: !!navigationState.palmImage
+      });
+      
+      const questionText = navigationState.question;
       
       // If palm image is provided, convert it to the expected format
       if (navigationState.palmImage) {
-        // Create a mock file object for the palm image
-        fetch(navigationState.palmImage)
+        console.log('Loading palm image from URL:', navigationState.palmImage);
+        const palmImageUrl = navigationState.palmImage;
+        
+        // Create a file object from the palm image
+        fetch(palmImageUrl)
           .then(res => res.blob())
           .then(blob => {
+            console.log('Palm image blob loaded:', blob.size, 'bytes');
             const file = new File([blob], 'palm-reading.jpg', { type: 'image/jpeg' });
-            setSelectedImage(file);
-            setImagePreview(navigationState.palmImage);
             
-            // Auto-send the message after a short delay
+            console.log('Sending message with image and question');
+            // Send message directly with the image and question
             setTimeout(() => {
-              sendMessage();
-            }, 1000);
+              sendMessage(questionText, file, palmImageUrl);
+            }, 500);
           })
           .catch(err => {
             console.error('Error loading palm image:', err);
             // Send message without image if loading fails
             setTimeout(() => {
-              sendMessage();
-            }, 1000);
+              sendMessage(questionText);
+            }, 500);
           });
       } else {
+        console.log('No palm image provided, sending text only');
         // Send message without image
         setTimeout(() => {
-          sendMessage();
-        }, 1000);
+          sendMessage(questionText);
+        }, 500);
       }
     }
   }, [location.state, hasProcessedNavigation, isLoadingHistory]);
@@ -420,13 +431,13 @@ export const Chatbot: React.FC = () => {
     }
   };
 
-  const sendMessage = async () => {
-    if (!inputMessage.trim() && !selectedImage) return;
-
-    // Save the input message before clearing it
-    const messageToSend = inputMessage;
-    const imageToSend = selectedImage;
-    const imagePreviewToSend = imagePreview;
+  const sendMessage = async (overrideMessage?: string, overrideImage?: File, overridePreview?: string) => {
+    // Use overrides if provided, otherwise use state
+    const messageToSend = overrideMessage !== undefined ? overrideMessage : inputMessage;
+    const imageToSend = overrideImage !== undefined ? overrideImage : selectedImage;
+    const imagePreviewToSend = overridePreview !== undefined ? overridePreview : imagePreview;
+    
+    if (!messageToSend.trim() && !imageToSend) return;
 
     // Create user message
     const userMessage: Message = {
@@ -1154,7 +1165,7 @@ export const Chatbot: React.FC = () => {
                 </Popover>
                 
                 <Button
-                  onClick={sendMessage}
+                  onClick={() => sendMessage()}
                   disabled={isLoading || (!inputMessage.trim() && !selectedImage)}
                   size="icon"
                   title="Send Message"
