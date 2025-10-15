@@ -550,6 +550,13 @@ export const Chatbot: React.FC = () => {
         throw error;
       }
 
+      if (!data || !data.response) {
+        console.error('Invalid response from Elysia:', data);
+        throw new Error('No response received from Elysia');
+      }
+
+      console.log('Creating bot response with content:', data.response.substring(0, 100));
+
       // Create bot response
       const botResponse: Message = {
         id: 'bot-' + Date.now(),
@@ -559,10 +566,14 @@ export const Chatbot: React.FC = () => {
         followUpQuestions: data.followUpQuestions || []
       };
 
+      console.log('Bot response created:', botResponse.id, 'Content length:', botResponse.content.length);
+
       // Remove typing indicator and add bot response atomically
       setMessages(prevMessages => {
         const messagesWithoutTyping = prevMessages.filter(msg => !msg.id.startsWith('typing-'));
-        return [...messagesWithoutTyping, botResponse];
+        const newMessages = [...messagesWithoutTyping, botResponse];
+        console.log('Updated messages array, total count:', newMessages.length);
+        return newMessages;
       });
 
       // Save bot response to history (don't await to avoid blocking UI)
