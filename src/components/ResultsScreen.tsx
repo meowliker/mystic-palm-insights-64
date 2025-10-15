@@ -142,7 +142,7 @@ const ResultsScreen = ({ onGoToDashboard, scanData }: ResultsScreenProps) => {
     navigate('/chatbot', { 
       state: { 
         question, 
-        palmImage: scanData.palm_image_url || scanData.right_palm_image_url,
+        palmImage: scanData.capturedImage || scanData.palm_image_url || scanData.right_palm_image_url,
         autoSend: true 
       } 
     });
