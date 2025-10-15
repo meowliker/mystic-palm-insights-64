@@ -432,12 +432,31 @@ export const Chatbot: React.FC = () => {
   };
 
   const sendMessage = async (overrideMessage?: string, overrideImage?: File, overridePreview?: string) => {
+    console.log('🚀 sendMessage called with:', { 
+      overrideMessage, 
+      hasOverrideImage: !!overrideImage, 
+      overridePreview,
+      inputMessage,
+      hasSelectedImage: !!selectedImage
+    });
+
     // Use overrides if provided, otherwise use state
     const messageToSend = overrideMessage !== undefined ? overrideMessage : inputMessage;
     const imageToSend = overrideImage !== undefined ? overrideImage : selectedImage;
     const imagePreviewToSend = overridePreview !== undefined ? overridePreview : imagePreview;
     
-    if (!messageToSend.trim() && !imageToSend) return;
+    console.log('📝 Message params:', { 
+      messageToSend: messageToSend?.substring(0, 50), 
+      hasImageToSend: !!imageToSend,
+      imagePreviewToSend: imagePreviewToSend?.substring(0, 50)
+    });
+    
+    if (!messageToSend.trim() && !imageToSend) {
+      console.log('❌ Aborting: No message or image to send');
+      return;
+    }
+
+    console.log('✅ Proceeding with message send');
 
     // Create user message
     const userMessage: Message = {
@@ -447,6 +466,8 @@ export const Chatbot: React.FC = () => {
       timestamp: new Date(),
       imageUrl: imagePreviewToSend || undefined
     };
+
+    console.log('👤 User message created:', userMessage.id);
 
     // Clear input immediately
     setInputMessage('');
@@ -534,6 +555,7 @@ export const Chatbot: React.FC = () => {
       }
 
       // Send to chatbot API
+      console.log('📡 Calling elysia-chat edge function...');
       const { data, error } = await supabase.functions.invoke('elysia-chat', {
         body: {
           message: messageToSend,
@@ -542,6 +564,7 @@ export const Chatbot: React.FC = () => {
           lastQuestion
         }
       });
+      console.log('📡 Edge function response received:', { hasData: !!data, hasError: !!error });
 
       console.log('Elysia response:', { data, error });
 
