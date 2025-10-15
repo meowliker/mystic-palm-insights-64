@@ -273,11 +273,17 @@ export const Chatbot: React.FC = () => {
             const loadedMessages: Message[] = messages.map(msg => ({
               id: msg.id,
               content: msg.content,
-              sender: msg.sender as 'user' | 'elysia',
+              // Handle both 'astrobot' (legacy) and 'elysia' as bot messages
+              sender: (msg.sender === 'user' ? 'user' : 'elysia') as 'user' | 'elysia',
               timestamp: new Date(msg.created_at),
               imageUrl: msg.image_url || undefined,
               followUpQuestions: Array.isArray(msg.follow_up_questions) ? msg.follow_up_questions.filter((q): q is string => typeof q === 'string') : undefined
             }));
+            console.log('✅ Loaded messages from database:', loadedMessages.length, 'messages');
+            console.log('Message breakdown:', {
+              user: loadedMessages.filter(m => m.sender === 'user').length,
+              elysia: loadedMessages.filter(m => m.sender === 'elysia').length
+            });
             setMessages(loadedMessages);
             setSessionId(currentSessionId);
             return; // Success, exit early
