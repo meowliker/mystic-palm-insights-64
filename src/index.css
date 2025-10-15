@@ -130,11 +130,8 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 
-  /* Camera preview mode: make webview transparent so native preview shows through */
-  body.camera-active,
-  body.camera-active #root,
-  body.camera-active .min-h-screen,
-  body.camera-active .fixed.inset-0 {
+  /* Camera preview mode: make video feed transparent but keep UI backgrounds */
+  body.camera-active #root {
     background: transparent !important;
   }
 
