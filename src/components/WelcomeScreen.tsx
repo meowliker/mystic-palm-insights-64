@@ -5,7 +5,6 @@ import { Gem, Sparkles, Star, Moon, MessageCircle } from 'lucide-react';
 import AuthForm from '@/components/AuthForm';
 import { useAuth } from '@/hooks/useAuth';
 import { Link } from 'react-router-dom';
-import logo from '@/assets/logo.png';
 
 interface WelcomeScreenProps {
   onStartScan: () => void;
@@ -97,7 +96,7 @@ const WelcomeScreen = ({ onStartScan, onGoToDashboard }: WelcomeScreenProps) => 
         {/* Logo and title - Compact */}
         <div className="pt-8 pb-4">
           <div className="flex items-center justify-center gap-2 mb-3">
-            <img src={logo} alt="PalmCosmic Logo" className="h-10 w-10 animate-pulse-glow" />
+            <Gem className="h-8 w-8 text-yellow-300 animate-pulse-glow" />
             <h1 className="text-3xl font-bold text-white cosmic-title">
               PalmCosmic
             </h1>
