@@ -74,7 +74,7 @@ const WelcomeScreen = ({ onStartScan, onGoToDashboard }: WelcomeScreenProps) => 
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative overflow-y-auto safe-area-inset-top">
+    <div className="h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative overflow-hidden safe-area-inset-top">
       {/* Background stars */}
       <div className="absolute inset-0 overflow-hidden">
         {[...Array(30)].map((_, i) => (
@@ -92,43 +92,43 @@ const WelcomeScreen = ({ onStartScan, onGoToDashboard }: WelcomeScreenProps) => 
       </div>
 
       {/* Main content */}
-      <div className="relative z-10 min-h-screen flex flex-col text-center p-4 max-w-sm mx-auto">
+      <div className="relative z-10 h-full flex flex-col text-center px-4 py-6 max-w-sm mx-auto justify-between">
         {/* Logo and title - Compact */}
-        <div className="pt-8 pb-4">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <Gem className="h-8 w-8 text-yellow-300 animate-pulse-glow" />
-            <h1 className="text-3xl font-bold text-white cosmic-title">
+        <div className="flex-shrink-0">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Gem className="h-7 w-7 text-yellow-300 animate-pulse-glow" />
+            <h1 className="text-2xl font-bold text-white cosmic-title">
               PalmCosmic
             </h1>
           </div>
-          <p className="text-base text-purple-200 font-light px-2">
+          <p className="text-sm text-purple-200 font-light px-2">
             Unlock the mysteries of your destiny through AI-powered palm reading
           </p>
         </div>
 
         {/* Features - Compressed */}
-        <div className="flex-1 flex flex-col justify-center space-y-4 py-4">
-          <div className="space-y-4 p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
-            <Sparkles className="h-6 w-6 text-yellow-300 mx-auto" />
-            <h3 className="text-base font-semibold text-white">AI Analysis</h3>
-            <p className="text-purple-200 text-xs leading-relaxed">Advanced AI interprets your palm lines with cosmic precision</p>
+        <div className="flex-1 flex flex-col justify-center space-y-3 py-4 min-h-0">
+          <div className="space-y-2 p-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
+            <Sparkles className="h-5 w-5 text-yellow-300 mx-auto" />
+            <h3 className="text-sm font-semibold text-white">AI Analysis</h3>
+            <p className="text-purple-200 text-xs leading-snug">Advanced AI interprets your palm lines with cosmic precision</p>
           </div>
           
-          <div className="space-y-4 p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
-            <Moon className="h-6 w-6 text-blue-300 mx-auto" />
-            <h3 className="text-base font-semibold text-white">Cosmic Insights</h3>
-            <p className="text-purple-200 text-xs leading-relaxed">Discover your life path, love lines, and hidden potentials</p>
+          <div className="space-y-2 p-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
+            <Moon className="h-5 w-5 text-blue-300 mx-auto" />
+            <h3 className="text-sm font-semibold text-white">Cosmic Insights</h3>
+            <p className="text-purple-200 text-xs leading-snug">Discover your life path, love lines, and hidden potentials</p>
           </div>
           
-          <div className="space-y-4 p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
-            <Star className="h-6 w-6 text-purple-300 mx-auto" />
-            <h3 className="text-base font-semibold text-white">Personalized</h3>
-            <p className="text-purple-200 text-xs leading-relaxed">Tailored readings based on your unique palm characteristics</p>
+          <div className="space-y-2 p-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
+            <Star className="h-5 w-5 text-purple-300 mx-auto" />
+            <h3 className="text-sm font-semibold text-white">Personalized</h3>
+            <p className="text-purple-200 text-xs leading-snug">Tailored readings based on your unique palm characteristics</p>
           </div>
         </div>
 
         {/* CTA Buttons - Bottom */}
-        <div className="pb-8 space-y-4">
+        <div className="flex-shrink-0 space-y-3 pb-4">
           {user ? (
             <div className="space-y-3">
               <Button
