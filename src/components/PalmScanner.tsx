@@ -54,30 +54,63 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
   const initializeCamera = async () => {
     try {
       if (Capacitor.isNativePlatform()) {
-        // Request permissions using Capacitor Camera service
-        const permissions = await CameraService.checkPermissions();
-        if (permissions.camera !== 'granted') {
-          const req = await CameraService.requestPermissions();
-          if (req.camera !== 'granted') {
-            setCameraError('Camera permission not granted. Please enable it in Settings.');
+        console.log('[PalmScanner] Native platform detected, requesting camera permissions');
+        
+        // Check and request Camera permissions
+        const cameraPermissions = await CameraService.checkPermissions();
+        console.log('[PalmScanner] Camera permissions:', cameraPermissions);
+        
+        if (cameraPermissions.camera !== 'granted') {
+          console.log('[PalmScanner] Requesting camera permissions');
+          const requestResult = await CameraService.requestPermissions();
+          console.log('[PalmScanner] Permission request result:', requestResult);
+          
+          if (requestResult.camera !== 'granted') {
+            const platform = Capacitor.getPlatform();
+            const settingsMsg = platform === 'ios' 
+              ? 'Go to Settings > PalmCosmic > Camera and enable access'
+              : 'Go to Settings > Apps > PalmCosmic > Permissions > Camera';
+            setCameraError(`Camera permission denied. ${settingsMsg}`);
+            toast({
+              title: "Camera Permission Required",
+              description: settingsMsg,
+              variant: "destructive"
+            });
             return;
           }
         }
-        // Start native in-app camera preview
-        await CameraPreview.start({
-          position: 'rear',
-          parent: 'native-camera',
-          className: 'native-camera-preview',
-          toBack: true, // ensure web UI stays on top and remains clickable
-          disableAudio: true,
-          width: window.innerWidth,
-          height: window.innerHeight,
-        });
-        setCameraActive(true);
-        document.body.classList.add('camera-active');
-        setCameraError(null);
+        
+        // Check CameraPreview permissions specifically
+        try {
+          console.log('[PalmScanner] Starting CameraPreview');
+          await CameraPreview.start({
+            position: 'rear',
+            parent: 'native-camera',
+            className: 'native-camera-preview',
+            toBack: true,
+            disableAudio: true,
+            width: window.innerWidth,
+            height: window.innerHeight,
+          });
+          console.log('[PalmScanner] CameraPreview started successfully');
+          setCameraActive(true);
+          document.body.classList.add('camera-active');
+          setCameraError(null);
+        } catch (previewError) {
+          console.error('[PalmScanner] CameraPreview error:', previewError);
+          // Fallback to standard camera if preview fails
+          setCameraError('Camera preview failed. Using standard camera capture instead.');
+          toast({
+            title: "Using Alternative Camera Mode",
+            description: "Camera preview unavailable, but capture will work.",
+            variant: "default"
+          });
+          setCameraActive(true);
+          setCameraError(null);
+        }
       } else {
         // Web platforms use getUserMedia
+        console.log('[PalmScanner] Web platform detected, using getUserMedia');
         const mediaStream = await navigator.mediaDevices.getUserMedia({
           video: { 
             facingMode: 'environment', // Use rear camera for palm scanning
@@ -92,10 +125,27 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
         }
         document.body.classList.add('camera-active');
         setCameraError(null);
+        console.log('[PalmScanner] Web camera initialized successfully');
       }
     } catch (error) {
-      setCameraError('Camera access denied. Please enable camera permissions.');
-      console.error('Camera error:', error);
+      console.error('[PalmScanner] Camera initialization error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      if (errorMessage.includes('NotAllowedError') || errorMessage.includes('Permission denied')) {
+        setCameraError('Camera access denied. Please enable camera permissions in your browser/device settings.');
+      } else if (errorMessage.includes('NotFoundError')) {
+        setCameraError('No camera found on this device.');
+      } else if (errorMessage.includes('NotReadableError')) {
+        setCameraError('Camera is in use by another app. Please close other camera apps and try again.');
+      } else {
+        setCameraError(`Camera error: ${errorMessage}`);
+      }
+      
+      toast({
+        title: "Camera Error",
+        description: errorMessage,
+        variant: "destructive"
+      });
     }
   };
 
@@ -309,12 +359,31 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
     try {
       // Capture the palm image immediately
       let imageDataUrl: string | null = null;
+      
       if (Capacitor.isNativePlatform()) {
-        const result = await CameraPreview.capture({ quality: 90 });
-        imageDataUrl = result?.value ? `data:image/jpeg;base64,${result.value}` : null;
+        console.log('[PalmScanner] Capturing image on native platform');
+        try {
+          const result = await CameraPreview.capture({ quality: 90 });
+          imageDataUrl = result?.value ? `data:image/jpeg;base64,${result.value}` : null;
+          console.log('[PalmScanner] Native image captured:', imageDataUrl ? 'success' : 'failed');
+        } catch (captureError) {
+          console.warn('[PalmScanner] CameraPreview capture failed, trying fallback:', captureError);
+          // Fallback to CameraService if CameraPreview fails
+          try {
+            const image = await CameraService.takePicture();
+            imageDataUrl = image.dataUrl || null;
+            console.log('[PalmScanner] Fallback camera capture:', imageDataUrl ? 'success' : 'failed');
+          } catch (fallbackError) {
+            console.error('[PalmScanner] Fallback camera also failed:', fallbackError);
+            throw new Error('Failed to capture image. Please try again.');
+          }
+        }
       } else {
+        console.log('[PalmScanner] Capturing image on web platform');
         imageDataUrl = await captureImage();
+        console.log('[PalmScanner] Web image captured:', imageDataUrl ? 'success' : 'failed');
       }
+      
       if (!imageDataUrl) {
         throw new Error("Failed to capture palm image");
       }
@@ -371,11 +440,14 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
       console.error('Error during scan completion:', error);
       setScanState('error');
       setProcessingStage('');
+      const errorMsg = error instanceof Error ? error.message : "Failed to analyze palm. Please try again.";
       toast({
         title: "Analysis Failed",
-        description: error instanceof Error ? error.message : "Failed to analyze palm. Please try again.",
+        description: errorMsg,
         variant: "destructive"
       });
+      // Restart camera for retry
+      await initializeCamera();
     }
   };
 
