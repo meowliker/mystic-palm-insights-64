@@ -74,9 +74,9 @@ const WelcomeScreen = ({ onStartScan, onGoToDashboard }: WelcomeScreenProps) => 
   }
 
   return (
-    <div className="h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative overflow-hidden safe-area-inset-top">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative overflow-y-auto safe-area-inset-top">
       {/* Background stars */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 overflow-hidden">
         {[...Array(30)].map((_, i) => (
           <Star
             key={i}
@@ -92,7 +92,7 @@ const WelcomeScreen = ({ onStartScan, onGoToDashboard }: WelcomeScreenProps) => 
       </div>
 
       {/* Main content */}
-      <div className="relative z-10 h-full flex flex-col text-center p-4 max-w-sm mx-auto">
+      <div className="relative z-10 min-h-screen flex flex-col text-center p-4 max-w-sm mx-auto">
         {/* Logo and title - Compact */}
         <div className="pt-8 pb-4">
           <div className="flex items-center justify-center gap-2 mb-3">
