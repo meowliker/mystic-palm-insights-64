@@ -87,10 +87,12 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
             position: 'rear',
             parent: 'native-camera',
             className: 'native-camera-preview',
-            toBack: true,
+            toBack: false,
             disableAudio: true,
             width: window.innerWidth,
             height: window.innerHeight,
+            enableZoom: false,
+            enableOpacity: false,
           });
           console.log('[PalmScanner] CameraPreview started successfully');
           setCameraActive(true);
@@ -773,13 +775,17 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
               ) : (
                 <>
                   {/* Camera Feed */}
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    className="absolute inset-0 w-full h-full object-cover rounded-lg"
-                  />
+                  {Capacitor.isNativePlatform() ? (
+                    <div id="native-camera" className="absolute inset-0 w-full h-full rounded-lg" />
+                  ) : (
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      className="absolute inset-0 w-full h-full object-cover rounded-lg"
+                    />
+                  )}
                   
                   {/* Hidden canvas for image capture */}
                   <canvas ref={canvasRef} className="hidden" />
