@@ -1,21 +1,17 @@
-import type { CapacitorConfig } from '@capacitor/cli';
+import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: 'com.palmcosmic.app',
-  appName: 'PalmCosmic - AI Palm Reading',
-  webDir: 'dist',
-  server: {
-    url: 'https://18040da5-f7a6-4b0c-a9df-64513a4b1d67.lovableproject.com?forceHideBadge=true',
-    cleartext: true
-  },
+  appId: "com.palmcosmic.app",
+  appName: "PalmCosmic - AI Palm Reading",
+  webDir: "dist",
   plugins: {
     Camera: {
-      permissions: ['camera']
+      permissions: ["camera"],
     },
     CameraPreview: {
-      permissions: ['camera']
-    }
-  }
+      permissions: ["camera"],
+    },
+  },
 };
 
 export default config;
