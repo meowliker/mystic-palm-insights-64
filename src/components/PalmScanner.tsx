@@ -531,7 +531,9 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
       {/* Mobile: Fullscreen camera view */}
       <div className="sm:hidden">
         {/* Fullscreen Camera Area */}
-        <div className="fixed inset-0 bg-gradient-to-br from-purple-900 via-indigo-900 to-purple-950 z-10">
+        <div className={`fixed inset-0 z-10 ${
+          cameraActive ? 'bg-transparent' : 'bg-gradient-to-br from-purple-900 via-indigo-900 to-purple-950'
+        }`}>
           {cameraError ? (
             <div className="flex flex-col items-center justify-center h-full space-y-4 text-center p-8">
               <AlertCircle className="h-12 w-12 text-destructive" />
@@ -544,7 +546,9 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
           ) : (
             <>
               {/* Camera Feed Container with purple card background */}
-              <div className="absolute inset-x-4 top-20 bottom-32 bg-gradient-to-br from-purple-900/50 via-indigo-900/50 to-purple-950/50 rounded-2xl overflow-hidden border border-purple-400/20 shadow-2xl backdrop-blur-sm">
+              <div className={`absolute inset-x-4 top-20 bottom-32 rounded-2xl overflow-hidden border border-purple-400/20 shadow-2xl ${
+                cameraActive ? 'bg-transparent backdrop-blur-none' : 'bg-gradient-to-br from-purple-900/50 via-indigo-900/50 to-purple-950/50 backdrop-blur-sm'
+              }`}>
                 {/* Camera Feed */}
                 {Capacitor.isNativePlatform() ? (
                   <div 
@@ -708,7 +712,11 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
       </div>
 
       {/* Desktop: Original design */}
-      <div className="hidden sm:block min-h-screen bg-gradient-to-br from-background via-background to-background/80 flex items-center justify-center px-6">
+      <div className={`hidden sm:block min-h-screen flex items-center justify-center px-6 ${
+        Capacitor.isNativePlatform() && cameraActive 
+          ? 'bg-transparent' 
+          : 'bg-gradient-to-br from-background via-background to-background/80'
+      }`}>
         <div className="w-full max-w-2xl mx-auto space-y-6">
           {/* Back Button */}
           {onGoBack && (
