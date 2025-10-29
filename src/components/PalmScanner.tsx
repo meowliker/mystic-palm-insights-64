@@ -549,22 +549,16 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
               <div className={`absolute inset-x-4 top-20 bottom-32 rounded-2xl overflow-hidden border border-purple-400/20 shadow-2xl ${
                 cameraActive ? 'bg-transparent backdrop-blur-none' : 'bg-gradient-to-br from-purple-900/50 via-indigo-900/50 to-purple-950/50 backdrop-blur-sm'
               }`}>
-                {/* Camera Feed */}
-                {Capacitor.isNativePlatform() ? (
-                  <div 
-                  id="camera-preview-container" 
-                  className="absolute inset-0 w-full h-full rounded-lg overflow-hidden"
-                  style={{ backgroundColor: 'black' }}
-                />
-              ) : (
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="absolute inset-0 w-full h-full object-cover rounded-lg"
-                  style={{ backgroundColor: 'transparent' }}
-                />
+                {/* Camera Feed - Only for web browsers */}
+                {!Capacitor.isNativePlatform() && (
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="absolute inset-0 w-full h-full object-cover rounded-lg"
+                    style={{ backgroundColor: 'transparent' }}
+                  />
                 )}
                 
                 {/* Scanning Progress Overlay - Don't show during analyzing */}
