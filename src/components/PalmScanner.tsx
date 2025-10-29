@@ -83,16 +83,22 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
         // Check CameraPreview permissions specifically
         try {
           console.log('[PalmScanner] Starting CameraPreview');
+          
+          // Ensure body has transparent background for camera to show
+          document.body.style.backgroundColor = 'transparent';
+          document.documentElement.style.backgroundColor = 'transparent';
+          
+          // Wait a tick to ensure DOM is ready
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
           await CameraPreview.start({
             position: 'rear',
-            parent: 'native-camera',
-            className: 'native-camera-preview',
-            toBack: false,
+            width: window.screen.width,
+            height: window.screen.height,
+            toBack: true,
             disableAudio: true,
-            width: window.innerWidth,
-            height: window.innerHeight,
-            enableZoom: false,
-            enableOpacity: false,
+            enableZoom: true,
+            enableOpacity: true,
           });
           console.log('[PalmScanner] CameraPreview started successfully');
           setCameraActive(true);
@@ -775,17 +781,14 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
               ) : (
                 <>
                   {/* Camera Feed */}
-                  {Capacitor.isNativePlatform() ? (
-                    <div id="native-camera" className="absolute inset-0 w-full h-full rounded-lg" />
-                  ) : (
-                    <video
-                      ref={videoRef}
-                      autoPlay
-                      playsInline
-                      muted
-                      className="absolute inset-0 w-full h-full object-cover rounded-lg"
-                    />
-                  )}
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="absolute inset-0 w-full h-full object-cover rounded-lg"
+                    style={{ backgroundColor: 'transparent' }}
+                  />
                   
                   {/* Hidden canvas for image capture */}
                   <canvas ref={canvasRef} className="hidden" />
