@@ -771,8 +771,16 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
           </div>
 
           {/* Main Scanning Area */}
-          <Card className="relative overflow-hidden bg-card/80 backdrop-blur-sm border-primary/20 z-10">
-            <div className="aspect-[4/3] relative flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5">
+          <Card className={`relative overflow-hidden border-primary/20 z-10 ${
+            Capacitor.isNativePlatform() && cameraActive 
+              ? 'bg-transparent' 
+              : 'bg-card/80 backdrop-blur-sm'
+          }`}>
+            <div className={`aspect-[4/3] relative flex items-center justify-center ${
+              Capacitor.isNativePlatform() && cameraActive 
+                ? 'bg-transparent' 
+                : 'bg-gradient-to-br from-primary/5 to-secondary/5'
+            }`}>
               {cameraError ? (
                 <div className="flex flex-col items-center space-y-4 text-center p-8">
                   <AlertCircle className="h-12 w-12 text-destructive" />
