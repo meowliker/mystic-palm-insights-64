@@ -85,17 +85,19 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
           console.log('[PalmScanner] Starting CameraPreview');
           
           // Ensure body has transparent background for camera to show
-          document.body.style.backgroundColor = 'transparent';
-          document.documentElement.style.backgroundColor = 'transparent';
+          // document.body.style.backgroundColor = 'transparent';
+          // document.documentElement.style.backgroundColor = 'transparent';
           
           // Wait a tick to ensure DOM is ready
           await new Promise(resolve => setTimeout(resolve, 100));
           
           await CameraPreview.start({
             position: 'rear',
+            parent: 'camera-preview-container',  // Add back parent
+            className: 'camera-preview',
             width: window.screen.width,
             height: window.screen.height,
-            toBack: true,
+            toBack: false,  // Change to false
             disableAudio: true,
             enableZoom: true,
             enableOpacity: true,
@@ -548,15 +550,20 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
               <div className="absolute inset-x-4 top-20 bottom-32 bg-gradient-to-br from-purple-900/50 via-indigo-900/50 to-purple-950/50 rounded-2xl overflow-hidden border border-purple-400/20 shadow-2xl backdrop-blur-sm">
                 {/* Camera Feed */}
                 {Capacitor.isNativePlatform() ? (
-                  <div id="native-camera" className="absolute inset-0 w-full h-full pointer-events-none rounded-2xl" />
-                ) : (
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    className="absolute inset-0 w-full h-full object-cover rounded-2xl"
-                  />
+                  <div 
+                  id="camera-preview-container" 
+                  className="absolute inset-0 w-full h-full rounded-lg overflow-hidden"
+                  style={{ backgroundColor: 'black' }}
+                />
+              ) : (
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="absolute inset-0 w-full h-full object-cover rounded-lg"
+                  style={{ backgroundColor: 'transparent' }}
+                />
                 )}
                 
                 {/* Scanning Progress Overlay - Don't show during analyzing */}

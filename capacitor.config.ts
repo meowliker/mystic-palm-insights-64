@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   webDir: "dist",
   plugins: {
     Camera: {
-      permissions: ["camera"],
+      permissions: ["camera", "photos"],
     },
     CameraPreview: {
       permissions: ["camera"],
