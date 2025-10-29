@@ -774,7 +774,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
           </div>
 
           {/* Main Scanning Area */}
-          <Card className="relative overflow-hidden bg-card/80 backdrop-blur-sm border-primary/20">
+          <Card className="relative overflow-hidden bg-card/80 backdrop-blur-sm border-primary/20 z-10">
             <div className="aspect-[4/3] relative flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5">
               {cameraError ? (
                 <div className="flex flex-col items-center space-y-4 text-center p-8">
@@ -788,14 +788,22 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
               ) : (
                 <>
                   {/* Camera Feed */}
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    className="absolute inset-0 w-full h-full object-cover rounded-lg"
-                    style={{ backgroundColor: 'transparent' }}
-                  />
+                  {Capacitor.isNativePlatform() ? (
+                    <div 
+                      id="camera-preview-container" 
+                      className="absolute inset-0 w-full h-full rounded-lg overflow-hidden"
+                      style={{ backgroundColor: 'black' }}
+                    />
+                  ) : (
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      className="absolute inset-0 w-full h-full object-cover rounded-lg"
+                      style={{ backgroundColor: 'black' }}
+                    />
+                  )}
                   
                   {/* Hidden canvas for image capture */}
                   <canvas ref={canvasRef} className="hidden" />
@@ -828,7 +836,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
             )}
             
             {/* Controls - Hide message during scanning and analysis */}
-            <div className="p-4 sm:p-6 text-center space-y-3 sm:space-y-4">
+            <div className="p-4 sm:p-6 text-center space-y-3 sm:space-y-4 relative z-20">
               {scanState !== 'analyzing' && scanState !== 'scanning' && (
                 <div className="flex items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground px-2">
                   <Camera className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
