@@ -84,23 +84,20 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
         try {
           console.log('[PalmScanner] Starting CameraPreview');
           
-          // Ensure body has transparent background for camera to show
-          // document.body.style.backgroundColor = 'transparent';
-          // document.documentElement.style.backgroundColor = 'transparent';
+          // CRITICAL: Set transparent background for toBack:true to work
+          document.body.style.backgroundColor = 'transparent';
+          document.documentElement.style.backgroundColor = 'transparent';
           
           // Wait a tick to ensure DOM is ready
           await new Promise(resolve => setTimeout(resolve, 100));
           
           await CameraPreview.start({
             position: 'rear',
-            parent: 'camera-preview-container',  // Add back parent
-            className: 'camera-preview',
             width: window.screen.width,
             height: window.screen.height,
-            toBack: false,  // Change to false
+            toBack: true,  // MUST be true for Android to show UI elements
             disableAudio: true,
             enableZoom: true,
-            enableOpacity: true,
           });
           console.log('[PalmScanner] CameraPreview started successfully');
           setCameraActive(true);
@@ -788,13 +785,7 @@ const PalmScanner = ({ onScanComplete, onGoBack }: {
               ) : (
                 <>
                   {/* Camera Feed */}
-                  {Capacitor.isNativePlatform() ? (
-                    <div 
-                      id="camera-preview-container" 
-                      className="absolute inset-0 w-full h-full rounded-lg overflow-hidden"
-                      style={{ backgroundColor: 'black' }}
-                    />
-                  ) : (
+                  {!Capacitor.isNativePlatform() && (
                     <video
                       ref={videoRef}
                       autoPlay
