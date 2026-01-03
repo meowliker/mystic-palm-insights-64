@@ -98,7 +98,7 @@ const AuthForm = ({ mode, onModeChange, onSuccess }: AuthFormProps) => {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail, {
-        redirectTo: 'https://palm-cosmic.lovable.app/',
+        redirectTo: 'https://palm-cosmic.lovable.app/email-verified.html',
       });
 
       if (error) {

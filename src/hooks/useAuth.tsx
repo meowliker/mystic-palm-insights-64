@@ -29,7 +29,7 @@ export const useAuth = () => {
   }, []);
 
   const signUp = async (email: string, password: string, fullName?: string) => {
-    const productionUrl = 'https://palm-cosmic.lovable.app';
+    const productionUrl = 'https://palm-cosmic.lovable.app/email-verified.html';
     const redirectUrl = `${productionUrl}/`;
     
     const { error } = await supabase.auth.signUp({
