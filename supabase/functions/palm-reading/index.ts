@@ -6,6 +6,53 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Input validation constants
+const MAX_BASE64_SIZE = 10 * 1024 * 1024; // 10MB limit
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const ALLOWED_STORAGE_DOMAIN = 'klustrtcwdgjacdezoih.supabase.co';
+
+// Validate image data URL
+function validateImageDataUrl(dataUrl: string): { valid: boolean; error?: string; mimeType?: string } {
+  if (!dataUrl.startsWith('data:image/')) {
+    return { valid: false, error: 'Invalid data URL: must start with data:image/' };
+  }
+  
+  const match = dataUrl.match(/^data:(image\/[a-z+]+);base64,(.*)$/i);
+  if (!match) {
+    return { valid: false, error: 'Invalid data URL format' };
+  }
+  
+  const mimeType = match[1].toLowerCase();
+  if (!ALLOWED_IMAGE_TYPES.includes(mimeType)) {
+    return { valid: false, error: `Invalid image type: ${mimeType}. Allowed types: ${ALLOWED_IMAGE_TYPES.join(', ')}` };
+  }
+  
+  const base64Data = match[2];
+  // Estimate actual size (base64 is ~33% larger than binary)
+  const estimatedSize = (base64Data.length * 3) / 4;
+  if (estimatedSize > MAX_BASE64_SIZE) {
+    return { valid: false, error: `Image too large: ${Math.round(estimatedSize / 1024 / 1024)}MB exceeds ${MAX_BASE64_SIZE / 1024 / 1024}MB limit` };
+  }
+  
+  return { valid: true, mimeType };
+}
+
+// Validate image URL (only allow Supabase storage)
+function validateImageUrl(url: string): { valid: boolean; error?: string } {
+  try {
+    const parsedUrl = new URL(url);
+    if (!parsedUrl.hostname.includes(ALLOWED_STORAGE_DOMAIN)) {
+      return { valid: false, error: `Invalid image URL: must be from Supabase storage (${ALLOWED_STORAGE_DOMAIN})` };
+    }
+    if (!parsedUrl.protocol.startsWith('https')) {
+      return { valid: false, error: 'Invalid image URL: must use HTTPS' };
+    }
+    return { valid: true };
+  } catch {
+    return { valid: false, error: 'Invalid image URL format' };
+  }
+}
+
 serve(async (req) => {
   console.log('=== PALM READING FUNCTION CALLED ===');
   console.log('Method:', req.method);
@@ -17,11 +64,49 @@ serve(async (req) => {
   }
 
   try {
-    const { imageUrl, imageDataUrl } = await req.json();
+    // Parse and validate request body
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch {
+      return new Response(JSON.stringify({ error: 'Invalid JSON request body' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400
+      });
+    }
+
+    const { imageUrl, imageDataUrl } = requestBody;
     console.log('Request received with image params:', { hasImageUrl: !!imageUrl, hasImageDataUrl: !!imageDataUrl });
 
+    // Validate that at least one image source is provided
     if (!imageUrl && !imageDataUrl) {
-      throw new Error('Palm image is required (imageUrl or imageDataUrl)');
+      return new Response(JSON.stringify({ error: 'Palm image is required (imageUrl or imageDataUrl)' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400
+      });
+    }
+
+    // Validate inputs based on type
+    if (imageDataUrl) {
+      const validation = validateImageDataUrl(imageDataUrl);
+      if (!validation.valid) {
+        console.error('Image data URL validation failed:', validation.error);
+        return new Response(JSON.stringify({ error: validation.error }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400
+        });
+      }
+    }
+
+    if (imageUrl) {
+      const validation = validateImageUrl(imageUrl);
+      if (!validation.valid) {
+        console.error('Image URL validation failed:', validation.error);
+        return new Response(JSON.stringify({ error: validation.error }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400
+        });
+      }
     }
 
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
@@ -47,9 +132,22 @@ serve(async (req) => {
       if (!imageResponse.ok) {
         throw new Error(`Failed to fetch image: ${imageResponse.status}`);
       }
+      
+      // Validate content type from response
+      const contentType = imageResponse.headers.get('content-type') || 'image/jpeg';
+      if (!ALLOWED_IMAGE_TYPES.some(type => contentType.includes(type.split('/')[1]))) {
+        throw new Error(`Invalid image content type: ${contentType}`);
+      }
+      
       const imageBuffer = await imageResponse.arrayBuffer();
+      
+      // Check size of fetched image
+      if (imageBuffer.byteLength > MAX_BASE64_SIZE) {
+        throw new Error(`Image too large: ${Math.round(imageBuffer.byteLength / 1024 / 1024)}MB exceeds limit`);
+      }
+      
       const uint8Array = new Uint8Array(imageBuffer);
-      mimeType = imageResponse.headers.get('content-type') || 'image/jpeg';
+      mimeType = contentType;
       // Convert to base64 safely for large images
       let binary = '';
       const chunkSize = 8192;

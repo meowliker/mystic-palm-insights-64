@@ -4,13 +4,11 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-
-const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
+const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, user-id',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
@@ -369,6 +367,26 @@ const parsePalmReading = (aiResponse: string) => {
   };
 };
 
+// Helper function to get authenticated user from request
+async function getAuthenticatedUser(req: Request): Promise<{ id: string } | null> {
+  const authHeader = req.headers.get('authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+
+  const token = authHeader.replace('Bearer ', '');
+  const supabase = createClient(supabaseUrl!, supabaseAnonKey!);
+  
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+  
+  if (error || !user) {
+    console.error('Auth error:', error?.message);
+    return null;
+  }
+  
+  return user;
+}
+
 serve(async (req) => {
   console.log('=== EDGE FUNCTION CALLED ===');
   console.log('Method:', req.method);
@@ -385,6 +403,23 @@ serve(async (req) => {
 
   if (req.method === 'POST') {
     try {
+      // Get authenticated user
+      const user = await getAuthenticatedUser(req);
+      if (!user) {
+        return new Response(JSON.stringify({ error: 'Authentication required' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Create authenticated Supabase client
+      const authHeader = req.headers.get('authorization');
+      const supabase = createClient(supabaseUrl!, supabaseAnonKey!, {
+        global: {
+          headers: { Authorization: authHeader! }
+        }
+      });
+
       const body = await req.text();
       console.log('Request body received');
       
@@ -397,6 +432,26 @@ serve(async (req) => {
         console.log('Left palm URL:', palmImageUrl);
         if (rightPalmImageUrl) {
           console.log('Right palm URL:', rightPalmImageUrl);
+        }
+        
+        // Validate palm image URL - only allow Supabase storage URLs
+        const allowedDomain = 'klustrtcwdgjacdezoih.supabase.co';
+        try {
+          const url = new URL(palmImageUrl);
+          if (!url.hostname.includes(allowedDomain)) {
+            throw new Error('Invalid image URL: must be from Supabase storage');
+          }
+          if (rightPalmImageUrl) {
+            const rightUrl = new URL(rightPalmImageUrl);
+            if (!rightUrl.hostname.includes(allowedDomain)) {
+              throw new Error('Invalid right image URL: must be from Supabase storage');
+            }
+          }
+        } catch (urlError) {
+          if (urlError instanceof Error && urlError.message.includes('Invalid image URL')) {
+            throw urlError;
+          }
+          throw new Error('Invalid image URL format');
         }
         
         let aiAnalysis;
@@ -412,17 +467,14 @@ serve(async (req) => {
         const palmReading = parsePalmReading(aiAnalysis);
         console.log('Palm reading parsed successfully');
         
-        // Save the palm reading to database
-        const userIdHeader = req.headers.get('user-id');
-        const userIdFromAuth = userIdHeader || 'anonymous';
-        
-        console.log('Saving palm reading to database for user:', userIdFromAuth);
+        // Save the palm reading to database using authenticated user's ID
+        console.log('Saving palm reading to database for user:', user.id);
         
         try {
           const { data: savedReading, error: saveError } = await supabase
             .from('palm_scans')
             .insert({
-              user_id: userIdFromAuth, 
+              user_id: user.id, 
               life_line_strength: palmReading.life_line_strength,
               heart_line_strength: palmReading.heart_line_strength,
               head_line_strength: palmReading.head_line_strength,
@@ -623,6 +675,7 @@ Tone should be insightful, cosmic, and supportive, yet grounded in real-life con
       });
       
     } catch (error: unknown) {
+      console.error('Error processing request:', error);
       return new Response(JSON.stringify({ 
         error: error instanceof Error ? error.message : 'Internal server error' 
       }), {
