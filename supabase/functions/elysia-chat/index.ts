@@ -237,11 +237,8 @@ Keep responses concise but insightful - focus on 1-2 key observations with speci
       systemPrompt += ageContext;
     }
 
-    const messages = [
-      {
-        role: "system",
-        content: systemPrompt
-      }
+    const messages: any[] = [
+      { role: "system", content: systemPrompt }
     ];
 
     // Add conversation context if available

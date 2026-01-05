@@ -404,9 +404,8 @@ serve(async (req) => {
           // Analyze the palm image(s) using OpenAI's vision API
           aiAnalysis = await analyzePalmImage(palmImageUrl, rightPalmImageUrl);
           console.log('AI Analysis completed successfully');
-        } catch (analysisError) {
-          console.error('Analysis failed:', analysisError);
-          throw new Error(`Palm analysis failed: ${analysisError.message}`);
+        } catch (analysisError: unknown) {
+          throw new Error(`Palm analysis failed: ${analysisError instanceof Error ? analysisError.message : 'Unknown error'}`);
         }
         
         // Parse the AI response into structured palm reading data
@@ -623,10 +622,9 @@ Tone should be insightful, cosmic, and supportive, yet grounded in real-life con
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
       
-    } catch (error) {
-      console.error('Error processing request:', error);
+    } catch (error: unknown) {
       return new Response(JSON.stringify({ 
-        error: error.message || 'Internal server error' 
+        error: error instanceof Error ? error.message : 'Internal server error' 
       }), {
         status: 500,
         headers: { 

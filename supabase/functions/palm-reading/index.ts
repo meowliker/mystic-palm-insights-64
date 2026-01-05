@@ -151,7 +151,7 @@ Provide detailed, specific predictions with age ranges and actionable insights. 
 
     console.log('Sending request to OpenAI...', {
       hasImage: true,
-      messageLength: messages[1].content[0].text.length,
+      messageCount: messages.length,
       finalImageUrl: `data:${mimeType};base64,${imageBase64.substring(0, 50)}...`
     });
 
@@ -200,9 +200,8 @@ Provide detailed, specific predictions with age ranges and actionable insights. 
       } else {
         console.log('No JSON found in response');
       }
-    } catch (e) {
-      console.log('Failed to parse JSON:', e.message);
-      console.log('Using text analysis fallback');
+    } catch (e: unknown) {
+      console.log('Failed to parse JSON:', e instanceof Error ? e.message : 'Unknown error');
     }
 
     // Parse line strengths from the analysis
@@ -280,12 +279,11 @@ Provide detailed, specific predictions with age ranges and actionable insights. 
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error in palm reading function:', error);
-    
     return new Response(JSON.stringify({ 
       error: 'Failed to analyze palm image',
-      details: error.message 
+      details: error instanceof Error ? error.message : 'Unknown error'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500
